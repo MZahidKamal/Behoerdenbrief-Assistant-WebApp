@@ -1,0 +1,10 @@
+# Store all text files with LF line endings (ARCHITECTURE §2).
+* text=auto eol=lf
+
+# Binary files: never change them.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.pdf binary
+*.heic binary

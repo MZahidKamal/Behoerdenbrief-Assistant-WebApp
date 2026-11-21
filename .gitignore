@@ -2,7 +2,10 @@
 .env
 .env.*
 !.env.example
-.mcp.json
+
+# ---------- Local IDE MCP configs (machine-specific) ----------
+/client_side/.mcp.json
+/server_side/.mcp.json
 
 # ---------- Python (server_side) ----------
 .venv/
@@ -13,6 +16,7 @@ __pycache__/
 .mypy_cache/
 .coverage
 htmlcov/
+coverage.xml
 
 # ---------- Allure test reports ----------
 allure-results/
@@ -23,6 +27,7 @@ node_modules/
 .next/
 out/
 build/
+coverage/
 *.tsbuildinfo
 npm-debug.log*
 
