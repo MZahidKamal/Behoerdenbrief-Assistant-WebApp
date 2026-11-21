@@ -1,0 +1,39 @@
+# ---------- Secrets (never commit) ----------
+.env
+.env.*
+!.env.example
+.mcp.json
+
+# ---------- Python (server_side) ----------
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ---------- Allure test reports ----------
+allure-results/
+allure-report/
+
+# ---------- Node / Next.js (client_side) ----------
+node_modules/
+.next/
+out/
+build/
+*.tsbuildinfo
+npm-debug.log*
+
+# ---------- IDE / OS ----------
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store
+
+# ---------- Logs ----------
+*.log
+
+# ---------- Personal notes ----------
+/My_Project_Note.txt
