@@ -65,7 +65,7 @@ Total: 382 tasks.
   - Read: ARCHITECTURE §2; SECURITY §13
   - Learn: What Git ignores, and why line endings matter between Windows and Linux
 
-- [ ] **T-002** · Root `CLAUDE.md` for this project
+- [x] **T-002** · Root `CLAUDE.md` for this project
   - Done when: `CLAUDE.md` gives a short project summary, says which document answers which question, points to RULES.md and TASKS.md, and repeats no rule from another document
   - Depends on: T-001
   - Read: Purpose lines of all documents; RULES §1
