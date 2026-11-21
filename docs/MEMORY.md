@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.6
+**Document Version:** 0.7
 **Status:** Draft
 **Last updated:** 2026-11-21
 
@@ -545,7 +545,7 @@ Status: `open` until checked; then `done` with result and date.
 | K-25 | Which MCP clients can send a bearer token to a remote server (some expect OAuth) | ARCHITECTURE §13.5 | open | |
 | K-26 | `Origin` header validation as required by the MCP specification (DNS rebinding) | SECURITY §10a.2 | open | |
 | K-27 | Current usage of the MCP Inspector | RULES §1.5 | open | |
-| K-29 | Current formats of `.claude/settings.json` and `.mcp.json` in Claude Code | RULES §1.6 | open | |
+| K-29 | Current formats of `.claude/settings.json` and `.mcp.json` in Claude Code | RULES §1.6 | done | `.claude/settings.json`: `permissions.allow/deny/ask` lists of `Tool(pattern)` rules, `Read()`/`Edit()` for files, deny wins (checked in the Claude Code 2.1.330 settings schema). `.mcp.json`: `{"mcpServers": {name: {type, url\|command, …}}}`. 2026-11-21 |
 | K-28 | The seed pages give enough text after extraction (e.g. the federal administration portal page without JavaScript) | RAG §3.2 | open | |
 | K-30 | Lawyer review of Impressum, Datenschutzerklärung, AGB and disclaimer wording | PRD L-02, §10 | open | |
 | K-31 | Rechtsdienstleistungsgesetz (RDG) check | PRD §12 | open | |
@@ -626,3 +626,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-21 | 0.4 | LLM tool calling and MCP: D-016–D-019 (scope, six launch authorities, AI recognition, honest "nothing found"), D-033–D-034 (tool-calling design, MCP server), D-048–D-049 (authority columns and tool-call log, MCP tokens and protection), D-071–D-074 (recognition step, chat with tools, evaluation, seed sources), D-083 (API), D-098–D-099 (working rules, abbreviation and renamed names); D-002, D-067 and D-070 superseded; open checks K-23–K-28 and K-37, K-36 points to RAG §3.2; known issue K-53; evaluation table columns; lessons L-08–L-09 |
 | 2026-11-21 | 0.5 | Final review: D-035 (Claude Code project configuration), D-050 (cost of MCP searches), open check K-29 |
 | 2026-11-21 | 0.6 | D-100 (task explanations in English); D-097 language part superseded; area 2.6 range widened to D-109 |
+| 2026-11-21 | 0.7 | K-29 done (Claude Code settings and `.mcp.json` formats) |

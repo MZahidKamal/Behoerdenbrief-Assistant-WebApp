@@ -71,7 +71,7 @@ Total: 382 tasks.
   - Read: Purpose lines of all documents; RULES §1
   - Learn: How Claude Code uses project memory files
 
-- [ ] **T-003** **[Check K-29]** · Claude Code project settings
+- [x] **T-003** **[Check K-29]** · Claude Code project settings
   - Done when: The current format of `.claude/settings.json` is confirmed (K-29); Claude Code proposes the project permissions (for example: never read `.env` files, allow the check commands), the developer approves, and the file is committed
   - Depends on: T-002
   - Read: RULES §1.6, §1.5; MEMORY D-035
