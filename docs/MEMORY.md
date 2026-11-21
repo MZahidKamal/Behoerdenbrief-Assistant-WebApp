@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.5
+**Document Version:** 0.6
 **Status:** Draft
 **Last updated:** 2026-11-21
 
@@ -437,7 +437,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: `authority_id` in `PATCH /letters/{letter_id}` (rejected); `DELETE` for revoke (rejected: misleading); SDK default error bodies (rejected).
 - Details: DESIGN §4.5, §5.6, §5.9, §6
 
-### 2.6 Development Workflow (D-090 – D-099)
+### 2.6 Development Workflow (D-090 – D-109)
 
 #### D-090 · 2026-11-19 · Documents first
 - Decision: All documents in `docs/` are written in English before any code, without duplication, and every decision is asked with options.
@@ -490,6 +490,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: The developer is new to FastAPI, Next.js, AI, RAG, system design, CI/CD and Docker and wants to understand every step.
 - Alternatives: Larger tasks of 1–2 hours (first version of TASKS.md, replaced); separate learning-only tasks outside the project (rejected); explanations only after coding or in English (rejected).
 - Details: TASKS §1; RULES §1.1a
+- Status: language of the explanations superseded by D-100; the rest stays valid
 
 #### D-098 · 2026-11-21 · Working rules for tools and MCP
 - Decision: Claude Code asks the developer before any new tool, any change of a tool's input or scope, adding a tool to a step, and any new MCP tool, resource or prompt; tool handlers have the tool's name, input schemas are `<ToolName>ToolInput`; MCP is checked by hand with the MCP Inspector (local only).
@@ -502,6 +503,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: Keep the full-word naming rule without exceptions that are not on the list.
 - Alternatives: Adding `stdio` or `ai` to the list (rejected).
 - Details: RULES §2; DATA_MODEL `letters`
+
+#### D-100 · 2026-11-21 · Task explanations in English
+- Decision: Claude Code writes the explanations before and after every task in easy English, not in Bengali. Code, docstrings, comments, commits and pull requests stay in English as before.
+- Reason: Developer decision; matches the developer's user-level rule "always answer in English".
+- Alternatives: Explanations in Bengali (D-097, replaced for the language part).
+- Details: RULES §1.1a
 
 ## 3. Open Checks and Known Issues
 
@@ -618,3 +625,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-20 | 0.3 | Added D-097 (small tasks and learning flow) |
 | 2026-11-21 | 0.4 | LLM tool calling and MCP: D-016–D-019 (scope, six launch authorities, AI recognition, honest "nothing found"), D-033–D-034 (tool-calling design, MCP server), D-048–D-049 (authority columns and tool-call log, MCP tokens and protection), D-071–D-074 (recognition step, chat with tools, evaluation, seed sources), D-083 (API), D-098–D-099 (working rules, abbreviation and renamed names); D-002, D-067 and D-070 superseded; open checks K-23–K-28 and K-37, K-36 points to RAG §3.2; known issue K-53; evaluation table columns; lessons L-08–L-09 |
 | 2026-11-21 | 0.5 | Final review: D-035 (Claude Code project configuration), D-050 (cost of MCP searches), open check K-29 |
+| 2026-11-21 | 0.6 | D-100 (task explanations in English); D-097 language part superseded; area 2.6 range widened to D-109 |
