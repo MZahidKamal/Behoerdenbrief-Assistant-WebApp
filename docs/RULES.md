@@ -1,7 +1,7 @@
 # RULES
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.5
+**Document Version:** 0.6
 **Status:** Draft
 **Last updated:** 2026-11-21
 
@@ -32,7 +32,7 @@
 
 ### 1.1a Learning flow (every task)
 
-The developer is learning FastAPI, Next.js, AI, RAG, system design, CI/CD and Docker with this project. Every task therefore has two explanations, written to the developer in **Bengali** (Bengali words in Bengali script, technical terms in English):
+The developer is learning FastAPI, Next.js, AI, RAG, system design, CI/CD and Docker with this project. Every task therefore has two explanations, written to the developer in **easy English** (short, simple sentences):
 
 | When | What Claude Code explains |
 |---|---|
@@ -376,3 +376,4 @@ Managed with the `pre-commit` framework: `ruff check`, `ruff format`, `mypy` (AR
 | 2026-11-20 | 0.3 | Learning flow (§1.1a): explanation before (with plan, wait for OK) and after every task, in Bengali |
 | 2026-11-21 | 0.4 | LLM tool calling and MCP (PRD, ARCHITECTURE, DATA_MODEL, SECURITY, RAG, DESIGN): reading list for tools and MCP; ask the developer before any new or changed tool and any MCP addition; `mcp` added to the allowed abbreviations, "stdio" written out in code names (`run_mcp_server_local`, `mcp_local`), `ai_deadline` renamed to `extracted_deadline` in DATA_MODEL and DESIGN; naming pattern for tools; MCP tests in the check command and manual MCP Inspector check; tool-calling loop rule; new §6a AI Tool and MCP Rules; Allure feature labels |
 | 2026-11-21 | 0.5 | Final review: new §1.6 Claude Code project configuration (`CLAUDE.md`, `.claude/settings.json`, `.mcp.json`) |
+| 2026-11-21 | 0.6 | Learning flow (§1.1a): explanations in easy English instead of Bengali (MEMORY D-100) |
