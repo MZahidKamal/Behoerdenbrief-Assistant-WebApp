@@ -1,9 +1,9 @@
 # RULES
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.6
+**Document Version:** 0.7
 **Status:** Draft
-**Last updated:** 2026-11-21
+**Last updated:** 2026-11-22
 
 > This document answers **which project-specific rules must be followed when writing code**.
 > General personal rules of the developer (full-word naming, uv, IDE setup, test database naming) are in the user-level `CLAUDE.md` and are not repeated here; this file adds only what is specific to this project.
@@ -94,13 +94,17 @@ Manual MCP check (local only, not in CI, not a project dependency): with the bac
 
 Allure results can be viewed locally with the Allure command-line tool (`allure serve allure-results`) if it is installed; CI keeps the report as an artifact.
 
-### 1.6 Claude Code project configuration
+### 1.6 AI coding assistant: local configuration
+
+The AI coding assistant keeps its configuration only on the developer's computer; none of these files is committed (MEMORY D-036):
 
 | File | Content |
 |---|---|
-| `CLAUDE.md` | Short project summary and pointers to the documents (TASKS M00) |
-| `.claude/settings.json` | Project permissions for Claude Code, proposed by Claude Code and approved by the developer (e.g. never read `.env` files, allow the check commands of §1.5); committed |
-| `.mcp.json` | Our own MCP server as a local process (`run_mcp_server_local`), so that Claude Code can use its public tools while working; contains no secrets; committed |
+| Project instructions | Short project summary and pointers to the documents (TASKS M00) |
+| Permission settings | Project permissions, proposed by the assistant and approved by the developer (e.g. never read `.env` files, allow the check commands of §1.5) |
+| `.mcp.json` | Our own MCP server as a local process (`run_mcp_server_local`), so that the assistant can use its public tools while working; contains no secrets |
+
+The assistant's own files are excluded in `.git/info/exclude` (local, so the rule itself is not in the repository); `.mcp.json` is excluded in `.gitignore`.
 
 Changes to these files follow §1.2 (ask first) **(verify the current Claude Code file formats)**.
 
@@ -377,3 +381,4 @@ Managed with the `pre-commit` framework: `ruff check`, `ruff format`, `mypy` (AR
 | 2026-11-21 | 0.4 | LLM tool calling and MCP (PRD, ARCHITECTURE, DATA_MODEL, SECURITY, RAG, DESIGN): reading list for tools and MCP; ask the developer before any new or changed tool and any MCP addition; `mcp` added to the allowed abbreviations, "stdio" written out in code names (`run_mcp_server_local`, `mcp_local`), `ai_deadline` renamed to `extracted_deadline` in DATA_MODEL and DESIGN; naming pattern for tools; MCP tests in the check command and manual MCP Inspector check; tool-calling loop rule; new §6a AI Tool and MCP Rules; Allure feature labels |
 | 2026-11-21 | 0.5 | Final review: new §1.6 Claude Code project configuration (`CLAUDE.md`, `.claude/settings.json`, `.mcp.json`) |
 | 2026-11-21 | 0.6 | Learning flow (§1.1a): explanations in easy English instead of Bengali (MEMORY D-100) |
+| 2026-11-22 | 0.7 | §1.6: the AI coding assistant's configuration stays local and is not committed (MEMORY D-036) |

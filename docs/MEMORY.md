@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.8
+**Document Version:** 0.9
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -247,6 +247,13 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: The repository contains `.claude/settings.json` (project permissions, approved by the developer) and `.mcp.json` with our local MCP server (no secrets), so that Claude Code itself can use the project's public MCP tools.
 - Reason: The developer learns Claude Code with this project; safe permissions and dogfooding the MCP server help both.
 - Alternatives: No project settings; `.mcp.json` kept out of Git (both rejected).
+- Details: RULES §1.6; ARCHITECTURE §2
+- Status: superseded by D-036 (the files stay local and are not committed)
+
+#### D-036 · 2026-11-22 · AI assistant configuration stays local
+- Decision: The AI coding assistant's files (project instructions, permission settings) and `.mcp.json` stay only on the developer's computer and are not committed. The assistant's files are excluded in `.git/info/exclude`, `.mcp.json` in `.gitignore`. Commit messages, pull request texts, branch names and code comments do not name the assistant's product. Older commits stay as they are.
+- Reason: Developer decision: the public repository should not show which AI assistant was used to build it. A rule in `.gitignore` would name the files in public; `.git/info/exclude` is local.
+- Alternatives: Keeping the files in Git (D-035, replaced); rewriting the Git history to remove older mentions (rejected: needs a force push to the protected `main`, and old pull request pages stay on GitHub); ignore rules in `.gitignore` (rejected).
 - Details: RULES §1.6; ARCHITECTURE §2
 
 ### 2.3 Data and Security (D-040 – D-059)
@@ -634,3 +641,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-21 | 0.6 | D-100 (task explanations in English); D-097 language part superseded; area 2.6 range widened to D-109 |
 | 2026-11-21 | 0.7 | K-29 done (Claude Code settings and `.mcp.json` formats) |
 | 2026-11-22 | 0.8 | K-21 done; D-051 (public GitHub repository) |
+| 2026-11-22 | 0.9 | D-036 (AI assistant configuration stays local); D-035 superseded |

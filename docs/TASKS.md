@@ -1,9 +1,9 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.4
+**Document Version:** 0.5
 **Status:** Draft
-**Last updated:** 2026-11-21
+**Last updated:** 2026-11-22
 
 > This document answers **what to do now and what is still open**: the complete build plan from an empty `server_side/` to launch, in small tasks with one idea each.
 > Each task names the documents to read; the rules themselves are not repeated here. How to work on a task (including the explanations before and after): RULES §1, §1.1a · Branches, commits, pull requests: RULES §11 · Decisions and open checks: MEMORY.md
@@ -29,7 +29,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 
 | Milestone | Tasks | Result |
 |---|---|---|
-| M00 Repository and Tooling | T-001 – T-013 (13) | Clean repository, Python project, checks, hooks, frontend test setup |
+| M00 Repository and Tooling | T-001 – T-013, T-383 (14) | Clean repository, Python project, checks, hooks, frontend test setup |
 | M01 Backend Skeleton | T-014 – T-031 (18) | FastAPI app with `/health`, settings, logging, Problem Details, Docker |
 | M02 Database Foundation | T-032 – T-046 (15) | Supabase connection, Alembic, test database, encryption and time helpers |
 | M03 Frontend Foundation | T-047 – T-060 (14) | Layout, translations, API client, generated types, auth client, PWA shell |
@@ -53,7 +53,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 | M21 Deployment | T-372 – T-378 (7) | Production on Render and Netlify through GitHub Actions |
 | M22 Legal and Launch | T-379 – T-382 (4) | Legal pages, legal checks, launch checklist |
 
-Total: 382 tasks.
+Total: 383 tasks.
 
 ## 3. Tasks
 
@@ -70,12 +70,14 @@ Total: 382 tasks.
   - Depends on: T-001
   - Read: Purpose lines of all documents; RULES §1
   - Learn: How Claude Code uses project memory files
+  - Note: Since T-383 the file is local only and no longer committed (MEMORY D-036)
 
 - [x] **T-003** **[Check K-29]** · Claude Code project settings
   - Done when: The current format of `.claude/settings.json` is confirmed (K-29); Claude Code proposes the project permissions (for example: never read `.env` files, allow the check commands), the developer approves, and the file is committed
   - Depends on: T-002
   - Read: RULES §1.6, §1.5; MEMORY D-035
   - Learn: How Claude Code permissions protect secrets and save confirmations
+  - Note: Since T-383 the file is local only and no longer committed (MEMORY D-036)
 
 - [x] **T-004** **[Developer]** **[Check K-21]** · GitHub repository and branch protection
   - Done when: The repository is on GitHub; `main` is protected (pull request required, no force push); secret scanning and push protection are on if available; K-21 result in MEMORY.md
@@ -136,6 +138,12 @@ Total: 382 tasks.
   - Depends on: T-012
   - Read: ARCHITECTURE §9.3; RULES §10
   - Learn: Component tests and coverage in the frontend
+
+- [x] **T-383** · Keep the AI assistant's files local
+  - Done when: The assistant's project instructions and permission settings are no longer tracked by Git but stay on the developer's computer and are excluded in `.git/info/exclude`; `.mcp.json` is excluded in `.gitignore`; RULES, ARCHITECTURE, MEMORY and TASKS no longer say these files are committed (MEMORY D-036)
+  - Depends on: T-003
+  - Read: RULES §1.6; MEMORY D-036
+  - Learn: The difference between `.gitignore` and `.git/info/exclude`, and why `git rm --cached` does not change older commits
 
 
 ### M01 Backend Skeleton
@@ -1866,9 +1874,9 @@ Total: 382 tasks.
   - Learn: Local MCP servers started by the client
 
 - [ ] **T-295** · Claude Code uses our MCP server
-  - Done when: `.mcp.json` at the repository root starts `run_mcp_server_local` (no secrets); after the developer approves the server in Claude Code, Claude Code lists our public tools and searches the official sources of a local authority
-  - Depends on: T-294, T-003
-  - Read: RULES §1.6; MEMORY D-035
+  - Done when: A local `.mcp.json` at the repository root (not committed, no secrets) starts `run_mcp_server_local`; after the developer approves the server in Claude Code, Claude Code lists our public tools and searches the official sources of a local authority
+  - Depends on: T-294, T-003, T-383
+  - Read: RULES §1.6; MEMORY D-036
   - Learn: Being the client of your own MCP server
 
 - [ ] **T-296** · MCP tests over HTTP
@@ -2425,3 +2433,4 @@ Total: 382 tasks.
 | 2026-11-20 | 0.2 | Tasks split to one idea each (~30–60 minutes, ~150 lines); learning flow with explanations before and after each task (RULES §1.1a); 382 tasks; every dependency checked by script |
 | 2026-11-21 | 0.3 | LLM tool calling and MCP (all documents): tool-calling tasks at the end of M09 (Vertex check, `mcp_access_tokens` and `llm_tool_calls` tables, tool-call recording, provider interface and fake with tools, Gemini and Claude tool calls, registry, loop with limits); search tool and seed sources of the six authorities in M10; authority recognition, per-authority limit and "nothing found" in M12; chat tools and authority change in M13; new milestone M14 MCP Server (milestones after it move up by one); statistics, retention, evaluation (42 letters, 12 chat questions) and E2E scenarios 13–14 updated; upload without authority; 382 tasks; renumbered once before any task was started; every dependency checked by script |
 | 2026-11-21 | 0.4 | Final review before the first task: Claude Code project settings (M00) and `.mcp.json` task (M14); `mcp_access_tokens` table before `token_usages`; MCP query tokens; MCP prompt version setting; five tasks split to one idea each (tool format and registry, recognition and its checks, chat answer and its sources, authority change checks and reset, MCP tests over HTTP and locally); 382 tasks; renumbered before any task was started |
+| 2026-11-22 | 0.5 | New task T-383 in M00 (AI assistant's files stay local, MEMORY D-036); notes on T-002 and T-003; T-295 uses a local `.mcp.json`; 383 tasks |

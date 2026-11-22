@@ -3,9 +3,8 @@
 .env.*
 !.env.example
 
-# ---------- Local IDE MCP configs (machine-specific) ----------
-/client_side/.mcp.json
-/server_side/.mcp.json
+# ---------- Local MCP client configs (machine-specific, never committed) ----------
+.mcp.json
 
 # ---------- Python (server_side) ----------
 .venv/
