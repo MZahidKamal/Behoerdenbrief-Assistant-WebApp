@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.11
+**Document Version:** 0.12
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -530,6 +530,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: Leaving the documents unchanged; also making the product's model names neutral (both rejected by the developer).
 - Details: RULES §1; all documents
 
+#### D-102 · 2026-11-22 · Ruff rule set
+- Decision: Ruff lint uses the rule groups `E`, `W`, `F`, `I`, `B`, `UP`, `S`, `D` (Google convention) and `DTZ`; line length 88; in `tests/` only `D103` (test function docstring) and `S101` (`assert`) are ignored.
+- Reason: `D` and `DTZ` are required by RULES §3.2 and §4.5; the other groups find real bugs, sort imports, keep Python syntax modern and find security problems early.
+- Alternatives: Only `D`, `DTZ` and Ruff's default rules (rejected: too few bug and security checks).
+- Details: RULES §1.5, §3.2, §4.5; `server_side/pyproject.toml` `[tool.ruff]`
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -651,3 +657,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-22 | 0.9 | D-036 (AI assistant configuration stays local); D-035 superseded |
 | 2026-11-22 | 0.10 | D-101 (neutral name for the coding assistant); D-020, D-035, D-090, D-091, D-096, D-097, D-098, D-100, K-29 and change log 0.5 and 0.7 reworded |
 | 2026-11-22 | 0.11 | K-03 done: Python 3.14 (D-030 fallback applies) |
+| 2026-11-22 | 0.12 | D-102 (Ruff rule set) |
