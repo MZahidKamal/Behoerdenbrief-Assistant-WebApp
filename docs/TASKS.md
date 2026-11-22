@@ -77,7 +77,7 @@ Total: 382 tasks.
   - Read: RULES §1.6, §1.5; MEMORY D-035
   - Learn: How Claude Code permissions protect secrets and save confirmations
 
-- [ ] **T-004** **[Developer]** **[Check K-21]** · GitHub repository and branch protection
+- [x] **T-004** **[Developer]** **[Check K-21]** · GitHub repository and branch protection
   - Done when: The repository is on GitHub; `main` is protected (pull request required, no force push); secret scanning and push protection are on if available; K-21 result in MEMORY.md
   - Depends on: T-001
   - Read: RULES §11.1; SECURITY §12

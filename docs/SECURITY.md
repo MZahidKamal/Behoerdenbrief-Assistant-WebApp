@@ -1,9 +1,9 @@
 # Security
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.9
+**Document Version:** 0.10
 **Status:** Draft
-**Last updated:** 2026-11-21
+**Last updated:** 2026-11-22
 
 > This document answers **how data and the system are kept safe**.
 > Product rules: PRD.md · Components, flows and configuration names: ARCHITECTURE.md · Tables, encrypted columns, RLS and retention columns: DATA_MODEL.md
@@ -271,7 +271,7 @@ Values come from configuration (ARCHITECTURE §11) so they can be tuned without 
 | API documentation | `/docs` and `/openapi.json` disabled in production |
 | Caching | `Cache-Control: no-store` on every API response; the PWA service worker never caches API requests (DESIGN §1.3) |
 | Dependencies | GitHub **Dependabot** update pull requests; `pip-audit` and `npm audit` in CI — a known **high or critical** vulnerability fails the build |
-| Secrets in Git | GitHub secret scanning and push protection enabled **(verify availability for the repository)** |
+| Secrets in Git | GitHub secret scanning and push protection enabled (public repository, MEMORY D-051) |
 | Containers | Non-root user, slim image, no build tools at runtime (ARCHITECTURE §12.2) |
 | Redis | Password-protected and reachable only from API and worker (Render internal network), TLS where offered **(verify)**; it holds task ids, download tokens and rate-limit counters, never decrypted content |
 | MCP endpoint | Bearer token, no CORS, `Origin` check, own rate limits (§10a.2) |
@@ -412,3 +412,4 @@ Scheduled jobs perform these deletions; each job's selection rule is tested.
 | 2026-11-21 | 0.7 | LLM tool calling and MCP (PRD 0.16, ARCHITECTURE 0.23, DATA_MODEL 0.10): principle 7; tool-call log and MCP access tokens as data classes; MCP client in access rules; `/mcp` as token-protected endpoint; tools in §9.1; §10 with limited tools and tool results as data; new §10a (tool scope from the backend, input checks, one writing tool, round limit, MCP public data only, 32-byte tokens stored as hash, same 401 for every bad token, admin-only management, no browser access, stdio not in production, queries at most 500 characters and never stored); MCP rate limits; logging, retention and tests |
 | 2026-11-21 | 0.8 | Aligned with RAG 0.3: authority recognition as its own text-only step in §9.1 |
 | 2026-11-21 | 0.9 | Aligned with RULES 0.4: command `run_mcp_server_local`, caller `mcp_local` |
+| 2026-11-22 | 0.10 | §12: secret scanning and push protection confirmed for the public repository (MEMORY K-21, D-051) |

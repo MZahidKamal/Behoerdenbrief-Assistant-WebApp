@@ -1,9 +1,9 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.7
+**Document Version:** 0.8
 **Status:** Draft
-**Last updated:** 2026-11-21
+**Last updated:** 2026-11-22
 
 > This document answers **which decisions were made and why**, which checks are still open, and what was learned.
 > The **rules themselves** live in the other documents (PRD, ARCHITECTURE, DATA_MODEL, SECURITY, RAG, DESIGN, RULES). An entry here gives only the decision in one line, the reason, the rejected alternatives, and where the details are. If an entry and a document disagree, the document wins and the entry is corrected (with approval).
@@ -317,6 +317,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: Not recording MCP cost (rejected).
 - Details: DATA_MODEL `token_usages`, §5; DESIGN §5.6
 
+#### D-051 · 2026-11-22 · Public GitHub repository
+- Decision: The GitHub repository is public; `main` is protected by the branch ruleset `protect-main` (pull request required, squash merge only, no force push, no deletion, empty bypass list); secret scanning and push protection are on; fork pull request workflows need approval.
+- Reason: On GitHub Free, a private personal repository has no protected branches, no secret scanning and no push protection; a public repository has all three for free. Security does not depend on hidden code, and secrets are never in Git (SECURITY §13). The full history was checked for secrets before the change.
+- Alternatives: Private repository with GitHub Pro (protected branches, but still no secret scanning); private repository on GitHub Free without protection (both rejected by the developer).
+- Details: RULES §11.1; SECURITY §12
+
 ### 2.4 AI and RAG (D-060 – D-079)
 
 #### D-060 · 2026-11-19 · Models on Vertex AI in the EU
@@ -538,7 +544,7 @@ Status: `open` until checked; then `done` with result and date.
 | K-18 | Web push on iPhone / iPad (installed PWA only) | ARCHITECTURE §13.5 | open | |
 | K-19 | Browser support of `showSaveFilePicker` | ARCHITECTURE §6 | open | |
 | K-20 | Browser PDF viewers work with a single-use token and no range requests | SECURITY §7 | open | |
-| K-21 | GitHub secret scanning and push protection for the repository | SECURITY §12 | open | |
+| K-21 | GitHub secret scanning and push protection for the repository | SECURITY §12 | done | Private personal repositories on GitHub Free have no protected branches, secret scanning or push protection; GitHub Pro adds protected branches only; GitHub Secret Protection can be bought only by organizations (Team, Enterprise Cloud). Public repositories get secret scanning and push protection for free. Repository made public (D-051) and both enabled (GitHub docs, checked 2026-11-21). 2026-11-22 |
 | K-22 | Provider requirements (DPA, no training, retention, region) for every processor — fill §5 | SECURITY §9.2 | open | |
 | K-23 | Tool (function) calling of the chosen Gemini and Claude models on Vertex AI, and how tool definitions are passed in the current SDK | RAG §2; ARCHITECTURE §13.5 | open | |
 | K-24 | Official MCP Python SDK: mounting the Streamable HTTP app in FastAPI at `/mcp`, reading the `Authorization` header, running over stdio; current MCP specification version | ARCHITECTURE §13.5; DESIGN §6 | open | |
@@ -627,3 +633,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-21 | 0.5 | Final review: D-035 (Claude Code project configuration), D-050 (cost of MCP searches), open check K-29 |
 | 2026-11-21 | 0.6 | D-100 (task explanations in English); D-097 language part superseded; area 2.6 range widened to D-109 |
 | 2026-11-21 | 0.7 | K-29 done (Claude Code settings and `.mcp.json` formats) |
+| 2026-11-22 | 0.8 | K-21 done; D-051 (public GitHub repository) |
