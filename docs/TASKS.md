@@ -91,7 +91,7 @@ Total: 384 tasks.
   - Read: ARCHITECTURE §13.5
   - Learn: Checking library compatibility before choosing a runtime
 
-- [ ] **T-006** · `server_side/` project with uv
+- [x] **T-006** · `server_side/` project with uv
   - Done when: `uv init` done; `pyproject.toml` with the chosen Python version and the runtime dependencies of ARCHITECTURE §3 that the skeleton needs; `app/` package and the folders of ARCHITECTURE §4 with empty modules that have a docstring; `uv run python -c "import app"` works
   - Depends on: T-005
   - Read: ARCHITECTURE §3–§4
