@@ -127,7 +127,7 @@ Total: 385 tasks.
   - Read: ARCHITECTURE §6; RULES §5
   - Learn: What create-next-app generates and what each file does
 
-- [ ] **T-012** · Frontend folder structure
+- [x] **T-012** · Frontend folder structure
   - Done when: The folders of ARCHITECTURE §6 exist (`app/`, `features/`, `components/ui/`, `lib/`, `messages/`) with placeholder files that have a JSDoc comment
   - Depends on: T-011
   - Read: ARCHITECTURE §6
