@@ -8,3 +8,38 @@ dependencies = [
     "pydantic-settings>=2.16.3",
     "uvicorn>=0.54.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.17.6",
+]
+
+# Ruff: linter (`ruff check`) and formatter (`ruff format`). RULES §1.5, MEMORY D-102.
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors: standard style
+    "W",   # pycodestyle warnings: whitespace
+    "F",   # Pyflakes: unused imports, undefined names
+    "I",   # isort: sorted imports
+    "B",   # flake8-bugbear: common Python traps
+    "UP",  # pyupgrade: modern Python syntax
+    "S",   # flake8-bandit: security problems
+    "D",   # pydocstyle: docstrings everywhere (RULES §3.2)
+    "DTZ", # flake8-datetimez: no naive datetimes (RULES §4.5)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# D103: test functions have no docstring (RULES §3.2).
+# S101: pytest checks results with `assert`.
+"tests/**/*.py" = ["D103", "S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+line-ending = "lf"

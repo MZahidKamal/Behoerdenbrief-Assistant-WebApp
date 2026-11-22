@@ -97,7 +97,7 @@ Total: 384 tasks.
   - Read: ARCHITECTURE §3–§4
   - Learn: uv projects, virtual environments and `pyproject.toml`
 
-- [ ] **T-007** · Ruff configuration
+- [x] **T-007** · Ruff configuration
   - Done when: Ruff lint (incl. Google docstring rules, datetime rules, missing-docstring rule ignored for test functions) and Ruff format are configured; `uv run ruff check .` and `uv run ruff format --check .` pass
   - Depends on: T-006
   - Read: RULES §3.2, §4.5, §1.5
