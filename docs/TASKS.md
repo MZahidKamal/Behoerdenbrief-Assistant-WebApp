@@ -1,7 +1,7 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.5
+**Document Version:** 0.6
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -15,10 +15,10 @@
 | Rule | Detail |
 |---|---|
 | Order | Work through the milestones in order and inside a milestone from top to bottom, unless "Depends on" allows otherwise. One task at a time (RULES §1.1) |
-| Size | One task = **one idea** = one pull request, readable in about 30–60 minutes, usually under ~150 changed lines including tests. If a task turns out bigger, Claude Code proposes to split it (RULES §1.2) |
-| Learning flow | Before coding, Claude Code explains the idea and its plan; after coding, it explains what changed, the reading order and how to test by hand (RULES §1.1a) |
-| Status | `[ ]` open · `[x]` done. Claude Code asks the developer before ticking a box or changing this file (RULES §1.2); ticking happens in the task's own pull request |
-| Kinds | No mark = Claude Code writes code. **[Developer]** = only the developer can do it (accounts, secrets, payments, lawyer); Claude Code reminds and may prepare step-by-step instructions. **[Check K-xx]** = an open check from MEMORY §3.1; Claude Code researches current documentation, the developer confirms, the result goes into MEMORY.md (with approval) |
+| Size | One task = **one idea** = one pull request, readable in about 30–60 minutes, usually under ~150 changed lines including tests. If a task turns out bigger, the AI coding assistant proposes to split it (RULES §1.2) |
+| Learning flow | Before coding, the assistant explains the idea and its plan; after coding, it explains what changed, the reading order and how to test by hand (RULES §1.1a) |
+| Status | `[ ]` open · `[x]` done. The assistant asks the developer before ticking a box or changing this file (RULES §1.2); ticking happens in the task's own pull request |
+| Kinds | No mark = the assistant writes code. **[Developer]** = only the developer can do it (accounts, secrets, payments, lawyer); the assistant reminds and may prepare step-by-step instructions. **[Check K-xx]** = an open check from MEMORY §3.1; the assistant researches current documentation, the developer confirms, the result goes into MEMORY.md (with approval) |
 | New tasks | Found work is proposed to the developer, then added with the next free id at the right place. Ids are never reused or renumbered (the renumberings in versions 0.3 and 0.4 happened before any task was started) |
 | Done | "Done when" plus the general definition of done (RULES §1.4: tests, checks, docstrings, documents) |
 | Fields | **Done when** – the visible result · **Depends on** – tasks that must be done first · **Read** – document sections with the rules · **Learn** – the main idea the developer learns in this task |
@@ -29,7 +29,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 
 | Milestone | Tasks | Result |
 |---|---|---|
-| M00 Repository and Tooling | T-001 – T-013, T-383 (14) | Clean repository, Python project, checks, hooks, frontend test setup |
+| M00 Repository and Tooling | T-001 – T-013, T-383 – T-384 (15) | Clean repository, Python project, checks, hooks, frontend test setup |
 | M01 Backend Skeleton | T-014 – T-031 (18) | FastAPI app with `/health`, settings, logging, Problem Details, Docker |
 | M02 Database Foundation | T-032 – T-046 (15) | Supabase connection, Alembic, test database, encryption and time helpers |
 | M03 Frontend Foundation | T-047 – T-060 (14) | Layout, translations, API client, generated types, auth client, PWA shell |
@@ -53,7 +53,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 | M21 Deployment | T-372 – T-378 (7) | Production on Render and Netlify through GitHub Actions |
 | M22 Legal and Launch | T-379 – T-382 (4) | Legal pages, legal checks, launch checklist |
 
-Total: 383 tasks.
+Total: 384 tasks.
 
 ## 3. Tasks
 
@@ -65,18 +65,18 @@ Total: 383 tasks.
   - Read: ARCHITECTURE §2; SECURITY §13
   - Learn: What Git ignores, and why line endings matter between Windows and Linux
 
-- [x] **T-002** · Root `CLAUDE.md` for this project
-  - Done when: `CLAUDE.md` gives a short project summary, says which document answers which question, points to RULES.md and TASKS.md, and repeats no rule from another document
+- [x] **T-002** · Project instructions for the AI coding assistant
+  - Done when: The project instructions file gives a short project summary, says which document answers which question, points to RULES.md and TASKS.md, and repeats no rule from another document
   - Depends on: T-001
   - Read: Purpose lines of all documents; RULES §1
-  - Learn: How Claude Code uses project memory files
+  - Learn: How the assistant uses project instruction files
   - Note: Since T-383 the file is local only and no longer committed (MEMORY D-036)
 
-- [x] **T-003** **[Check K-29]** · Claude Code project settings
-  - Done when: The current format of `.claude/settings.json` is confirmed (K-29); Claude Code proposes the project permissions (for example: never read `.env` files, allow the check commands), the developer approves, and the file is committed
+- [x] **T-003** **[Check K-29]** · AI coding assistant settings
+  - Done when: The current format of the permission settings file is confirmed (K-29); the assistant proposes the project permissions (for example: never read `.env` files, allow the check commands), the developer approves, and the file is committed
   - Depends on: T-002
   - Read: RULES §1.6, §1.5; MEMORY D-035
-  - Learn: How Claude Code permissions protect secrets and save confirmations
+  - Learn: How the assistant's permissions protect secrets and save confirmations
   - Note: Since T-383 the file is local only and no longer committed (MEMORY D-036)
 
 - [x] **T-004** **[Developer]** **[Check K-21]** · GitHub repository and branch protection
@@ -144,6 +144,12 @@ Total: 383 tasks.
   - Depends on: T-003
   - Read: RULES §1.6; MEMORY D-036
   - Learn: The difference between `.gitignore` and `.git/info/exclude`, and why `git rm --cached` does not change older commits
+
+- [x] **T-384** · Neutral name for the coding assistant in the documents
+  - Done when: No document names the coding assistant's product; it is called "the AI coding assistant"; examples of external MCP clients are neutral; names of the product's own AI models stay (MEMORY D-101)
+  - Depends on: T-383
+  - Read: MEMORY D-036, D-101
+  - Learn: Keeping documents consistent when one term changes in many places
 
 
 ### M01 Backend Skeleton
@@ -1873,8 +1879,8 @@ Total: 383 tasks.
   - Read: ARCHITECTURE §7.12; SECURITY §10a.2; RULES §2
   - Learn: Local MCP servers started by the client
 
-- [ ] **T-295** · Claude Code uses our MCP server
-  - Done when: A local `.mcp.json` at the repository root (not committed, no secrets) starts `run_mcp_server_local`; after the developer approves the server in Claude Code, Claude Code lists our public tools and searches the official sources of a local authority
+- [ ] **T-295** · The AI coding assistant uses our MCP server
+  - Done when: A local `.mcp.json` at the repository root (not committed, no secrets) starts `run_mcp_server_local`; after the developer approves the server in the assistant, the assistant lists our public tools and searches the official sources of a local authority
   - Depends on: T-294, T-003, T-383
   - Read: RULES §1.6; MEMORY D-036
   - Learn: Being the client of your own MCP server
@@ -2432,5 +2438,6 @@ Total: 383 tasks.
 | 2026-11-20 | 0.1 | First version: 22 milestones, 184 tasks with "Done when", "Depends on", "Read" and "Learn" |
 | 2026-11-20 | 0.2 | Tasks split to one idea each (~30–60 minutes, ~150 lines); learning flow with explanations before and after each task (RULES §1.1a); 382 tasks; every dependency checked by script |
 | 2026-11-21 | 0.3 | LLM tool calling and MCP (all documents): tool-calling tasks at the end of M09 (Vertex check, `mcp_access_tokens` and `llm_tool_calls` tables, tool-call recording, provider interface and fake with tools, Gemini and Claude tool calls, registry, loop with limits); search tool and seed sources of the six authorities in M10; authority recognition, per-authority limit and "nothing found" in M12; chat tools and authority change in M13; new milestone M14 MCP Server (milestones after it move up by one); statistics, retention, evaluation (42 letters, 12 chat questions) and E2E scenarios 13–14 updated; upload without authority; 382 tasks; renumbered once before any task was started; every dependency checked by script |
-| 2026-11-21 | 0.4 | Final review before the first task: Claude Code project settings (M00) and `.mcp.json` task (M14); `mcp_access_tokens` table before `token_usages`; MCP query tokens; MCP prompt version setting; five tasks split to one idea each (tool format and registry, recognition and its checks, chat answer and its sources, authority change checks and reset, MCP tests over HTTP and locally); 382 tasks; renumbered before any task was started |
+| 2026-11-21 | 0.4 | Final review before the first task: AI coding assistant settings (M00) and `.mcp.json` task (M14); `mcp_access_tokens` table before `token_usages`; MCP query tokens; MCP prompt version setting; five tasks split to one idea each (tool format and registry, recognition and its checks, chat answer and its sources, authority change checks and reset, MCP tests over HTTP and locally); 382 tasks; renumbered before any task was started |
 | 2026-11-22 | 0.5 | New task T-383 in M00 (AI assistant's files stay local, MEMORY D-036); notes on T-002 and T-003; T-295 uses a local `.mcp.json`; 383 tasks |
+| 2026-11-22 | 0.6 | New task T-384 in M00 (neutral name for the coding assistant, MEMORY D-101); §1, T-002, T-003, T-295 and change log 0.4 reworded; 384 tasks |

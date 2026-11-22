@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.9
+**Document Version:** 0.10
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -154,8 +154,8 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 ### 2.2 Architecture and Platform (D-020 – D-039)
 
 #### D-020 · 2026-11-19 · Monorepo
-- Decision: One repository with `docs/`, `client_side/`, `server_side/`, Git at the root; Claude Code runs from the root.
-- Reason: One place for code and documents; Claude Code sees everything; one CI.
+- Decision: One repository with `docs/`, `client_side/`, `server_side/`, Git at the root; the AI coding assistant runs from the root.
+- Reason: One place for code and documents; the assistant sees everything; one CI.
 - Alternatives: Separate repositories for frontend and backend (rejected).
 - Details: ARCHITECTURE §2
 
@@ -243,9 +243,9 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: A separate MCP service (rejected: extra deployment); MCP access to the user's own letters (rejected: privacy, out of scope).
 - Details: PRD §6.11; ARCHITECTURE §7.12; DESIGN §6
 
-#### D-035 · 2026-11-21 · Claude Code project configuration
-- Decision: The repository contains `.claude/settings.json` (project permissions, approved by the developer) and `.mcp.json` with our local MCP server (no secrets), so that Claude Code itself can use the project's public MCP tools.
-- Reason: The developer learns Claude Code with this project; safe permissions and dogfooding the MCP server help both.
+#### D-035 · 2026-11-21 · AI coding assistant configuration
+- Decision: The repository contains the assistant's permission settings (project permissions, approved by the developer) and `.mcp.json` with our local MCP server (no secrets), so that the assistant itself can use the project's public MCP tools.
+- Reason: The developer learns working with an AI coding assistant in this project; safe permissions and dogfooding the MCP server help both.
 - Alternatives: No project settings; `.mcp.json` kept out of Git (both rejected).
 - Details: RULES §1.6; ARCHITECTURE §2
 - Status: superseded by D-036 (the files stay local and are not committed)
@@ -454,14 +454,14 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 
 #### D-090 · 2026-11-19 · Documents first
 - Decision: All documents in `docs/` are written in English before any code, without duplication, and every decision is asked with options.
-- Reason: Claude Code works from complete, consistent documents; the developer stays in control.
+- Reason: The AI coding assistant works from complete, consistent documents; the developer stays in control.
 - Alternatives: Writing documents during coding (rejected).
 - Details: PRD §14
 
-#### D-091 · 2026-11-20 · Claude Code permissions
-- Decision: Claude Code creates branches, commits and opens pull requests; the developer reviews and merges. Every change to `docs/`, every new decision and every new dependency needs the developer's approval first.
+#### D-091 · 2026-11-20 · AI coding assistant permissions
+- Decision: The assistant creates branches, commits and opens pull requests; the developer reviews and merges. Every change to `docs/`, every new decision and every new dependency needs the developer's approval first.
 - Reason: Learning project; the developer controls every decision and document.
-- Alternatives: The developer does all Git work; Claude Code updates documents on its own (both rejected).
+- Alternatives: The developer does all Git work; the assistant updates documents on its own (both rejected).
 - Details: RULES §1.2, §11
 
 #### D-092 · 2026-11-20 · Git workflow
@@ -488,8 +488,8 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: No exceptions (rejected).
 - Details: RULES §2
 
-#### D-096 · 2026-11-20 · Values proposed by Claude, accepted together
-- Decision: The developer accepted all values that Claude had proposed while writing the documents. They stay as written and can be changed later like any decision:
+#### D-096 · 2026-11-20 · Values proposed by the assistant, accepted together
+- Decision: The developer accepted all values that the AI coding assistant had proposed while writing the documents. They stay as written and can be changed later like any decision:
   - RAG: knowledge PDFs only through their text layer (pypdf), at most 10 linked PDFs per URL, RRF k = 60, 20 candidates per method, weak-retrieval threshold 0.50 (to be calibrated), evaluation targets (RAG §4, §6, §9.3).
   - Data: calendar months in Europe/Berlin, customer and transaction numbers never reset, reminder days 1–60, data export kept 7 days and at most 3 per day, inactivity warnings 30 and 7 days before deletion, Stripe events kept 1 year, seed writes database rows only (DATA_MODEL §1, §12; SECURITY §11, §16.4).
   - Architecture: Uvicorn, the browser's own PDF viewer, Supabase Admin API for E2E codes (ARCHITECTURE §9.3, §12).
@@ -499,14 +499,14 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Details: the sections named above
 
 #### D-097 · 2026-11-20 · Small tasks and a learning flow
-- Decision: Every task in TASKS.md covers one idea (~30–60 minutes reading, ~150 changed lines); Claude Code explains the idea and plan before coding (waits for OK) and explains the result and manual testing after coding, in Bengali.
+- Decision: Every task in TASKS.md covers one idea (~30–60 minutes reading, ~150 changed lines); the assistant explains the idea and plan before coding (waits for OK) and explains the result and manual testing after coding, in Bengali.
 - Reason: The developer is new to FastAPI, Next.js, AI, RAG, system design, CI/CD and Docker and wants to understand every step.
 - Alternatives: Larger tasks of 1–2 hours (first version of TASKS.md, replaced); separate learning-only tasks outside the project (rejected); explanations only after coding or in English (rejected).
 - Details: TASKS §1; RULES §1.1a
 - Status: language of the explanations superseded by D-100; the rest stays valid
 
 #### D-098 · 2026-11-21 · Working rules for tools and MCP
-- Decision: Claude Code asks the developer before any new tool, any change of a tool's input or scope, adding a tool to a step, and any new MCP tool, resource or prompt; tool handlers have the tool's name, input schemas are `<ToolName>ToolInput`; MCP is checked by hand with the MCP Inspector (local only).
+- Decision: The assistant asks the developer before any new tool, any change of a tool's input or scope, adding a tool to a step, and any new MCP tool, resource or prompt; tool handlers have the tool's name, input schemas are `<ToolName>ToolInput`; MCP is checked by hand with the MCP Inspector (local only).
 - Reason: Tools decide what data the model and external clients can reach; this is a security decision.
 - Alternatives: Asking only before MCP changes (rejected); no manual MCP check (rejected).
 - Details: RULES §1.2, §1.5, §2, §6a
@@ -518,10 +518,16 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Details: RULES §2; DATA_MODEL `letters`
 
 #### D-100 · 2026-11-21 · Task explanations in English
-- Decision: Claude Code writes the explanations before and after every task in easy English, not in Bengali. Code, docstrings, comments, commits and pull requests stay in English as before.
+- Decision: The assistant writes the explanations before and after every task in easy English, not in Bengali. Code, docstrings, comments, commits and pull requests stay in English as before.
 - Reason: Developer decision; matches the developer's user-level rule "always answer in English".
 - Alternatives: Explanations in Bengali (D-097, replaced for the language part).
 - Details: RULES §1.1a
+
+#### D-101 · 2026-11-22 · Neutral name for the coding assistant in documents
+- Decision: The documents call the coding assistant "the AI coding assistant" (or "the assistant"), never by its product name; examples of external MCP clients are neutral. Names of AI models that the product itself uses (for example the fallback model, D-060) stay as they are.
+- Reason: Continues D-036: the public repository should not show which AI assistant was used to build it. The product's own models must stay named, so that the documents, settings and processor list stay correct.
+- Alternatives: Leaving the documents unchanged; also making the product's model names neutral (both rejected by the developer).
+- Details: RULES §1; all documents
 
 ## 3. Open Checks and Known Issues
 
@@ -558,7 +564,7 @@ Status: `open` until checked; then `done` with result and date.
 | K-25 | Which MCP clients can send a bearer token to a remote server (some expect OAuth) | ARCHITECTURE §13.5 | open | |
 | K-26 | `Origin` header validation as required by the MCP specification (DNS rebinding) | SECURITY §10a.2 | open | |
 | K-27 | Current usage of the MCP Inspector | RULES §1.5 | open | |
-| K-29 | Current formats of `.claude/settings.json` and `.mcp.json` in Claude Code | RULES §1.6 | done | `.claude/settings.json`: `permissions.allow/deny/ask` lists of `Tool(pattern)` rules, `Read()`/`Edit()` for files, deny wins (checked in the Claude Code 2.1.330 settings schema). `.mcp.json`: `{"mcpServers": {name: {type, url\|command, …}}}`. 2026-11-21 |
+| K-29 | Current formats of the AI coding assistant's permission settings and `.mcp.json` | RULES §1.6 | done | Permission settings: `permissions.allow/deny/ask` lists of `Tool(pattern)` rules, `Read()`/`Edit()` for files, deny wins (checked in the settings schema of version 2.1.330). `.mcp.json`: `{"mcpServers": {name: {type, url\|command, …}}}`. 2026-11-21 |
 | K-28 | The seed pages give enough text after extraction (e.g. the federal administration portal page without JavaScript) | RAG §3.2 | open | |
 | K-30 | Lawyer review of Impressum, Datenschutzerklärung, AGB and disclaimer wording | PRD L-02, §10 | open | |
 | K-31 | Rechtsdienstleistungsgesetz (RDG) check | PRD §12 | open | |
@@ -637,8 +643,9 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-20 | 0.2 | Final review: added D-015 (transaction), D-031 (seed and Stripe objects), D-032 (local development), D-047 (admin access), D-096 (accepted values); rule that entries without `Status` are active |
 | 2026-11-20 | 0.3 | Added D-097 (small tasks and learning flow) |
 | 2026-11-21 | 0.4 | LLM tool calling and MCP: D-016–D-019 (scope, six launch authorities, AI recognition, honest "nothing found"), D-033–D-034 (tool-calling design, MCP server), D-048–D-049 (authority columns and tool-call log, MCP tokens and protection), D-071–D-074 (recognition step, chat with tools, evaluation, seed sources), D-083 (API), D-098–D-099 (working rules, abbreviation and renamed names); D-002, D-067 and D-070 superseded; open checks K-23–K-28 and K-37, K-36 points to RAG §3.2; known issue K-53; evaluation table columns; lessons L-08–L-09 |
-| 2026-11-21 | 0.5 | Final review: D-035 (Claude Code project configuration), D-050 (cost of MCP searches), open check K-29 |
+| 2026-11-21 | 0.5 | Final review: D-035 (AI coding assistant configuration), D-050 (cost of MCP searches), open check K-29 |
 | 2026-11-21 | 0.6 | D-100 (task explanations in English); D-097 language part superseded; area 2.6 range widened to D-109 |
-| 2026-11-21 | 0.7 | K-29 done (Claude Code settings and `.mcp.json` formats) |
+| 2026-11-21 | 0.7 | K-29 done (assistant settings and `.mcp.json` formats) |
 | 2026-11-22 | 0.8 | K-21 done; D-051 (public GitHub repository) |
 | 2026-11-22 | 0.9 | D-036 (AI assistant configuration stays local); D-035 superseded |
+| 2026-11-22 | 0.10 | D-101 (neutral name for the coding assistant); D-020, D-035, D-090, D-091, D-096, D-097, D-098, D-100, K-29 and change log 0.5 and 0.7 reworded |
