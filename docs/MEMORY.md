@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.13
+**Document Version:** 0.14
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -542,6 +542,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: Plain mypy strict without the plugin (rejected).
 - Details: RULES §4.6; `server_side/pyproject.toml` `[tool.mypy]`
 
+#### D-104 · 2026-11-22 · pytest-asyncio auto mode; Allure and mypy
+- Decision: pytest-asyncio runs in `auto` mode (every `async def` test runs without a marker, one event loop per test). Allure has no type hints: mypy allows calls into `allure` and `allure_commons` (`untyped_calls_exclude`), but not Allure decorators, so tests set the story with `allure.dynamic.story("<PRD id>")` inside the test.
+- Reason: Almost all backend code is async, so a marker on every test would only repeat itself. The call exclusion keeps mypy strict fully on for tests without `# type: ignore` in every file.
+- Alternatives: `strict` mode with `@pytest.mark.asyncio` on each test; turning off `disallow_untyped_decorators` for `tests.*` to allow `@allure.story` (both rejected).
+- Details: RULES §4.6, §10.3; `server_side/pyproject.toml` `[tool.pytest.ini_options]`, `[tool.mypy]`
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -665,3 +671,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-22 | 0.11 | K-03 done: Python 3.14 (D-030 fallback applies) |
 | 2026-11-22 | 0.12 | D-102 (Ruff rule set) |
 | 2026-11-22 | 0.13 | D-103 (Pydantic plugin for mypy) |
+| 2026-11-22 | 0.14 | D-104 (pytest-asyncio auto mode; Allure and mypy) |

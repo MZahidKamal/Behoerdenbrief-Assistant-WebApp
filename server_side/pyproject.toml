@@ -11,7 +11,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "allure-pytest>=2.16.2",
     "mypy>=2.4.1",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.5.0",
+    "pytest-cov>=7.1.0",
     "ruff>=0.17.6",
 ]
 
@@ -51,3 +55,25 @@ python_version = "3.14"
 strict = true
 # The Pydantic plugin helps mypy understand Pydantic models and settings.
 plugins = ["pydantic.mypy"]
+# Allure has no type hints. Calls into it are allowed; decorators are not,
+# so tests set the story with `allure.dynamic.story(...)` (MEMORY D-104).
+untyped_calls_exclude = ["allure", "allure_commons"]
+
+# pytest: finds and runs the tests in `tests/`. RULES §10, ARCHITECTURE §9.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Unknown markers and unknown settings are errors, so typos are found early.
+addopts = ["--strict-markers", "--strict-config"]
+# Every `async def` test runs without an extra marker (MEMORY D-104).
+asyncio_mode = "auto"
+# Each test gets its own event loop, so tests do not affect each other.
+asyncio_default_fixture_loop_scope = "function"
+
+# Coverage: how many lines and branches of `app` the tests run. RULES §10.1.
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true

@@ -109,7 +109,7 @@ Total: 384 tasks.
   - Read: RULES §4.6
   - Learn: Static type checking in Python
 
-- [ ] **T-009** · pytest configuration
+- [x] **T-009** · pytest configuration
   - Done when: pytest with pytest-asyncio, pytest-cov (80 % threshold) and allure-pytest is configured; one trivial test passes with `uv run pytest --cov=app --alluredir=allure-results`
   - Depends on: T-006
   - Read: RULES §10; ARCHITECTURE §9
