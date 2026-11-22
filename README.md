@@ -13,7 +13,7 @@ letters from German authorities and write a correct German reply.
 
 - [PRD](docs/PRD.md) — what we build and why
 - [ARCHITECTURE](docs/ARCHITECTURE.md) — system structure and tech stack
-- [DESIGN](docs/DESIGN.md) — API design
+- [API_DESIGN](docs/API_DESIGN.md) — API design
 - [DATA_MODEL](docs/DATA_MODEL.md) — tables and business rules
 - [SECURITY](docs/SECURITY.md) — data protection and security rules
 - [RAG](docs/RAG.md) — knowledge ingestion, retrieval and prompts

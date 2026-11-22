@@ -1,9 +1,9 @@
 # RAG (Retrieval-Augmented Generation)
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.5
+**Document Version:** 0.6
 **Status:** Draft
-**Last updated:** 2026-11-21
+**Last updated:** 2026-11-22
 
 > This document answers **how the AI finds the right official information and produces correct answers**.
 > Product rules: PRD.md · Flows (including the tool-calling loop and the MCP server), tasks and configuration names: ARCHITECTURE.md · Tables (`authorities`, `knowledge_*`, `letters`, `token_usages`, `llm_tool_calls`): DATA_MODEL.md · What may be sent to the LLM, prompt-injection rules, tool and MCP security, provider requirements: SECURITY.md
@@ -380,7 +380,7 @@ Runs in `process_letter` right after letter reading, as its own model call with 
 |---|---|
 | Active authority, `confidence_level = high` | `letters.recognised_authority_id` and `authority_id` set; per-authority limit checked; retrieval and explanation follow |
 | Active authority, `confidence_level = low` | Same, and `letters.authority_recognition_confidence = low`; the explanation shows a short note at the top asking the user to check the authority (PRD E-09) |
-| `null` | Letter `failed` with `authority_not_supported`, not retryable, transaction `failed` (PRD E-10); if the AI was wrong, the user picks the authority (DESIGN §4.5) and retrieval and explanation run with it |
+| `null` | Letter `failed` with `authority_not_supported`, not retryable, transaction `failed` (PRD E-10); if the AI was wrong, the user picks the authority (API_DESIGN §4.5) and retrieval and explanation run with it |
 | An id that was not in the `list_authorities` result, or invalid output | Treated as invalid output: one retry, then fallback model, then `invalid_llm_output` |
 
 When the user changes or picks the authority (PRD E-09, E-10), recognition is not run again; retrieval and explanation run with the chosen authority.
@@ -532,3 +532,4 @@ RAG-specific settings (names only; all are listed in ARCHITECTURE §11):
 | 2026-11-21 | 0.3 | LLM tool calling and MCP (PRD, ARCHITECTURE, DATA_MODEL, SECURITY): authority recognition as its own text-only call with tools (§7.9, low confidence asks the user to check); six launch authorities with other names (§3.1) and nationwide seed sources for all of them (§3.2, Grundsicherungsgeld since July 2026); search tool for the chat (§6.3, 4 results, `found: false`) replacing "the chat never searches"; tool definitions and prompt rules (§7.8); chat preview changed only by `update_reply_preview`, `answer_basis` in the chat result; MCP resource and prompt (§7.10); fixed "nothing found" sentence and chat `not_found` (§8.2); guardrails and error codes; evaluation with 42 letters (6 per authority + 6 special) and 12 chat questions, recognition ≥ 95 %; automated tests; configuration |
 | 2026-11-21 | 0.4 | Aligned with DESIGN 0.4: user can pick the authority after a wrong `authority_not_supported`; chat `answer_basis` and sources stored and shown; `official_sources_found` flag |
 | 2026-11-21 | 0.5 | Final review: MCP query embeddings recorded as `mcp_query`; `PROMPT_VERSION_MCP_EXPLAIN_OFFICIAL_TOPIC` |
+| 2026-11-22 | 0.6 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |

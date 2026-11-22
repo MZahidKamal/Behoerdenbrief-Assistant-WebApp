@@ -1,7 +1,7 @@
 # Product Requirements Document (PRD)
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.21
+**Document Version:** 0.22
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -392,7 +392,7 @@ All project documents live in `docs/`:
 |---|---|
 | PRD.md | This document: what we build and why |
 | ARCHITECTURE.md | System structure, tech stack, main flows, testing, Docker, CI/CD, deployment |
-| DESIGN.md | API design: endpoints, request/response examples, error format |
+| API_DESIGN.md | API design: endpoints, request/response examples, error format |
 | RULES.md | Project-specific development rules: layers, LLM usage, logging, testing, Git |
 | TASKS.md | Task plan with completion criteria |
 | MEMORY.md | Decision log with reasons, known issues, lessons learned |
@@ -425,3 +425,4 @@ All project documents live in `docs/`:
 | 2026-11-21 | 0.19 | Aligned with DESIGN 0.4: the user can pick the authority when the AI wrongly found none (E-10); chat answers show their sources (R-02); statistics for recognition, tools and MCP (AD-07) |
 | 2026-11-21 | 0.20 | Final review: MCP tokens per access token in the statistics (AD-07) |
 | 2026-11-22 | 0.21 | §4: neutral example of an external AI client (MEMORY D-101) |
+| 2026-11-22 | 0.22 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |

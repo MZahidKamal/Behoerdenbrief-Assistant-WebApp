@@ -1,12 +1,12 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.32
+**Document Version:** 0.33
 **Status:** Draft
 **Last updated:** 2026-11-22
 
 > This document answers **how the system is organised and built**.
-> Product requirements: PRD.md · API endpoints: DESIGN.md · Tables and RLS: DATA_MODEL.md · RAG pipeline: RAG.md · Security details: SECURITY.md · Coding rules: RULES.md · Decision reasons: MEMORY.md
+> Product requirements: PRD.md · API endpoints: API_DESIGN.md · Tables and RLS: DATA_MODEL.md · RAG pipeline: RAG.md · Security details: SECURITY.md · Coding rules: RULES.md · Decision reasons: MEMORY.md
 > Everything described here is built as part of the project; there is no MVP split.
 
 ---
@@ -167,7 +167,7 @@ server_side/
 │   │   ├── encryption.py             # AES-256-GCM with key versions; identity HMAC (SECURITY §5)
 │   │   ├── download_tokens.py        # One-time 15-minute download tokens in Redis (SECURITY §7)
 │   │   ├── dependencies.py           # get_database_session, get_current_user, require_admin_role
-│   │   ├── exceptions.py             # AppException base + global handlers (RFC 9457 Problem Details, DESIGN §3)
+│   │   ├── exceptions.py             # AppException base + global handlers (RFC 9457 Problem Details, API_DESIGN §3)
 │   │   ├── rate_limit.py             # Redis-backed limiter
 │   │   ├── logging.py                # Structured logging, no personal data
 │   │   └── sentry.py                 # Sentry init with data scrubbing
@@ -328,7 +328,7 @@ client_side/
 - Polling uses TanStack Query `refetchInterval` and stops when status is final.
 - Images are compressed in the browser before upload.
 - Push permission is requested only after the user turns on push reminders, never on first visit.
-- The service worker handles push only and never caches API requests (DESIGN §1.3).
+- The service worker handles push only and never caches API requests (API_DESIGN §1.3).
 - **Download with save dialog:** where the browser supports the File System Access API (`showSaveFilePicker`, mainly Chromium-based desktop browsers), the app opens a "save as" dialog; elsewhere the browser's normal download applies (on phones the file goes to Downloads / Files). Browser support must be verified during implementation.
 - No secrets in `NEXT_PUBLIC_*` variables.
 
@@ -364,7 +364,7 @@ client_side/
                               summary, deadline, required actions, whether a reply is
                               needed, sources, confidence → tokens recorded
       c. status: ready (or failed with error code; retryable failure → transaction failed, not counted;
-         user retry with the same transaction, DESIGN §4.5)
+         user retry with the same transaction, API_DESIGN §4.5)
       d. If a deadline exists: notifications.service schedules reminders
       e. If a reply is needed: enqueue create_reply_preview (7.2)
 8.  Browser shows explanation: recognised authority, deadline on top, actions, reply needed (yes/no),
@@ -372,7 +372,7 @@ client_side/
 9.  User corrects or adds the deadline → letters.service saves the user value
     → notifications.service reschedules reminders
 10. User changes a wrongly recognised authority, or picks one for a letter that failed with
-    authority_not_supported (DESIGN §4.5; not possible once a version is locked)
+    authority_not_supported (API_DESIGN §4.5; not possible once a version is locked)
     → per-authority limit checked → preview, chat and draft of the letter deleted, reminders canceled
     → letter status processing, step analysing → step 7b–7e again with the new authority
     → same transaction, not counted again (a failed transaction becomes started again)
@@ -450,7 +450,7 @@ Letter: user confirms deletion dialog
     transaction record stays (letter reference removed; tokens and dates kept)
 → enqueue delete_letter_files (images and PDFs in storage; retried until done)
 → permanent, no recovery (PRD H-04); allowed in any status: a running task that no longer finds
-  the letter stops without error and stores nothing (DESIGN §4.5)
+  the letter stops without error and stores nothing (API_DESIGN §4.5)
 
 Account: user confirms account deletion
 → all letters deleted as above, push subscriptions deleted, Stripe subscription cancelled
@@ -830,7 +830,7 @@ Only variable **names** are listed. Values live in `.env` files locally (never c
 | `IDENTITY_HASH_KEY` | Secret key for the HMAC identity hash used by the duplicate check (DATA_MODEL.md) |
 | `MAX_UPLOAD_MB` | Upload size limit (10) |
 | `MAX_PAGES_PER_LETTER` | Page limit per letter (10) |
-| `MAX_UPLOAD_REQUEST_MB` | Size limit of a whole upload request (30, DESIGN §1.8) |
+| `MAX_UPLOAD_REQUEST_MB` | Size limit of a whole upload request (30, API_DESIGN §1.8) |
 | `DOWNLOAD_TOKEN_TTL_SECONDS` | Lifetime of one-time download and preview tokens (900) |
 | `ADMIN_SESSION_MAX_HOURS` | Admin session limit (8) |
 | `DATA_EXPORT_RETENTION_DAYS` | Days a data export stays available (7) |
@@ -1087,3 +1087,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-22 | 0.30 | §2 and §12: the AI coding assistant's configuration and `.mcp.json` removed from the repository layout; they stay local (MEMORY D-036) |
 | 2026-11-22 | 0.31 | §7.12: neutral example of an external AI client; change log 0.29 reworded (MEMORY D-101) |
 | 2026-11-22 | 0.32 | §3.1, §12.2, §13.5: Python 3.14, because Celery does not support 3.15 yet (MEMORY K-03) |
+| 2026-11-22 | 0.33 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |
