@@ -133,7 +133,7 @@ Total: 385 tasks.
   - Read: ARCHITECTURE §6
   - Learn: Next.js App Router folder conventions
 
-- [ ] **T-013** · Vitest and React Testing Library
+- [x] **T-013** · Vitest and React Testing Library
   - Done when: Vitest with React Testing Library and V8 coverage (70 % threshold) is configured; one sample component test passes with `npm run test -- --coverage`
   - Depends on: T-012
   - Read: ARCHITECTURE §9.3; RULES §10
