@@ -103,7 +103,7 @@ Total: 384 tasks.
   - Read: RULES §3.2, §4.5, §1.5
   - Learn: Linting and formatting with Ruff
 
-- [ ] **T-008** · mypy in strict mode
+- [x] **T-008** · mypy in strict mode
   - Done when: mypy strict is configured for `app` and `tests`; `uv run mypy app tests` passes
   - Depends on: T-006
   - Read: RULES §4.6

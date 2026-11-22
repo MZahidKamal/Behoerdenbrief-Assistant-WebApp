@@ -11,6 +11,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "mypy>=2.4.1",
     "ruff>=0.17.6",
 ]
 
@@ -43,3 +44,10 @@ convention = "google"
 [tool.ruff.format]
 quote-style = "double"
 line-ending = "lf"
+
+# mypy: static type checks in strict mode for `app` and `tests`. RULES §4.6, MEMORY D-103.
+[tool.mypy]
+python_version = "3.14"
+strict = true
+# The Pydantic plugin helps mypy understand Pydantic models and settings.
+plugins = ["pydantic.mypy"]
