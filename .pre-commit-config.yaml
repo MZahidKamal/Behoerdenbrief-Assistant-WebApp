@@ -1,0 +1,47 @@
+# Checks that run before every commit (RULES §11.3).
+# If one check fails, Git stops the commit.
+# Activate once per computer: in server_side/, run `uv run pre-commit install`.
+
+repos:
+  # Backend checks. They run with `uv run`, so they use the same tool versions
+  # as server_side/uv.lock. They check the whole backend, not single files.
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check (lint)
+        entry: uv run --directory server_side ruff check .
+        language: system
+        files: ^server_side/(.*\.py|pyproject\.toml)$
+        pass_filenames: false
+
+      # This hook changes badly formatted files and stops the commit.
+      # Look at the change, stage it again and commit (MEMORY D-106).
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --directory server_side ruff format .
+        language: system
+        files: ^server_side/(.*\.py|pyproject\.toml)$
+        pass_filenames: false
+
+      - id: mypy
+        name: mypy (strict)
+        entry: uv run --directory server_side mypy app tests
+        language: system
+        files: ^server_side/(.*\.py|pyproject\.toml)$
+        pass_filenames: false
+
+      # .env files can hold secrets. They must never be committed (RULES §1.3).
+      # Only the .env.example files with empty values are allowed.
+      - id: block-env-files
+        name: block .env files
+        entry: .env files can hold secrets and must never be committed (RULES §1.3).
+        language: fail
+        files: (^|/)\.env(\..+)?$
+        exclude: (^|/)\.env\.example$
+
+  # Stop files larger than 500 KB (MEMORY D-106).
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
