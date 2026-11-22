@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.15
+**Document Version:** 0.16
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -554,6 +554,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: Not compared.
 - Details: `docs/API_DESIGN.md`; all documents
 
+#### D-106 · 2026-11-22 · Pre-commit hook details
+- Decision: `.pre-commit-config.yaml` lives at the repository root. Ruff and mypy run as local hooks through `uv run` in `server_side/` and check the whole backend. The `ruff format` hook fixes files and stops the commit. `.env` files (except `.env.example`) are blocked. Files larger than 500 KB are blocked (`check-added-large-files`, version pinned).
+- Reason: Hooks use the same tool versions as `uv.lock`, CI and the IDE. Fixing is faster, and the developer still sees each change before staging it again. 500 KB is the tool default and is enough for code, documents and small test files.
+- Alternatives: `ruff format --check` only (rejected); a 1 MB limit (rejected).
+- Details: RULES §11.3; `.pre-commit-config.yaml`
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -679,3 +685,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-22 | 0.13 | D-103 (Pydantic plugin for mypy) |
 | 2026-11-22 | 0.14 | D-104 (pytest-asyncio auto mode; Allure and mypy) |
 | 2026-11-22 | 0.15 | D-105 (API design document renamed to `API_DESIGN.md`); references changed to `API_DESIGN §` |
+| 2026-11-22 | 0.16 | D-106 (pre-commit hook details) |

@@ -1,7 +1,7 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.33
+**Document Version:** 0.34
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -68,7 +68,8 @@ Behoerdenbrief_Assistant_Webapp/
 ├── .github/workflows/       # GitHub Actions CI/CD (§13.3)
 ├── docker-compose.yml       # Local development stack (§12.3)
 ├── .gitignore
-└── .gitattributes           # Enforce LF line endings
+├── .gitattributes           # Enforce LF line endings
+└── .pre-commit-config.yaml  # Checks before every commit (RULES §11.3)
 ```
 
 One Git repository at the root. The AI coding assistant's configuration and `.mcp.json` exist only on the developer's computer and are not part of the repository (RULES §1.6). Frontend and backend are built and deployed separately from their own folders.
@@ -1088,3 +1089,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-22 | 0.31 | §7.12: neutral example of an external AI client; change log 0.29 reworded (MEMORY D-101) |
 | 2026-11-22 | 0.32 | §3.1, §12.2, §13.5: Python 3.14, because Celery does not support 3.15 yet (MEMORY K-03) |
 | 2026-11-22 | 0.33 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |
+| 2026-11-22 | 0.34 | §2: `.pre-commit-config.yaml` in the repository layout (MEMORY D-106) |

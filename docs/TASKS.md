@@ -115,7 +115,7 @@ Total: 385 tasks.
   - Read: RULES §10; ARCHITECTURE §9
   - Learn: How pytest finds and runs tests; coverage
 
-- [ ] **T-010** · Pre-commit hooks
+- [x] **T-010** · Pre-commit hooks
   - Done when: `.pre-commit-config.yaml` runs `ruff check`, `ruff format`, `mypy`, a block for `.env` files and a large-file check; a commit with a lint error is blocked
   - Depends on: T-007, T-008
   - Read: RULES §11.3
