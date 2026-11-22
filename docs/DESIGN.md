@@ -1,9 +1,9 @@
 # DESIGN (API)
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.6
+**Document Version:** 0.7
 **Status:** Draft
-**Last updated:** 2026-11-21
+**Last updated:** 2026-11-22
 
 > This document answers **what the API looks like from the outside**: conventions, access rules, every endpoint with request, response and errors, the error format, and the MCP endpoint for external AI clients.
 > Product rules: PRD.md · Flows, layers, configuration: ARCHITECTURE.md · Tables and statuses: DATA_MODEL.md · Auth, encryption, rate-limit values, file checks: SECURITY.md · AI steps and their error codes: RAG.md
@@ -28,7 +28,7 @@
 - Child resources are nested at most one level below their owner: `/letters/{letter_id}/reply`, `/letters/{letter_id}/reply/chat-messages`.
 - A **singleton** child has a singular name: `/letters/{letter_id}/reply`, `/letters/{letter_id}/reply/draft`, `/me`.
 - An action that is not create, read, update or delete is a `POST` to a verb sub-path: `/letters/{letter_id}/retry`, `/letters/{letter_id}/reply/draft/lock`, `/admin/knowledge-sources/{knowledge_source_id}/reindex`.
-- Path parameter names are full words: `{letter_id}`, `{chat_message_id}`, `{reply_version_id}` (full-word naming rule in the user-level `CLAUDE.md`; allowed abbreviations: RULES §2).
+- Path parameter names are full words: `{letter_id}`, `{chat_message_id}`, `{reply_version_id}` (full-word naming rule in the developer's user-level instructions; allowed abbreviations: RULES §2).
 
 ### 1.3 JSON
 
@@ -1326,7 +1326,8 @@ The MCP server for external AI clients (PRD §6.11, ARCHITECTURE §7.12). It giv
 |---|---|---|
 | 2026-11-19 | 0.1 | First draft from developer decisions: `/api/v1`, snake_case JSON, ISO 8601 UTC timestamps, page-number pagination, RFC 9457 Problem Details with `code` extension, polling through normal `GET` endpoints, all letter pages in one multipart upload, verification code checked by the backend, admin audit log readable, retry of failed letters in the same transaction (failed letters not counted), read-only accounts blocked from all AI work, account deletion after re-entering the password, last activity updated once per day |
 | 2026-11-19 | 0.2 | Final review: field limits (incl. minimum age 18, German postal code), 30 MB request limit, `Cache-Control: no-store` on all responses, schema naming `<Resource><Action>Request` / `<Resource>Response`, complete list of background error codes and where codes live, "send again" email endpoint, `draft.is_outdated` with chat blocked during draft generation, letter deletion in any status, address fields sent together, `is_read_only` meaning, reply state for letters not ready, lock idempotency, empty pages beyond the last, health response, statistics default period, fixed broken references |
-| 2026-11-20 | 0.3 | Naming reference points to the user-level `CLAUDE.md` and RULES §2 |
+| 2026-11-20 | 0.3 | Naming reference points to the developer's user-level instructions and RULES §2 |
 | 2026-11-21 | 0.4 | LLM tool calling and MCP (PRD, ARCHITECTURE, DATA_MODEL, SECURITY, RAG): upload without authority (AI recognition), total limit at upload and per-authority limit in the background; letter fields `authority_recognition_confidence`, `authority_changed_by_user_at`, `can_change_authority`, `explanation.official_sources_found`; new `POST /letters/{letter_id}/authority-change` (also for a wrong `authority_not_supported`); background codes `authority_not_supported` and `transaction_limit_reached`; chat answers with `answer_basis` and `sources`; admin `alternative_names`, statistics for recognition, tools and MCP, MCP access token endpoints (§5.9); new §6 MCP endpoint (MCP token access level, `mcp` rate-limit group, Problem Details for HTTP errors) |
 | 2026-11-21 | 0.5 | Aligned with RULES 0.4: command `run_mcp_server_local`; `deadline.extracted_deadline` (was `ai_deadline`, naming rule) |
 | 2026-11-21 | 0.6 | Final review: MCP query tokens per access token in the statistics |
+| 2026-11-22 | 0.7 | §1: naming reference reworded without the assistant's file name; change log 0.3 reworded (MEMORY D-101) |

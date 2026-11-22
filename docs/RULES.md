@@ -1,17 +1,17 @@
 # RULES
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.7
+**Document Version:** 0.8
 **Status:** Draft
 **Last updated:** 2026-11-22
 
 > This document answers **which project-specific rules must be followed when writing code**.
-> General personal rules of the developer (full-word naming, uv, IDE setup, test database naming) are in the user-level `CLAUDE.md` and are not repeated here; this file adds only what is specific to this project.
+> General personal rules of the developer (full-word naming, uv, IDE setup, test database naming) are in the developer's user-level instructions and are not repeated here; this file adds only what is specific to this project.
 > Structure and layers: ARCHITECTURE.md · API conventions and error format: DESIGN.md · Tables, migrations policy, RLS: DATA_MODEL.md · Security requirements: SECURITY.md · AI pipeline: RAG.md
 
 ---
 
-## 1. Working Rules for Claude Code
+## 1. Working Rules for the AI Coding Assistant
 
 ### 1.1 Before and during a task
 
@@ -34,9 +34,9 @@
 
 The developer is learning FastAPI, Next.js, AI, RAG, system design, CI/CD and Docker with this project. Every task therefore has two explanations, written to the developer in **easy English** (short, simple sentences):
 
-| When | What Claude Code explains |
+| When | What the assistant explains |
 |---|---|
-| **Before coding** | The idea of the task in simple words (what it is, why the project needs it, how it fits the architecture) and a short plan: which files will be created or changed and in which order. Then Claude Code **waits for the developer's OK** before writing code |
+| **Before coding** | The idea of the task in simple words (what it is, why the project needs it, how it fits the architecture) and a short plan: which files will be created or changed and in which order. Then the assistant **waits for the developer's OK** before writing code |
 | **After coding** | What changed in each file, the best order to read the files, the important lines, and how the developer can test it by hand (commands, URLs, what result to expect) |
 
 - Keep the explanations short and concrete; use the project's own code as examples.
@@ -106,7 +106,7 @@ The AI coding assistant keeps its configuration only on the developer's computer
 
 The assistant's own files are excluded in `.git/info/exclude` (local, so the rule itself is not in the repository); `.mcp.json` is excluded in `.gitignore`.
 
-Changes to these files follow §1.2 (ask first) **(verify the current Claude Code file formats)**.
+Changes to these files follow §1.2 (ask first) (formats confirmed in MEMORY K-29).
 
 ## 2. Naming: Project Exceptions
 
@@ -351,7 +351,7 @@ Test levels, tools, scenarios and the test database: **ARCHITECTURE §9**. In ad
 
 - `main` is always deployable and protected: changes only through pull requests with green CI.
 - One short-lived branch per task: **`<type>/<task id>-<short-description>`**, e.g. `feat/T-012-letter-upload` (task ids from TASKS.md).
-- Claude Code creates the branch, commits, pushes and opens the pull request; **the developer reviews and merges** (squash merge).
+- The assistant creates the branch, commits, pushes and opens the pull request; **the developer reviews and merges** (squash merge).
 
 ### 11.2 Commits
 
@@ -375,10 +375,11 @@ Managed with the `pre-commit` framework: `ruff check`, `ruff format`, `mypy` (AR
 
 | Date | Version | Changes |
 |---|---|---|
-| 2026-11-20 | 0.1 | First draft from developer decisions: Claude Code working rules (ask before every docs change, new decision and new dependency; Claude Code commits and opens PRs, developer merges), allowed abbreviations, docstrings and comments everywhere in very easy English (Google style, JSDoc), mypy strict, ESLint only for TypeScript, coverage 80 % backend / 70 % frontend, test names `test_<action>_<result>_when_<condition>`, Allure for pytest and Playwright, feature branches with squash merge, Conventional Commits |
+| 2026-11-20 | 0.1 | First draft from developer decisions: AI coding assistant working rules (ask before every docs change, new decision and new dependency; the assistant commits and opens PRs, developer merges), allowed abbreviations, docstrings and comments everywhere in very easy English (Google style, JSDoc), mypy strict, ESLint only for TypeScript, coverage 80 % backend / 70 % frontend, test names `test_<action>_<result>_when_<condition>`, Allure for pytest and Playwright, feature branches with squash merge, Conventional Commits |
 | 2026-11-20 | 0.2 | Final review: check commands, CEFR A2–B1 English, no docstrings on test functions, tasks safe to run twice and with ids only, UTC datetimes, Server/Client Component rule, API type generation with openapi-typescript and `export_openapi_schema`; developer confirmed encryption in repositories, one transaction per request, JSON logs, branch names `feat/T-012-…`, TypeScript style |
 | 2026-11-20 | 0.3 | Learning flow (§1.1a): explanation before (with plan, wait for OK) and after every task, in Bengali |
 | 2026-11-21 | 0.4 | LLM tool calling and MCP (PRD, ARCHITECTURE, DATA_MODEL, SECURITY, RAG, DESIGN): reading list for tools and MCP; ask the developer before any new or changed tool and any MCP addition; `mcp` added to the allowed abbreviations, "stdio" written out in code names (`run_mcp_server_local`, `mcp_local`), `ai_deadline` renamed to `extracted_deadline` in DATA_MODEL and DESIGN; naming pattern for tools; MCP tests in the check command and manual MCP Inspector check; tool-calling loop rule; new §6a AI Tool and MCP Rules; Allure feature labels |
-| 2026-11-21 | 0.5 | Final review: new §1.6 Claude Code project configuration (`CLAUDE.md`, `.claude/settings.json`, `.mcp.json`) |
+| 2026-11-21 | 0.5 | Final review: new §1.6 configuration of the AI coding assistant (project instructions, permission settings, `.mcp.json`) |
 | 2026-11-21 | 0.6 | Learning flow (§1.1a): explanations in easy English instead of Bengali (MEMORY D-100) |
 | 2026-11-22 | 0.7 | §1.6: the AI coding assistant's configuration stays local and is not committed (MEMORY D-036) |
+| 2026-11-22 | 0.8 | §1, §1.1a, §1.6, §11.1: the coding assistant is called "the AI coding assistant", not by its product name; change log 0.1 and 0.5 reworded (MEMORY D-101) |

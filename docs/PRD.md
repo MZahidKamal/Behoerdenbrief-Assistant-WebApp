@@ -1,9 +1,9 @@
 # Product Requirements Document (PRD)
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.20
+**Document Version:** 0.21
 **Status:** Draft
-**Last updated:** 2026-11-21
+**Last updated:** 2026-11-22
 
 > This document answers **what** we are building and **why**.
 > Technical details live in other documents (see [Related Documents](#14-related-documents)).
@@ -56,7 +56,7 @@ Build the full product with LLM integration, RAG, LLM tool calling and an MCP se
 - **Authorities are data, not code.** The system supports any number of authorities; admin adds and activates them in the admin panel without code changes.
 - **Launch authorities:** TK (Techniker Krankenkasse), Jobcenter, Agentur für Arbeit, Wohngeldstelle, Wohnungsamt and Familienkasse (Kindergeld and Kinderzuschlag). For local offices (Jobcenter, Wohngeldstelle, Wohnungsamt) the knowledge is nationwide general information, not the rules of one city.
 - **The AI recognises the authority** of an uploaded letter itself, using tools; the user sees the recognised authority and can change it.
-- **MCP server:** external AI clients (e.g., Claude Desktop) can use the app's public official information through an MCP server. It never gives access to personal data or letters.
+- **MCP server:** external AI clients (e.g., desktop AI assistants) can use the app's public official information through an MCP server. It never gives access to personal data or letters.
 - **Responsive web app** (mobile, tablet, desktop browsers), **installable as a PWA** (home screen icon, push notifications).
 - UI language: **English and Bengali combined**. The reply is prepared as a **Bengali preview** in the app; the final reply letter is **German** and contains no Bengali text.
 
@@ -424,3 +424,4 @@ All project documents live in `docs/`:
 | 2026-11-21 | 0.18 | Aligned with RAG 0.3: note to check the authority when the AI is not sure (E-09) |
 | 2026-11-21 | 0.19 | Aligned with DESIGN 0.4: the user can pick the authority when the AI wrongly found none (E-10); chat answers show their sources (R-02); statistics for recognition, tools and MCP (AD-07) |
 | 2026-11-21 | 0.20 | Final review: MCP tokens per access token in the statistics (AD-07) |
+| 2026-11-22 | 0.21 | §4: neutral example of an external AI client (MEMORY D-101) |

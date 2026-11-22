@@ -1,7 +1,7 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.30
+**Document Version:** 0.31
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -614,7 +614,7 @@ Tool definitions, input schemas and the prompt rules for tool use: RAG.md.
 ### 7.12 MCP server
 
 ```
-External AI client (e.g. Claude Desktop, Claude Code)
+External AI client (e.g. a desktop AI assistant or an AI coding tool)
   HTTP: POST/GET /mcp  with  Authorization: Bearer <MCP access token>
     → mcp_server/access.py: token hash looked up via mcp_access.service (not revoked, not expired) → last use updated
     → requests with an Origin header refused (403); rate limit (SECURITY §10a.2, §11) → FastMCP handles the MCP request
@@ -1083,5 +1083,6 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-21 | 0.26 | Aligned with DESIGN 0.4: authority change also for a letter failed with `authority_not_supported` (§7.1 step 10) |
 | 2026-11-21 | 0.27 | Aligned with RULES 0.4: command `run_mcp_server_local` (was `run_mcp_server_stdio`), caller `mcp_local`; tools marked `public` or `user_scoped` in `tool_registry.py` |
 | 2026-11-21 | 0.28 | Aligned with MEMORY 0.4: tool-calling check in §13.5 without images (recognition is text-only), link to K-23 |
-| 2026-11-21 | 0.29 | Final review: total limit at upload only for plans with a total limit (§7.1 step 3); MCP query tokens recorded as `mcp_query`; `PROMPT_VERSION_MCP_EXPLAIN_OFFICIAL_TOPIC`; `.claude/settings.json` and `.mcp.json` in the repository layout |
+| 2026-11-21 | 0.29 | Final review: total limit at upload only for plans with a total limit (§7.1 step 3); MCP query tokens recorded as `mcp_query`; `PROMPT_VERSION_MCP_EXPLAIN_OFFICIAL_TOPIC`; the assistant's settings and `.mcp.json` in the repository layout |
 | 2026-11-22 | 0.30 | §2 and §12: the AI coding assistant's configuration and `.mcp.json` removed from the repository layout; they stay local (MEMORY D-036) |
+| 2026-11-22 | 0.31 | §7.12: neutral example of an external AI client; change log 0.29 reworded (MEMORY D-101) |
