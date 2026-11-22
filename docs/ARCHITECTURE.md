@@ -1,9 +1,9 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.29
+**Document Version:** 0.30
 **Status:** Draft
-**Last updated:** 2026-11-21
+**Last updated:** 2026-11-22
 
 > This document answers **how the system is organised and built**.
 > Product requirements: PRD.md · API endpoints: DESIGN.md · Tables and RLS: DATA_MODEL.md · RAG pipeline: RAG.md · Security details: SECURITY.md · Coding rules: RULES.md · Decision reasons: MEMORY.md
@@ -68,13 +68,10 @@ Behoerdenbrief_Assistant_Webapp/
 ├── .github/workflows/       # GitHub Actions CI/CD (§13.3)
 ├── docker-compose.yml       # Local development stack (§12.3)
 ├── .gitignore
-├── .gitattributes           # Enforce LF line endings
-├── .claude/settings.json    # Claude Code project settings: permissions (RULES §1.6)
-├── .mcp.json                # Claude Code project MCP config: our local MCP server, no secrets (RULES §1.6)
-└── CLAUDE.md                # Entry point for Claude Code
+└── .gitattributes           # Enforce LF line endings
 ```
 
-One Git repository at the root. Frontend and backend are built and deployed separately from their own folders.
+One Git repository at the root. The AI coding assistant's configuration and `.mcp.json` exist only on the developer's computer and are not part of the repository (RULES §1.6). Frontend and backend are built and deployed separately from their own folders.
 
 ## 3. Tech Stack
 
@@ -958,7 +955,7 @@ Database, Auth and Storage come from the Supabase development project, so there 
 - Celery does not officially support Windows; it always runs inside Docker.
 - File watching inside Docker on Windows can be slow; running the frontend natively (`npm run dev`) is an acceptable alternative.
 - Service workers and push notifications require HTTPS, except on `localhost`.
-- Useful commands (tests, lint, type generation) are listed in RULES.md and CLAUDE.md.
+- Useful commands (tests, lint, type generation) are listed in RULES.md.
 
 ## 13. Deployment and CI/CD
 
@@ -1087,3 +1084,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-21 | 0.27 | Aligned with RULES 0.4: command `run_mcp_server_local` (was `run_mcp_server_stdio`), caller `mcp_local`; tools marked `public` or `user_scoped` in `tool_registry.py` |
 | 2026-11-21 | 0.28 | Aligned with MEMORY 0.4: tool-calling check in §13.5 without images (recognition is text-only), link to K-23 |
 | 2026-11-21 | 0.29 | Final review: total limit at upload only for plans with a total limit (§7.1 step 3); MCP query tokens recorded as `mcp_query`; `PROMPT_VERSION_MCP_EXPLAIN_OFFICIAL_TOPIC`; `.claude/settings.json` and `.mcp.json` in the repository layout |
+| 2026-11-22 | 0.30 | §2 and §12: the AI coding assistant's configuration and `.mcp.json` removed from the repository layout; they stay local (MEMORY D-036) |
