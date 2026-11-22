@@ -1,0 +1,1 @@
+"""The Celery background worker."""
