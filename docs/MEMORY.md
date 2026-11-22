@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.10
+**Document Version:** 0.11
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -218,6 +218,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: Current Python; Celery support not yet confirmed.
 - Alternatives: Not compared.
 - Details: ARCHITECTURE §3, §13.5
+- Status: fallback applies — Python 3.14 (K-03, 2026-11-22)
 
 #### D-031 · 2026-11-19 · Seed data and Stripe objects
 - Decision: A seed command (run after migrations, also in CI deploys) writes the initial rows (TK, plans, prices, settings, TK URL sources) and never overwrites existing rows; the worker creates missing Stripe products and prices; the worker's periodic re-crawl picks up the new sources.
@@ -539,7 +540,7 @@ Status: `open` until checked; then `done` with result and date.
 |---|---|---|---|---|
 | K-01 | Which Claude models Vertex AI offers in EU regions | RAG §2 | open | |
 | K-02 | Which Gemini models are offered in `europe-west3`; current Vertex AI / Google Gen AI Python SDK package | RAG §2; ARCHITECTURE §3 | open | |
-| K-03 | Celery support for Python 3.15 (else 3.14) | ARCHITECTURE §13.5 | open | |
+| K-03 | Celery support for Python 3.15 (else 3.14) | ARCHITECTURE §13.5 | done | Python 3.15 final since 2026-10-09, but Celery 5.7.0 (2026-11-05), billiard 4.3.2 and kombu 5.7.0 list Python 3.10–3.14 only; Celery tests 3.15 only on CI. Chosen: Python 3.14 (D-030 fallback). Check again when a Celery release lists 3.15. 2026-11-22 |
 | K-04 | Supabase JWT: verification method, claim for MFA level (`aal2`), claim for authentication time (8-hour admin limit, 5-minute recent login) | SECURITY §4.2–§4.3; DESIGN §2.4 | open | |
 | K-05 | Supabase signup code: `{{ .Token }}` in the "Confirm signup" template and server-side code check; fallback: own code via Mailjet | ARCHITECTURE §13.5; DESIGN §4.2 | open | |
 | K-06 | Supabase Admin API provides verification codes for E2E test users | ARCHITECTURE §9.3 | open | |
@@ -649,3 +650,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-22 | 0.8 | K-21 done; D-051 (public GitHub repository) |
 | 2026-11-22 | 0.9 | D-036 (AI assistant configuration stays local); D-035 superseded |
 | 2026-11-22 | 0.10 | D-101 (neutral name for the coding assistant); D-020, D-035, D-090, D-091, D-096, D-097, D-098, D-100, K-29 and change log 0.5 and 0.7 reworded |
+| 2026-11-22 | 0.11 | K-03 done: Python 3.14 (D-030 fallback applies) |

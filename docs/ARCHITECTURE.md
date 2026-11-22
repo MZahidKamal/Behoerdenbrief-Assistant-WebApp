@@ -1,7 +1,7 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.31
+**Document Version:** 0.32
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -79,7 +79,7 @@ One Git repository at the root. The AI coding assistant's configuration and `.mc
 
 | Area | Technology | Reason (one line) |
 |---|---|---|
-| Language | Python 3.15 | Chosen by developer; library compatibility must be checked (see §13.5) |
+| Language | Python 3.14 | Chosen by developer; Celery does not support 3.15 yet (MEMORY K-03) |
 | Tooling | uv | Fast dependency and virtual-environment management |
 | Web framework | FastAPI | Async, typed, automatic OpenAPI schema |
 | File uploads | python-multipart | Required by FastAPI for `multipart/form-data` |
@@ -898,7 +898,7 @@ Git, Docker Desktop, Node.js, uv, a Supabase development project (EU region) wit
 | `builder` | Python slim base image; uv installed; `uv sync --frozen --no-dev` installs dependencies from `uv.lock` into a virtual environment (dependency layer cached separately from source code) |
 | `runtime` | Python slim base image (same Python version); system libraries required by WeasyPrint (Pango and its font/text dependencies) and fonts for the DIN 5008 letter; ClamAV with signature updates (used by the worker); virtual environment and application code copied from `builder`; runs as a **non-root user**; no build tools inside |
 
-- Python version: 3.15 if all dependencies support it, otherwise 3.14 (§13.5).
+- Python version: 3.14 (MEMORY K-03).
 - The image does not contain any secrets; configuration comes from environment variables.
 - The process is chosen by the start command:
 
@@ -1031,7 +1031,7 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 ### 13.5 Notes and open checks
 
 - **Budget (PRD §12: low budget, free tiers preferred):** use free tiers wherever possible. Components that may require a paid plan: Render background worker, Render Key Value, an always-on API (the free web service sleeps after inactivity). Verify current pricing of Render, Supabase (including backups), Sentry, Stripe fees and Mailjet before deployment.
-- **Python 3.15 and Celery:** Celery 5.6 announces only initial support for Python 3.14; Python 3.15 support is not confirmed. Check before setup; otherwise use Python 3.14 in the Docker image.
+- **Python version (checked):** Celery 5.7.0 lists Python 3.10–3.14, not 3.15, so the project uses Python 3.14 (MEMORY K-03). Check again when a Celery release lists 3.15.
 - **ClamAV:** the scanner needs noticeable memory (signature database); confirm the worker's Render plan has enough RAM and choose daemon (`clamd`) or per-file scanning accordingly; confirm the signature update method in the image.
 - **WeasyPrint in Docker:** confirm the exact system packages required by the current WeasyPrint version on the chosen slim base image.
 - **Stripe payment methods:** confirm in the Stripe dashboard that PayPal and SEPA direct debit are available for the account and usable with subscriptions in Germany.
@@ -1086,3 +1086,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-21 | 0.29 | Final review: total limit at upload only for plans with a total limit (§7.1 step 3); MCP query tokens recorded as `mcp_query`; `PROMPT_VERSION_MCP_EXPLAIN_OFFICIAL_TOPIC`; the assistant's settings and `.mcp.json` in the repository layout |
 | 2026-11-22 | 0.30 | §2 and §12: the AI coding assistant's configuration and `.mcp.json` removed from the repository layout; they stay local (MEMORY D-036) |
 | 2026-11-22 | 0.31 | §7.12: neutral example of an external AI client; change log 0.29 reworded (MEMORY D-101) |
+| 2026-11-22 | 0.32 | §3.1, §12.2, §13.5: Python 3.14, because Celery does not support 3.15 yet (MEMORY K-03) |

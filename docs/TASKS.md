@@ -85,7 +85,7 @@ Total: 384 tasks.
   - Read: RULES §11.1; SECURITY §12
   - Learn: Branch protection and secret scanning
 
-- [ ] **T-005** **[Check K-03]** · Python version for Celery
+- [x] **T-005** **[Check K-03]** · Python version for Celery
   - Done when: It is confirmed whether Celery supports Python 3.15; the chosen version (3.15 or 3.14) is in MEMORY.md
   - Depends on: —
   - Read: ARCHITECTURE §13.5
