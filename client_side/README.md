@@ -18,4 +18,5 @@ The app runs at http://localhost:3000.
 ```powershell
 npm run lint
 npx tsc --noEmit
+npm run test -- --coverage
 ```

@@ -1,9 +1,9 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.16
+**Document Version:** 0.17
 **Status:** Draft
-**Last updated:** 2026-11-22
+**Last updated:** 2026-11-23
 
 > This document answers **which decisions were made and why**, which checks are still open, and what was learned.
 > The **rules themselves** live in the other documents (PRD, ARCHITECTURE, DATA_MODEL, SECURITY, RAG, API_DESIGN, RULES). An entry here gives only the decision in one line, the reason, the rejected alternatives, and where the details are. If an entry and a document disagree, the document wins and the entry is corrected (with approval).
@@ -560,6 +560,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: `ruff format --check` only (rejected); a 1 MB limit (rejected).
 - Details: RULES §11.3; `.pre-commit-config.yaml`
 
+#### D-107 · 2026-11-23 · Node.js version for the frontend
+- Decision: The frontend uses Node.js 26 (LTS); `@types/node` in `client_side/package.json` matches it (`^26`).
+- Reason: Vitest 5 does not support the Node 20 types that create-next-app set (`^20`), so the test setup (T-013) could not be installed. Node 26 is the current LTS and is already used on the developer's computer; the frontend Dockerfile (T-060) and CI (M04) use the same version.
+- Alternatives: Node 24 (older LTS; local and CI would differ); installing with `--force` or `--legacy-peer-deps` (rejected: ignores the conflict).
+- Details: ARCHITECTURE §3.2; `client_side/package.json`
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -686,3 +692,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-22 | 0.14 | D-104 (pytest-asyncio auto mode; Allure and mypy) |
 | 2026-11-22 | 0.15 | D-105 (API design document renamed to `API_DESIGN.md`); references changed to `API_DESIGN §` |
 | 2026-11-22 | 0.16 | D-106 (pre-commit hook details) |
+| 2026-11-23 | 0.17 | D-107 (Node.js version for the frontend) |

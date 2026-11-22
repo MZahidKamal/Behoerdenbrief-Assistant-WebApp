@@ -1,9 +1,9 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.34
+**Document Version:** 0.35
 **Status:** Draft
-**Last updated:** 2026-11-22
+**Last updated:** 2026-11-23
 
 > This document answers **how the system is organised and built**.
 > Product requirements: PRD.md · API endpoints: API_DESIGN.md · Tables and RLS: DATA_MODEL.md · RAG pipeline: RAG.md · Security details: SECURITY.md · Coding rules: RULES.md · Decision reasons: MEMORY.md
@@ -117,6 +117,7 @@ One Git repository at the root. The AI coding assistant's configuration and `.mc
 
 | Area | Technology | Reason (one line) |
 |---|---|---|
+| Runtime | Node.js 26 (LTS) | Current LTS; Vitest 5 needs Node types 22 or newer (MEMORY D-107) |
 | Framework | Next.js (App Router) + TypeScript (strict) | Modern React, server and client components |
 | Styling | Tailwind CSS (no component library) | Full control over a light, mobile-first UI |
 | Server state | TanStack Query | Caching, retries, mutations and status polling in the browser |
@@ -128,7 +129,7 @@ One Git repository at the root. The AI coding assistant's configuration and `.mc
 | Auth client | Supabase JS (auth only) | Login, session, password reset, 2FA |
 | Payments UI | Stripe Checkout and Customer Portal (hosted by Stripe) | Payment pages handled by Stripe; less security burden |
 | Lint | ESLint | Already set up by create-next-app |
-| Unit / component tests | Vitest + React Testing Library, `@vitest/coverage-v8` | Fast, modern test runner with coverage (RULES §10) |
+| Unit / component tests | Vitest + React Testing Library (with `@testing-library/dom`), `jsdom`, `@vitejs/plugin-react`, `@vitest/coverage-v8` | Fast, modern test runner with coverage (RULES §10) |
 | E2E tests | Playwright, `allure-playwright` | Real browser tests including mobile and tablet viewports; results in the Allure report |
 | Error monitoring | Sentry (Next.js SDK) | Frontend errors in the same place as backend errors |
 
@@ -1090,3 +1091,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-22 | 0.32 | §3.1, §12.2, §13.5: Python 3.14, because Celery does not support 3.15 yet (MEMORY K-03) |
 | 2026-11-22 | 0.33 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |
 | 2026-11-22 | 0.34 | §2: `.pre-commit-config.yaml` in the repository layout (MEMORY D-106) |
+| 2026-11-23 | 0.35 | §3.2: Node.js 26 runtime; test packages `@testing-library/dom`, `jsdom`, `@vitejs/plugin-react` (developer approval, MEMORY D-107) |
