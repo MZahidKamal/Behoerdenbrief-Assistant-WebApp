@@ -121,7 +121,7 @@ Total: 385 tasks.
   - Read: RULES §11.3
   - Learn: How Git hooks stop bad commits
 
-- [ ] **T-011** · Clean up `client_side/`
+- [x] **T-011** · Clean up `client_side/`
   - Done when: create-next-app boilerplate removed; TypeScript strict on; `npm run lint` and `npx tsc --noEmit` pass
   - Depends on: T-001
   - Read: ARCHITECTURE §6; RULES §5
