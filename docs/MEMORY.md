@@ -1,12 +1,12 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.14
+**Document Version:** 0.15
 **Status:** Draft
 **Last updated:** 2026-11-22
 
 > This document answers **which decisions were made and why**, which checks are still open, and what was learned.
-> The **rules themselves** live in the other documents (PRD, ARCHITECTURE, DATA_MODEL, SECURITY, RAG, DESIGN, RULES). An entry here gives only the decision in one line, the reason, the rejected alternatives, and where the details are. If an entry and a document disagree, the document wins and the entry is corrected (with approval).
+> The **rules themselves** live in the other documents (PRD, ARCHITECTURE, DATA_MODEL, SECURITY, RAG, API_DESIGN, RULES). An entry here gives only the decision in one line, the reason, the rejected alternatives, and where the details are. If an entry and a document disagree, the document wins and the entry is corrected (with approval).
 
 ---
 
@@ -89,7 +89,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: Without an active trial or subscription the account is read-only: no new letters and no AI work on existing letters; viewing, downloading, locking an existing draft and settings stay available.
 - Reason: AI work costs money; existing results stay accessible.
 - Alternatives: Block only new uploads (rejected).
-- Details: PRD B-09; DESIGN §2.2
+- Details: PRD B-09; API_DESIGN §2.2
 
 #### D-010 · 2026-11-19 · One trial per person
 - Decision: Duplicate check on normalised first name + last name + date of birth; trial only after profile completion; deleted accounts are kept deactivated and can be reactivated without a new trial; a person whose data was purged gets a new account without trial.
@@ -101,13 +101,13 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: A letter that failed for a technical reason can be retried in the same transaction; such failures do not count towards the monthly limit. Malware and unreadable letters are not retryable and keep counting.
 - Reason: Users should not pay for technical errors.
 - Alternatives: Upload again as a new transaction (rejected).
-- Details: PRD E-08; DESIGN §4.5; DATA_MODEL §11
+- Details: PRD E-08; API_DESIGN §4.5; DATA_MODEL §11
 
 #### D-012 · 2026-11-19 · Minimum age 18
 - Decision: Registration requires an age of at least 18.
 - Reason: Paid contract and explicit consent for health data (legal check open, K-35).
 - Alternatives: No age limit (rejected).
-- Details: PRD A-01; DESIGN §1.12
+- Details: PRD A-01; API_DESIGN §1.12
 
 #### D-013 · 2026-11-19 · Generic reminder texts
 - Decision: Email and push reminders contain only generic text and a link; no authority, subject or amount.
@@ -119,7 +119,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: If the preview changed after a draft was generated, the draft is marked outdated (warning, lock still allowed); a locked version can be emailed again without a new version.
 - Reason: Avoid sending an old text by mistake without blocking the user; recover from failed emails.
 - Alternatives: Block locking of outdated drafts; automatic email retries only (both rejected).
-- Details: PRD R-05, R-07; DESIGN §4.6
+- Details: PRD R-05, R-07; API_DESIGN §4.6
 
 #### D-015 · 2026-11-19 · What a transaction is
 - Decision: A transaction is one letter's whole journey; it starts at upload (tokens are spent from then on), includes all chat tokens, and is never deleted. The app's customer number is never printed on letters.
@@ -143,7 +143,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: No authority is chosen at upload; the AI recognises it with tools. Unsupported → the user is told and nothing is counted. Low confidence → the user is asked to check. The user can change a wrong authority (or pick one after a wrong "not supported") in the same transaction, not counted again, not after a lock; preview, chat and draft are removed. The total limit is checked at upload, the per-authority limit after recognition.
 - Reason: Less work for the user, and a meaningful tool-calling use case; the two-step limit check is needed because the authority is unknown at upload.
 - Alternatives: User selects the authority before upload (old U-08, replaced); stopping unsure letters as unsupported (rejected); new upload as the only fix for a wrong "not supported" (rejected).
-- Details: PRD U-08, E-09, E-10, B-07; ARCHITECTURE §7.1; RAG §7.9; DESIGN §4.5
+- Details: PRD U-08, E-09, E-10, B-07; ARCHITECTURE §7.1; RAG §7.9; API_DESIGN §4.5
 
 #### D-019 · 2026-11-21 · Honest "nothing found"
 - Decision: When the official sources contain nothing relevant, the explanation shows a fixed Bengali sentence and the chat says so (`answer_basis = not_found`) instead of guessing.
@@ -175,7 +175,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: Heavy work runs in Celery with Redis; Beat runs inside the single worker (`-B`); the frontend polls normal `GET` endpoints.
 - Reason: LLM calls, crawling and PDF rendering take too long for a request; scheduled jobs are needed; polling is simpler than push channels.
 - Alternatives: FastAPI background tasks; WebSockets or server-sent events (rejected).
-- Details: ARCHITECTURE §1, §7.9; DESIGN §1.7
+- Details: ARCHITECTURE §1, §7.9; API_DESIGN §1.7
 
 #### D-024 · 2026-11-19 · Async everywhere, event-loop thread in Celery
 - Decision: All I/O code is async; each Celery worker process runs one persistent event loop on a daemon thread, and tasks submit service functions with `run_coroutine_threadsafe` through `run_async`.
@@ -242,7 +242,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: An MCP server built with the official MCP Python SDK (FastMCP), mounted in the FastAPI app at `/mcp` (Streamable HTTP) and available as a local process (`run_mcp_server_local`, stdio transport, development and tests only); three public tools, the authority catalog resource and one prompt; never personal data.
 - Reason: Uses the real services and database without a second deployment; public data only keeps privacy simple.
 - Alternatives: A separate MCP service (rejected: extra deployment); MCP access to the user's own letters (rejected: privacy, out of scope).
-- Details: PRD §6.11; ARCHITECTURE §7.12; DESIGN §6
+- Details: PRD §6.11; ARCHITECTURE §7.12; API_DESIGN §6
 
 #### D-035 · 2026-11-21 · AI coding assistant configuration
 - Decision: The repository contains the assistant's permission settings (project permissions, approved by the developer) and `.mcp.json` with our local MCP server (no secrets), so that the assistant itself can use the project's public MCP tools.
@@ -269,7 +269,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: No signed storage URLs; the backend checks ownership, issues a one-time 15-minute token and streams the decrypted file.
 - Reason: Files are encrypted, so storage cannot serve them; PDFs must stay available like invoices; signed URLs can leak and be reused.
 - Alternatives: Supabase signed URLs (rejected).
-- Details: SECURITY §7; DESIGN §1.8
+- Details: SECURITY §7; API_DESIGN §1.8
 
 #### D-042 · 2026-11-19 · Identity hash
 - Decision: The duplicate check compares an HMAC-SHA256 of the normalised identity with its own secret key.
@@ -305,7 +305,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: The admin role is granted only by the developer with a server command; admin needs 2FA (`aal2`); admin sessions end after 8 hours; every admin change and every view of user or billing data is written to an audit log that cannot be deleted early.
 - Reason: The admin panel is powerful; strong protection and traceability.
 - Alternatives: Admin role set in the admin panel; optional 2FA for admin (both rejected).
-- Details: PRD AD-12, AD-13; SECURITY §4; DESIGN §5
+- Details: PRD AD-12, AD-13; SECURITY §4; API_DESIGN §5
 
 #### D-048 · 2026-11-21 · Recognised and effective authority, tool-call log
 - Decision: `letters` keeps the AI's `recognised_authority_id` (never changed) next to the effective `authority_id`, plus the recognition confidence; the transaction follows the effective authority. Every tool call (ours and MCP) is logged in `llm_tool_calls` without input or result, kept 1 year.
@@ -317,13 +317,13 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: Admin creates tokens per partner (32 random bytes, shown once, stored as SHA-256 hash with an 8-character prefix, optional expiry, revoked but never deleted); the same `401` for every bad token; 30 requests per minute and 1,000 per day per token, failed checks 10 per 15 minutes per IP; requests with an `Origin` header refused; search queries at most 500 characters and never stored; the local process refuses to start in production.
 - Reason: Simple bearer access for partners with cost and misuse limits; no information leak about tokens; no browser-based attacks.
 - Alternatives: OAuth for MCP (rejected: too complex for the project); no token (rejected).
-- Details: SECURITY §10a.2, §11; DATA_MODEL §3.11; DESIGN §5.9, §6
+- Details: SECURITY §10a.2, §11; DATA_MODEL §3.11; API_DESIGN §5.9, §6
 
 #### D-050 · 2026-11-21 · Cost of MCP searches
 - Decision: The query embedding of every MCP search is recorded in `token_usages` as `mcp_query`, linked to the MCP access token (none for the local command); the statistics show MCP tokens per access token.
 - Reason: MCP use costs money and must be visible per partner.
 - Alternatives: Not recording MCP cost (rejected).
-- Details: DATA_MODEL `token_usages`, §5; DESIGN §5.6
+- Details: DATA_MODEL `token_usages`, §5; API_DESIGN §5.6
 
 #### D-051 · 2026-11-22 · Public GitHub repository
 - Decision: The GitHub repository is public; `main` is protected by the branch ruleset `protect-main` (pull request required, squash merge only, no force push, no deletion, empty bypass list); secret scanning and push protection are on; fork pull request workflows need approval.
@@ -411,7 +411,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: The chat still gets the letter, the current preview, the last 10 messages and the explanation's chunks directly, and can call `search_official_sources` (4 results, letter's authority only, `found: false` when nothing relevant), `get_letter_details` and `update_reply_preview`; the preview changes only through the tool; each answer stores `answer_basis` and its sources, which the user sees. Replaces D-067.
 - Reason: Questions outside the explanation's chunks can be answered from official sources; honest "not found" answers; fewer rounds than fetching everything through tools.
 - Alternatives: Everything through tools (rejected: more rounds and cost); keeping the chat without search (D-067, replaced).
-- Details: RAG §6.2–§6.3, §7.5, §7.8; DESIGN §4.6
+- Details: RAG §6.2–§6.3, §7.5, §7.8; API_DESIGN §4.6
 
 #### D-073 · 2026-11-21 · Evaluation for six authorities and tool use
 - Decision: 42 anonymised letters (6 per launch authority, 2 unsupported, 2 without matching source, 2 prompt injection) and 12 gold chat questions; targets: letter accuracy ≥ 80 %, authority recognition ≥ 95 %, unsupported 2/2, honest "nothing found" 6/6, chat tool use 8/8. A new authority gets 6 letters before activation. Replaces D-070.
@@ -431,25 +431,25 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Decision: REST under `/api/v1`, snake_case JSON, ISO 8601 UTC timestamps, page-number pagination, one multipart upload with all pages (30 MB), `Cache-Control: no-store`.
 - Reason: Matches Python names and the generated frontend types; simple admin tables; personal data is never cached.
 - Alternatives: camelCase; cursor pagination; page-by-page upload (all rejected).
-- Details: DESIGN §1
+- Details: API_DESIGN §1
 
 #### D-081 · 2026-11-19 · Error format RFC 9457
 - Decision: Problem Details (RFC 9457) with the extensions `code` and `errors`.
 - Reason: Developer wanted an industry standard; the `code` extension still lets the frontend translate errors.
 - Alternatives: Own simple `{"error": {…}}` format (first recommended for simplicity, rejected).
-- Details: DESIGN §3
+- Details: API_DESIGN §3
 
 #### D-082 · 2026-11-19 · Auth split between browser and backend
 - Decision: Login, logout, token refresh and MFA run in the browser with Supabase Auth; registration, verification code, reset request and reactivation run through the backend.
 - Reason: The duplicate check, status changes and rate limits must be enforced by the backend.
 - Alternatives: Verifying the code directly in the browser (rejected).
-- Details: DESIGN §2.1, §4.2
+- Details: API_DESIGN §2.1, §4.2
 
 #### D-083 · 2026-11-21 · API for authority change and MCP
 - Decision: `POST /letters/{letter_id}/authority-change` (plan user, an action separate from `PATCH`); letter fields for recognition confidence, change time, `can_change_authority` and `official_sources_found`; admin endpoints for MCP access tokens with `POST …/revoke`; statistics for recognition, tool calls and MCP calls; `/mcp` outside `/api/v1` with its own access level and rate-limit group; HTTP errors of `/mcp` as Problem Details.
 - Reason: Keeps the read-only-allowed `PATCH` separate from AI work; tokens are never deleted; one error format for every HTTP error.
 - Alternatives: `authority_id` in `PATCH /letters/{letter_id}` (rejected); `DELETE` for revoke (rejected: misleading); SDK default error bodies (rejected).
-- Details: DESIGN §4.5, §5.6, §5.9, §6
+- Details: API_DESIGN §4.5, §5.6, §5.9, §6
 
 ### 2.6 Development Workflow (D-090 – D-109)
 
@@ -494,7 +494,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
   - RAG: knowledge PDFs only through their text layer (pypdf), at most 10 linked PDFs per URL, RRF k = 60, 20 candidates per method, weak-retrieval threshold 0.50 (to be calibrated), evaluation targets (RAG §4, §6, §9.3).
   - Data: calendar months in Europe/Berlin, customer and transaction numbers never reset, reminder days 1–60, data export kept 7 days and at most 3 per day, inactivity warnings 30 and 7 days before deletion, Stripe events kept 1 year, seed writes database rows only (DATA_MODEL §1, §12; SECURITY §11, §16.4).
   - Architecture: Uvicorn, the browser's own PDF viewer, Supabase Admin API for E2E codes (ARCHITECTURE §9.3, §12).
-  - API: chat message at most 1,000 characters, email at most 254 characters in lowercase, problem type URL `<FRONTEND_BASE_URL>/problems/<code>`, page size 20 (max 100), account deletion confirmation `delete_my_account`, admin user search by customer number or email, re-crawl interval 1–365 days (DESIGN §1, §3, §4, §5).
+  - API: chat message at most 1,000 characters, email at most 254 characters in lowercase, problem type URL `<FRONTEND_BASE_URL>/problems/<code>`, page size 20 (max 100), account deletion confirmation `delete_my_account`, admin user search by customer number or email, re-crawl interval 1–365 days (API_DESIGN §1, §3, §4, §5).
 - Reason: Reasonable defaults; reviewed by the developer as a list.
 - Alternatives: Confirming each value later (rejected).
 - Details: the sections named above
@@ -548,6 +548,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: `strict` mode with `@pytest.mark.asyncio` on each test; turning off `disallow_untyped_decorators` for `tests.*` to allow `@allure.story` (both rejected).
 - Details: RULES §4.6, §10.3; `server_side/pyproject.toml` `[tool.pytest.ini_options]`, `[tool.mypy]`
 
+#### D-105 · 2026-11-22 · API design document renamed
+- Decision: The API design document is named `API_DESIGN.md` (renamed with `git mv`, so Git keeps its history); all references say `API_DESIGN.md` and `API_DESIGN §`, and the document list at the top of this file and the link text in `README.md` say `API_DESIGN`. Old change-log rows ("Aligned with DESIGN 0.x") stay as written, because they record history.
+- Reason: Developer decision; the file name now shows that the document describes the API.
+- Alternatives: Not compared.
+- Details: `docs/API_DESIGN.md`; all documents
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -559,8 +565,8 @@ Status: `open` until checked; then `done` with result and date.
 | K-01 | Which Claude models Vertex AI offers in EU regions | RAG §2 | open | |
 | K-02 | Which Gemini models are offered in `europe-west3`; current Vertex AI / Google Gen AI Python SDK package | RAG §2; ARCHITECTURE §3 | open | |
 | K-03 | Celery support for Python 3.15 (else 3.14) | ARCHITECTURE §13.5 | done | Python 3.15 final since 2026-10-09, but Celery 5.7.0 (2026-11-05), billiard 4.3.2 and kombu 5.7.0 list Python 3.10–3.14 only; Celery tests 3.15 only on CI. Chosen: Python 3.14 (D-030 fallback). Check again when a Celery release lists 3.15. 2026-11-22 |
-| K-04 | Supabase JWT: verification method, claim for MFA level (`aal2`), claim for authentication time (8-hour admin limit, 5-minute recent login) | SECURITY §4.2–§4.3; DESIGN §2.4 | open | |
-| K-05 | Supabase signup code: `{{ .Token }}` in the "Confirm signup" template and server-side code check; fallback: own code via Mailjet | ARCHITECTURE §13.5; DESIGN §4.2 | open | |
+| K-04 | Supabase JWT: verification method, claim for MFA level (`aal2`), claim for authentication time (8-hour admin limit, 5-minute recent login) | SECURITY §4.2–§4.3; API_DESIGN §2.4 | open | |
+| K-05 | Supabase signup code: `{{ .Token }}` in the "Confirm signup" template and server-side code check; fallback: own code via Mailjet | ARCHITECTURE §13.5; API_DESIGN §4.2 | open | |
 | K-06 | Supabase Admin API provides verification codes for E2E test users | ARCHITECTURE §9.3 | open | |
 | K-07 | Extra database `behoerdenbrief_testdb` with pgvector in the Supabase dev project (else separate test project) | ARCHITECTURE §13.5 | open | |
 | K-08 | Supabase leaked-password check on the chosen plan | SECURITY §4.1 | open | |
@@ -579,7 +585,7 @@ Status: `open` until checked; then `done` with result and date.
 | K-21 | GitHub secret scanning and push protection for the repository | SECURITY §12 | done | Private personal repositories on GitHub Free have no protected branches, secret scanning or push protection; GitHub Pro adds protected branches only; GitHub Secret Protection can be bought only by organizations (Team, Enterprise Cloud). Public repositories get secret scanning and push protection for free. Repository made public (D-051) and both enabled (GitHub docs, checked 2026-11-21). 2026-11-22 |
 | K-22 | Provider requirements (DPA, no training, retention, region) for every processor — fill §5 | SECURITY §9.2 | open | |
 | K-23 | Tool (function) calling of the chosen Gemini and Claude models on Vertex AI, and how tool definitions are passed in the current SDK | RAG §2; ARCHITECTURE §13.5 | open | |
-| K-24 | Official MCP Python SDK: mounting the Streamable HTTP app in FastAPI at `/mcp`, reading the `Authorization` header, running over stdio; current MCP specification version | ARCHITECTURE §13.5; DESIGN §6 | open | |
+| K-24 | Official MCP Python SDK: mounting the Streamable HTTP app in FastAPI at `/mcp`, reading the `Authorization` header, running over stdio; current MCP specification version | ARCHITECTURE §13.5; API_DESIGN §6 | open | |
 | K-25 | Which MCP clients can send a bearer token to a remote server (some expect OAuth) | ARCHITECTURE §13.5 | open | |
 | K-26 | `Origin` header validation as required by the MCP specification (DNS rebinding) | SECURITY §10a.2 | open | |
 | K-27 | Current usage of the MCP Inspector | RULES §1.5 | open | |
@@ -590,7 +596,7 @@ Status: `open` until checked; then `done` with result and date.
 | K-32 | Data protection impact assessment (Art. 35 DSGVO) | SECURITY §16.2 | open | |
 | K-33 | Wording of the explicit consent (Art. 9) and the legal bases | SECURITY §16.2 | open | |
 | K-34 | Invoice retention period (likely 10 years) and the legal basis for keeping identity data after deletion | SECURITY §16.4 | open | |
-| K-35 | Minimum age 18 is sufficient for contract and consent | DESIGN §1.12 | open | |
+| K-35 | Minimum age 18 is sufficient for contract and consent | API_DESIGN §1.12 | open | |
 | K-36 | TK terms of use allow crawling for a commercial product | RAG §3.2 | open | |
 | K-37 | robots.txt and terms of use of arbeitsagentur.de, bmwsb.bund.de, gesetze-im-internet.de and verwaltung.bund.de allow crawling for a commercial product | RAG §3.2 | open | |
 
@@ -672,3 +678,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-22 | 0.12 | D-102 (Ruff rule set) |
 | 2026-11-22 | 0.13 | D-103 (Pydantic plugin for mypy) |
 | 2026-11-22 | 0.14 | D-104 (pytest-asyncio auto mode; Allure and mypy) |
+| 2026-11-22 | 0.15 | D-105 (API design document renamed to `API_DESIGN.md`); references changed to `API_DESIGN §` |

@@ -1,9 +1,9 @@
 # Data Model
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.14
+**Document Version:** 0.15
 **Status:** Draft
-**Last updated:** 2026-11-21
+**Last updated:** 2026-11-22
 
 > This document answers **what is stored in the database and how**.
 > Product rules: PRD.md · Flows, layers and configuration: ARCHITECTURE.md · Encryption method, keys and GDPR: SECURITY.md · Chunking and embedding model: RAG.md
@@ -221,7 +221,7 @@ One row per account. `id` equals the Supabase Auth user id (`auth.users.id`).
 | `disclaimer_accepted_at` | timestamptz | no | Acceptance at registration |
 | `privacy_terms_accepted_at` | timestamptz | no | Acceptance at registration |
 | `profile_completed_at` | timestamptz | yes | Set when the address is complete; starts the trial |
-| `last_login_at` | timestamptz | yes | Last activity: set by any authenticated request when older than one day (DESIGN §2.5); basis for inactivity deletion (PRD H-07) |
+| `last_login_at` | timestamptz | yes | Last activity: set by any authenticated request when older than one day (API_DESIGN §2.5); basis for inactivity deletion (PRD H-07) |
 | `inactivity_warning_sent_at` | timestamptz | yes | First warning (30 days before deletion) |
 | `inactivity_final_warning_sent_at` | timestamptz | yes | Final warning (7 days before deletion) |
 | `deleted_at` | timestamptz | yes | Set on account deletion (soft delete) |
@@ -327,7 +327,7 @@ Global settings changed by admin.
 | `user_id` | uuid | no | → `users.id` |
 | `authority_id` | uuid | yes | → `authorities.id`; `NULL` until the AI has recognised the authority, and stays `NULL` when the letter's authority is not supported; follows the letter's `authority_id` when the user changes it; used for per-authority limits and admin statistics |
 | `letter_id` | uuid | yes | → `letters.id`; becomes `NULL` when the user deletes the letter |
-| `transaction_status` | text | no | `started`, `completed`, `failed` (letter failed with a retryable error; not counted towards the monthly limit, DESIGN §4.5) |
+| `transaction_status` | text | no | `started`, `completed`, `failed` (letter failed with a retryable error; not counted towards the monthly limit, API_DESIGN §4.5) |
 | `started_at` | timestamptz | no | Upload time; decides the calendar month for limits |
 | `completed_at` | timestamptz | yes | First download or email of a version |
 | `created_at`, `updated_at` | timestamptz | no | |
@@ -384,7 +384,7 @@ One row per tool call, made by our own LLM steps or through the MCP server (ARCH
 | `authority_changed_by_user_at` | timestamptz | yes | When the user last changed the authority |
 | `processing_status` | text | no | `queued`, `processing`, `ready`, `failed` (common status model, ARCHITECTURE §7.9) |
 | `processing_step` | text | yes | While `processing`: `scanning`, `reading`, `analysing` |
-| `error_code` | text | yes | Set when `failed`, e.g. `malware_detected`, `letter_unreadable`, `authority_not_supported`, `transaction_limit_reached` (per-authority limit after recognition), `invalid_llm_output`, `llm_unavailable` (DESIGN §3.4) |
+| `error_code` | text | yes | Set when `failed`, e.g. `malware_detected`, `letter_unreadable`, `authority_not_supported`, `transaction_limit_reached` (per-authority limit after recognition), `invalid_llm_output`, `llm_unavailable` (API_DESIGN §3.4) |
 | `extracted_text_encrypted` | bytea | yes | Full text read from the pages |
 | `recipient_address_encrypted` | bytea | yes | Sender address of the authority office, extracted from the letter; editable by the user; used as recipient of the reply |
 | `extracted_deadline` | date | yes | Deadline found in the letter by the AI |
@@ -468,7 +468,7 @@ Holds both the single current **draft** and all **locked versions** of a letter'
 | `german_text_encrypted` | bytea | yes | German letter text |
 | `pdf_storage_path` | text | yes | Encrypted PDF in the private bucket |
 | `delivery_method` | text | yes | `download`, `email` (how the version was locked) |
-| `generation_requested_at` | timestamptz | yes | When the current generation was requested; the draft is outdated if the preview changed later (DESIGN §4.6) |
+| `generation_requested_at` | timestamptz | yes | When the current generation was requested; the draft is outdated if the preview changed later (API_DESIGN §4.6) |
 | `locked_at` | timestamptz | yes | |
 | `downloaded_at` | timestamptz | yes | Last download |
 | `emailed_at` | timestamptz | yes | Last successful email |
@@ -831,10 +831,10 @@ Only these transitions are allowed; services reject all others.
 |---|---|
 | `users.account_status` | `registered → verified → active`; `active → deleted`; `deleted → verified` (reactivation, no trial; the address is entered again); `deleted → purged` (no way back) |
 | `data_exports.export_status` | `queued → processing → ready → expired`; `queued → failed`; `processing → failed` |
-| `letters.processing_status` | `queued → processing → ready`; `queued → failed`; `processing → failed`; `failed → queued` (retry, only for retryable error codes, DESIGN §4.5; not for `authority_not_supported` or `transaction_limit_reached`); `ready → processing` and `failed → processing` for `authority_not_supported` (authority changed by the user, step `analysing`, PRD E-09, E-10) |
+| `letters.processing_status` | `queued → processing → ready`; `queued → failed`; `processing → failed`; `failed → queued` (retry, only for retryable error codes, API_DESIGN §4.5; not for `authority_not_supported` or `transaction_limit_reached`); `ready → processing` and `failed → processing` for `authority_not_supported` (authority changed by the user, step `analysing`, PRD E-09, E-10) |
 | `reply_previews.generation_status`, `reply_chat_messages.processing_status`, `reply_documents.generation_status` | `queued → processing → ready`; `queued → failed`; `processing → failed`; a failed item can be requested again (new `queued`) |
 | `reply_documents.document_status` | `draft → locked → sent` (no way back) |
-| `reply_documents.email_delivery_status` | `NULL → queued` ("Email me" or first "send again"); `queued → sent`; `queued → failed`; `failed → queued` and `sent → queued` ("send again", DESIGN §4.6) |
+| `reply_documents.email_delivery_status` | `NULL → queued` ("Email me" or first "send again"); `queued → sent`; `queued → failed`; `failed → queued` and `sent → queued` ("send again", API_DESIGN §4.6) |
 | `knowledge_sources.indexing_status` | `pending → processing → indexed`; `pending → failed`; `processing → failed`; `indexed → pending` and `failed → pending` (edit or re-crawl) |
 | `transactions.transaction_status` | `started → completed` (no way back); `started → failed` (letter failed with a retryable error); `failed → started` (retry, or authority changed by the user) |
 | `subscriptions.subscription_status` | `trialing → active` or `expired`; `active → past_due → active`; `active → canceled`; `past_due → canceled` (following Stripe events) |
@@ -885,3 +885,4 @@ Development-only test users are not part of the seed; automated tests create the
 | 2026-11-21 | 0.12 | Aligned with DESIGN 0.4: `letter_explanations.official_sources_found`; `reply_chat_messages.answer_basis` and `source_references`; authority change also for a letter failed with `authority_not_supported` (`failed → processing`, transaction `failed → started`) |
 | 2026-11-21 | 0.13 | Aligned with RULES 0.4: `llm_tool_calls.caller_type` value `mcp_local` (was `mcp_stdio`); `letters.extracted_deadline` (was `ai_deadline`, naming rule) |
 | 2026-11-21 | 0.14 | Final review: `token_usages.mcp_access_token_id` and operation type `mcp_query`, so the embedding cost of MCP searches is recorded (CHECK, relationship, index, ERD) |
+| 2026-11-22 | 0.15 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |

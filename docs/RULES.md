@@ -1,13 +1,13 @@
 # RULES
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.8
+**Document Version:** 0.9
 **Status:** Draft
 **Last updated:** 2026-11-22
 
 > This document answers **which project-specific rules must be followed when writing code**.
 > General personal rules of the developer (full-word naming, uv, IDE setup, test database naming) are in the developer's user-level instructions and are not repeated here; this file adds only what is specific to this project.
-> Structure and layers: ARCHITECTURE.md · API conventions and error format: DESIGN.md · Tables, migrations policy, RLS: DATA_MODEL.md · Security requirements: SECURITY.md · AI pipeline: RAG.md
+> Structure and layers: ARCHITECTURE.md · API conventions and error format: API_DESIGN.md · Tables, migrations policy, RLS: DATA_MODEL.md · Security requirements: SECURITY.md · AI pipeline: RAG.md
 
 ---
 
@@ -21,11 +21,11 @@
    | Task touches | Read first |
    |---|---|
    | Any backend feature | ARCHITECTURE §4–§5, this file |
-   | Endpoints | DESIGN.md |
+   | Endpoints | API_DESIGN.md |
    | Tables or migrations | DATA_MODEL.md |
    | Auth, files, encryption, logging, personal data | SECURITY.md |
    | LLM, retrieval, prompts, ingestion, AI tools | RAG.md |
-   | AI tools or the MCP server | ARCHITECTURE §7.11–§7.12, RAG §7.8–§7.10, SECURITY §10a, DESIGN §6 |
+   | AI tools or the MCP server | ARCHITECTURE §7.11–§7.12, RAG §7.8–§7.10, SECURITY §10a, API_DESIGN §6 |
    | Product behaviour | PRD.md |
 
 3. If the documents do not answer a question, or two documents disagree: **stop and ask the developer**. Never guess a product rule, limit or wording.
@@ -123,7 +123,7 @@ Project naming patterns:
 | Item | Pattern | Example |
 |---|---|---|
 | Python modules, functions, variables | snake_case | `letters/service.py`, `upload_letter` |
-| Python classes, Pydantic schemas | PascalCase; schemas as in DESIGN §1.11 | `LetterResponse`, `LetterNotFoundError` |
+| Python classes, Pydantic schemas | PascalCase; schemas as in API_DESIGN §1.11 | `LetterResponse`, `LetterNotFoundError` |
 | Exceptions | `<Thing><Problem>Error`, subclass of `AppException` | `TransactionLimitReachedError` |
 | Celery tasks | verb phrase, same as in ARCHITECTURE §4 | `process_letter` |
 | AI tools | snake_case verb phrase; the handler function in the feature's `tools.py` has the same name as the tool; input schema `<ToolName>ToolInput` | `search_official_sources`, `SearchOfficialSourcesToolInput` |
@@ -205,7 +205,7 @@ Layer responsibilities and the cross-feature rule: **ARCHITECTURE §5**. In addi
 | Repositories | Only SQLAlchemy 2 style (`select()`, `insert()`); raw SQL only inside a repository and only with bound parameters |
 | Encryption | Repositories encrypt on write and decrypt on read with `core/encryption.py`; services work with plain values; admin queries never select encrypted columns (DATA_MODEL §5) |
 | Configuration | Read only through `core/config.py` settings; never `os.environ` elsewhere; no hard-coded limits (all values in ARCHITECTURE §11 come from settings or the database) |
-| Constants | Status values, error codes and enums only in the feature's `constants.py`, matching DATA_MODEL and DESIGN §3.4 |
+| Constants | Status values, error codes and enums only in the feature's `constants.py`, matching DATA_MODEL and API_DESIGN §3.4 |
 
 ### 4.2 Database transactions
 
@@ -244,9 +244,9 @@ Structure and the general frontend rules: **ARCHITECTURE §6**. In addition:
 | Server and Client Components | Everything that loads API data or reacts to the user is a **Client Component** using TanStack Query. Layouts, legal pages and static parts are Server Components. Server code never loads user data (the login token exists only in the browser, ARCHITECTURE §7.7) |
 | Data fetching | Only through hooks in `features/*/hooks` that use `lib/api/client.ts` and generated types; no `fetch` in components |
 | API types | Generated with **openapi-typescript**: `npm run generate:api-types` runs `uv run python -m app.command_line export_openapi_schema` (writes `client_side/lib/api/openapi.json` without starting the server) and then `openapi-typescript` to write `lib/api/schema.d.ts`. Both files are generated and committed, never edited by hand |
-| Errors | `client.ts` turns Problem Details (DESIGN §3) into one error type; components show the text for `error.code` from `messages/*.json` |
+| Errors | `client.ts` turns Problem Details (API_DESIGN §3) into one error type; components show the text for `error.code` from `messages/*.json` |
 | Text | No UI text in components; every text comes from `messages/en.json` and `messages/bn.json` (next-intl); both files always have the same keys |
-| Forms | Zod schemas use the field limits of DESIGN §1.12 |
+| Forms | Zod schemas use the field limits of API_DESIGN §1.12 |
 | Styling | Tailwind classes only; shared pieces in `components/ui/` |
 | Types | TypeScript strict; no `any`; API types only from `schema.d.ts` |
 | Formatting | No separate formatter: ESLint (Next.js configuration) is the only check; keep the style of the surrounding code (2-space indent, semicolons, double quotes) |
@@ -283,12 +283,12 @@ Structure and the general frontend rules: **ARCHITECTURE §6**. In addition:
 
 | Situation | Rule |
 |---|---|
-| Expected business problem | Raise the feature's `AppException` subclass with its `code`; the global handler returns Problem Details (DESIGN §3.2) |
+| Expected business problem | Raise the feature's `AppException` subclass with its `code`; the global handler returns Problem Details (API_DESIGN §3.2) |
 | Validation | Done by Pydantic schemas; services check only business rules |
 | Unexpected error | Do not catch it in feature code; it reaches the global handler (`500 internal_error`) and Sentry |
 | `except` blocks | Only for specific exception types; never `except Exception: pass`; when re-raising, use `raise … from error` |
 | External services | Integrations turn provider errors into the project's own exceptions (`LlmUnavailableError`, `StorageUnavailableError`, …); no provider exception type leaks into services |
-| Background tasks | A failed task sets `failed` and an `error_code` from DESIGN §3.4. Temporary errors (timeouts, network, storage, email, push) are retried with Celery's automatic retry and backoff; validation errors are not retried (ARCHITECTURE §8) |
+| Background tasks | A failed task sets `failed` and an `error_code` from API_DESIGN §3.4. Temporary errors (timeouts, network, storage, email, push) are retried with Celery's automatic retry and backoff; validation errors are not retried (ARCHITECTURE §8) |
 | Messages | Exception messages and `detail` are English and never contain personal data or letter content |
 
 ## 8. Logging
@@ -383,3 +383,4 @@ Managed with the `pre-commit` framework: `ruff check`, `ruff format`, `mypy` (AR
 | 2026-11-21 | 0.6 | Learning flow (§1.1a): explanations in easy English instead of Bengali (MEMORY D-100) |
 | 2026-11-22 | 0.7 | §1.6: the AI coding assistant's configuration stays local and is not committed (MEMORY D-036) |
 | 2026-11-22 | 0.8 | §1, §1.1a, §1.6, §11.1: the coding assistant is called "the AI coding assistant", not by its product name; change log 0.1 and 0.5 reworded (MEMORY D-101) |
+| 2026-11-22 | 0.9 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |

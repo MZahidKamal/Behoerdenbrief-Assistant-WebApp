@@ -1,7 +1,7 @@
 # Security
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.10
+**Document Version:** 0.11
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -77,7 +77,7 @@ Rules for the code:
 
 - Logout revokes the refresh token.
 - Account deletion and password change revoke all sessions.
-- Account deletion requires a login within the last 5 minutes (password entered again, DESIGN §2.4).
+- Account deletion requires a login within the last 5 minutes (password entered again, API_DESIGN §2.4).
 - Session lifetime settings are configured in Supabase Auth; the 8-hour admin limit is additionally enforced by the backend from the token's authentication time **(verify the claim name in Supabase docs)**.
 
 ### 4.3 Token verification
@@ -87,7 +87,7 @@ Rules for the code:
 
 ### 4.4 Public endpoints (no login)
 
-Registration, verification code, password reset, reactivation request, `/health`, the Stripe webhook (Stripe signature instead, §14), the file download endpoint (one-time download token instead, §7), the MCP endpoint `/mcp` (MCP access token instead of a user login, §10a), and legal pages. All other endpoints require a valid token. Endpoint list and access levels: DESIGN §2, §4.
+Registration, verification code, password reset, reactivation request, `/health`, the Stripe webhook (Stripe signature instead, §14), the file download endpoint (one-time download token instead, §7), the MCP endpoint `/mcp` (MCP access token instead of a user login, §10a), and legal pages. All other endpoints require a valid token. Endpoint list and access levels: API_DESIGN §2, §4.
 
 ## 5. Encryption
 
@@ -267,9 +267,9 @@ Values come from configuration (ARCHITECTURE §11) so they can be tuned without 
 | CSRF | The API uses Bearer tokens, not cookies, so classic CSRF does not apply; the webhook uses Stripe signatures |
 | XSS | React escaping; no `dangerouslySetInnerHTML`; AI output and user text always rendered as text |
 | Input validation | Every request body validated by Pydantic schemas; unknown fields rejected |
-| Error responses | Uniform error format (DESIGN.md) with an error code; no stack traces, SQL or internal ids of other users |
+| Error responses | Uniform error format (API_DESIGN.md) with an error code; no stack traces, SQL or internal ids of other users |
 | API documentation | `/docs` and `/openapi.json` disabled in production |
-| Caching | `Cache-Control: no-store` on every API response; the PWA service worker never caches API requests (DESIGN §1.3) |
+| Caching | `Cache-Control: no-store` on every API response; the PWA service worker never caches API requests (API_DESIGN §1.3) |
 | Dependencies | GitHub **Dependabot** update pull requests; `pip-audit` and `npm audit` in CI — a known **high or critical** vulnerability fails the build |
 | Secrets in Git | GitHub secret scanning and push protection enabled (public repository, MEMORY D-051) |
 | Containers | Non-root user, slim image, no build tools at runtime (ARCHITECTURE §12.2) |
@@ -413,3 +413,4 @@ Scheduled jobs perform these deletions; each job's selection rule is tested.
 | 2026-11-21 | 0.8 | Aligned with RAG 0.3: authority recognition as its own text-only step in §9.1 |
 | 2026-11-21 | 0.9 | Aligned with RULES 0.4: command `run_mcp_server_local`, caller `mcp_local` |
 | 2026-11-22 | 0.10 | §12: secret scanning and push protection confirmed for the public repository (MEMORY K-21, D-051) |
+| 2026-11-22 | 0.11 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |

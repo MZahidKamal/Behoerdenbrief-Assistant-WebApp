@@ -1,7 +1,7 @@
-# DESIGN (API)
+# API_DESIGN
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.7
+**Document Version:** 0.8
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -1331,3 +1331,4 @@ The MCP server for external AI clients (PRD §6.11, ARCHITECTURE §7.12). It giv
 | 2026-11-21 | 0.5 | Aligned with RULES 0.4: command `run_mcp_server_local`; `deadline.extracted_deadline` (was `ai_deadline`, naming rule) |
 | 2026-11-21 | 0.6 | Final review: MCP query tokens per access token in the statistics |
 | 2026-11-22 | 0.7 | §1: naming reference reworded without the assistant's file name; change log 0.3 reworded (MEMORY D-101) |
+| 2026-11-22 | 0.8 | Document renamed to `API_DESIGN.md` with `git mv`; title line changed to match (MEMORY D-105) |

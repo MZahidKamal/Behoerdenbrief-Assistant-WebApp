@@ -1,7 +1,7 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.6
+**Document Version:** 0.7
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -29,7 +29,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 
 | Milestone | Tasks | Result |
 |---|---|---|
-| M00 Repository and Tooling | T-001 – T-013, T-383 – T-384 (15) | Clean repository, Python project, checks, hooks, frontend test setup |
+| M00 Repository and Tooling | T-001 – T-013, T-383 – T-385 (16) | Clean repository, Python project, checks, hooks, frontend test setup |
 | M01 Backend Skeleton | T-014 – T-031 (18) | FastAPI app with `/health`, settings, logging, Problem Details, Docker |
 | M02 Database Foundation | T-032 – T-046 (15) | Supabase connection, Alembic, test database, encryption and time helpers |
 | M03 Frontend Foundation | T-047 – T-060 (14) | Layout, translations, API client, generated types, auth client, PWA shell |
@@ -53,7 +53,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 | M21 Deployment | T-372 – T-378 (7) | Production on Render and Netlify through GitHub Actions |
 | M22 Legal and Launch | T-379 – T-382 (4) | Legal pages, legal checks, launch checklist |
 
-Total: 384 tasks.
+Total: 385 tasks.
 
 ## 3. Tasks
 
@@ -151,6 +151,12 @@ Total: 384 tasks.
   - Read: MEMORY D-036, D-101
   - Learn: Keeping documents consistent when one term changes in many places
 
+- [x] **T-385** · Rename the API design document
+  - Done when: The API design document is `docs/API_DESIGN.md` (renamed with `git mv`) with a matching title line; every reference says `API_DESIGN.md` or `API_DESIGN §`; a search finds no old reference (MEMORY D-105)
+  - Depends on: —
+  - Read: MEMORY D-105
+  - Learn: How `git mv` keeps a file's history, and how to rename a document safely in many places
+
 
 ### M01 Backend Skeleton
 
@@ -169,13 +175,13 @@ Total: 384 tasks.
 - [ ] **T-016** · `GET /health` and the first API test
   - Done when: `GET /health` returns `200 {"status": "ok"}`; an API test with httpx `AsyncClient` passes
   - Depends on: T-015
-  - Read: DESIGN §1.1
+  - Read: API_DESIGN §1.1
   - Learn: Routers, path operations and API tests
 
 - [ ] **T-017** · API documentation only outside production
   - Done when: `/docs` and `/openapi.json` work locally and return 404 when `APP_ENV=production`; tests
   - Depends on: T-016
-  - Read: SECURITY §12; DESIGN §1.11
+  - Read: SECURITY §12; API_DESIGN §1.11
   - Learn: OpenAPI and Swagger UI in FastAPI
 
 - [ ] **T-018** · Logging setup
@@ -191,27 +197,27 @@ Total: 384 tasks.
   - Learn: Middleware and context variables
 
 - [ ] **T-020** · `AppException` and the Problem Details response
-  - Done when: `core/exceptions.py` has `AppException` (code, status, title) and a handler that returns `application/problem+json` as in DESIGN §3.1; API test with a sample exception
+  - Done when: `core/exceptions.py` has `AppException` (code, status, title) and a handler that returns `application/problem+json` as in API_DESIGN §3.1; API test with a sample exception
   - Depends on: T-016
-  - Read: DESIGN §3.1–§3.2; RULES §7
+  - Read: API_DESIGN §3.1–§3.2; RULES §7
   - Learn: Central error handling and RFC 9457
 
 - [ ] **T-021** · Validation and HTTP errors as Problem Details
   - Done when: Pydantic validation errors return `422 validation_failed` with the `errors` list (JSON pointers); `HTTPException` and unknown routes also return Problem Details; tests
   - Depends on: T-020
-  - Read: DESIGN §3.1, §3.3
+  - Read: API_DESIGN §3.1, §3.3
   - Learn: How FastAPI validates requests
 
 - [ ] **T-022** · Unexpected errors and common error codes
-  - Done when: Unexpected exceptions return `500 internal_error` without internal details; the common error codes of DESIGN §3.3 exist as an enum; tests
+  - Done when: Unexpected exceptions return `500 internal_error` without internal details; the common error codes of API_DESIGN §3.3 exist as an enum; tests
   - Depends on: T-021
-  - Read: DESIGN §3.2–§3.3, §3.5
+  - Read: API_DESIGN §3.2–§3.3, §3.5
   - Learn: Never leaking internals in error responses
 
 - [ ] **T-023** · `Cache-Control: no-store` and security headers
   - Done when: Every API response has `Cache-Control: no-store` and the security headers of SECURITY §12; tests
   - Depends on: T-016
-  - Read: SECURITY §12; DESIGN §1.3
+  - Read: SECURITY §12; API_DESIGN §1.3
   - Learn: HTTP security headers
 
 - [ ] **T-024** · CORS
@@ -223,13 +229,13 @@ Total: 384 tasks.
 - [ ] **T-025** · Request size limit
   - Done when: Requests larger than `MAX_UPLOAD_REQUEST_MB` (30) return `413 request_too_large`; test
   - Depends on: T-022
-  - Read: DESIGN §1.8
+  - Read: API_DESIGN §1.8
   - Learn: Protecting a server from very large requests
 
 - [ ] **T-026** · Pagination helper
   - Done when: A generic `PaginatedResponse` schema and a query helper for `page` / `page_size` (limits, empty page beyond the last); unit tests
   - Depends on: T-022
-  - Read: DESIGN §1.6
+  - Read: API_DESIGN §1.6
   - Learn: Generic Pydantic models and offset pagination
 
 - [ ] **T-027** · Developer command module
@@ -391,13 +397,13 @@ Total: 384 tasks.
 - [ ] **T-052** · API client
   - Done when: `lib/api/client.ts` sends requests to `NEXT_PUBLIC_API_BASE_URL`, adds the Bearer token when given, and turns Problem Details into one error type with `code`; unit tests with a mocked fetch
   - Depends on: T-051
-  - Read: DESIGN §3; RULES §5
+  - Read: API_DESIGN §3; RULES §5
   - Learn: A typed fetch wrapper
 
 - [ ] **T-053** · Error texts by code
   - Done when: Error messages come from `errors.<code>` in both message files, with a generic fallback; unit tests
   - Depends on: T-052, T-050
-  - Read: DESIGN §3.5
+  - Read: API_DESIGN §3.5
   - Learn: Translating API errors
 
 - [ ] **T-054** · Generated API types
@@ -409,19 +415,19 @@ Total: 384 tasks.
 - [ ] **T-055** · Supabase auth client
   - Done when: `lib/supabase.ts` (auth only) with `NEXT_PUBLIC_SUPABASE_URL` and the anon key
   - Depends on: T-052
-  - Read: DESIGN §2.1; ARCHITECTURE §7.7
+  - Read: API_DESIGN §2.1; ARCHITECTURE §7.7
   - Learn: Client-side authentication
 
 - [ ] **T-056** · Session hook
   - Done when: A hook gives the current session and access token to the API client and reacts to token refresh and logout; unit tests with a mocked client
   - Depends on: T-055
-  - Read: DESIGN §2.1
+  - Read: API_DESIGN §2.1
   - Learn: React context and hooks for auth state
 
 - [ ] **T-057** · Polling hook
   - Done when: A hook polls a query every `NEXT_PUBLIC_POLL_INTERVAL_MS` and stops at `ready` or `failed`; unit tests
   - Depends on: T-051
-  - Read: DESIGN §1.7; ARCHITECTURE §6
+  - Read: API_DESIGN §1.7; ARCHITECTURE §6
   - Learn: Polling with `refetchInterval`
 
 - [ ] **T-058** · Web app manifest
@@ -433,7 +439,7 @@ Total: 384 tasks.
 - [ ] **T-059** · Service worker shell
   - Done when: A registered service worker that handles only push events and never caches API requests
   - Depends on: T-058
-  - Read: PRD P-03; RULES §5; DESIGN §1.3
+  - Read: PRD P-03; RULES §5; API_DESIGN §1.3
   - Learn: Service workers and their lifecycle
 
 - [ ] **T-060** · Client in Docker Compose
@@ -511,13 +517,13 @@ Total: 384 tasks.
 - [ ] **T-071** **[Check K-04]** · Supabase token verification and claims
   - Done when: The current verification method and the claim names for MFA level and authentication time are confirmed; result in MEMORY.md
   - Depends on: T-070
-  - Read: SECURITY §4.2–§4.3; DESIGN §2.4
+  - Read: SECURITY §4.2–§4.3; API_DESIGN §2.4
   - Learn: JWT structure, signature and claims
 
 - [ ] **T-072** **[Check K-05]** · Signup verification code
   - Done when: It is tested in the dev project whether "Confirm signup" can send a 6-digit code and how the backend checks it; the chosen way is in MEMORY.md
   - Depends on: T-070
-  - Read: ARCHITECTURE §7.8, §13.5; DESIGN §4.2
+  - Read: ARCHITECTURE §7.8, §13.5; API_DESIGN §4.2
   - Learn: Email one-time-code flows
 
 - [ ] **T-073** · Table `users`
@@ -541,25 +547,25 @@ Total: 384 tasks.
 - [ ] **T-076** · Current user
   - Done when: `get_current_user` loads the user for the token; missing or invalid token → 401; deleted or purged → `403 account_deleted`; API tests
   - Depends on: T-075, T-073, T-035
-  - Read: DESIGN §2.2, §3.3
+  - Read: API_DESIGN §2.2, §3.3
   - Learn: FastAPI dependencies for authentication
 
 - [ ] **T-077** · Access levels Active user and Plan user
   - Done when: Dependencies for Active user (`profile_incomplete`) and Plan user (`account_read_only`, a placeholder that always allows until M11); API tests
   - Depends on: T-076
-  - Read: DESIGN §2.2
+  - Read: API_DESIGN §2.2
   - Learn: Layered authorisation
 
 - [ ] **T-078** · Last activity
   - Done when: An authenticated request sets `last_login_at` when it is older than one day; tests with the injected clock
   - Depends on: T-076, T-046
-  - Read: DESIGN §2.5
+  - Read: API_DESIGN §2.5
   - Learn: Cheap writes on frequently used code paths
 
 - [ ] **T-079** · Rate limiter
   - Done when: `core/rate_limit.py` counts requests in Redis per key and window; exceeded → `429 rate_limited` with `Retry-After`; tests
   - Depends on: T-022, T-030
-  - Read: SECURITY §11; DESIGN §1.9
+  - Read: SECURITY §11; API_DESIGN §1.9
   - Learn: Rate limiting with Redis counters
 
 - [ ] **T-080** · Rate limit groups
@@ -571,7 +577,7 @@ Total: 384 tasks.
 - [ ] **T-081** · Auth adapter interface and fake
   - Done when: An interface for creating unconfirmed users, checking codes, sending reset emails, enabling and disabling users and revoking sessions; a fake for tests
   - Depends on: T-072
-  - Read: ARCHITECTURE §8; DESIGN §2.1
+  - Read: ARCHITECTURE §8; API_DESIGN §2.1
   - Learn: Adapters and fakes
 
 - [ ] **T-082** · Supabase auth adapter
@@ -593,57 +599,57 @@ Total: 384 tasks.
   - Learn: Business rules in a service
 
 - [ ] **T-085** · `POST /registrations`
-  - Done when: Validation (field limits, age ≥ 18, consents), authentication rate limit, responses and error codes of DESIGN §4.2; API tests
+  - Done when: Validation (field limits, age ≥ 18, consents), authentication rate limit, responses and error codes of API_DESIGN §4.2; API tests
   - Depends on: T-084, T-080
-  - Read: DESIGN §1.12, §4.2
+  - Read: API_DESIGN §1.12, §4.2
   - Learn: Request schemas and validation
 
 - [ ] **T-086** · `POST /registrations/verify`
   - Done when: A correct code sets `account_status = verified`; wrong, expired or used → `invalid_verification_code`; API tests
   - Depends on: T-085
-  - Read: DESIGN §4.2
+  - Read: API_DESIGN §4.2
   - Learn: Status changes through an endpoint
 
 - [ ] **T-087** · `POST /registrations/verification-code`
   - Done when: Always 202; a code is sent only for an unverified account; API tests
   - Depends on: T-086
-  - Read: DESIGN §4.2
+  - Read: API_DESIGN §4.2
   - Learn: Responses that do not reveal accounts
 
 - [ ] **T-088** · `POST /password-resets`
   - Done when: Always 202; the adapter sends the reset email; rate limited; API test
   - Depends on: T-081, T-080
-  - Read: DESIGN §4.2; SECURITY §4.1
+  - Read: API_DESIGN §4.2; SECURITY §4.1
   - Learn: Safe password reset requests
 
 - [ ] **T-089** · `POST /reactivations`
   - Done when: Always 202; a code is sent only for a deleted account; API tests
   - Depends on: T-086
-  - Read: DESIGN §4.2
+  - Read: API_DESIGN §4.2
   - Learn: Recovering deleted accounts
 
 - [ ] **T-090** · `POST /reactivations/verify`
   - Done when: A correct code enables the Auth user and sets `verified`; no trial; API tests
   - Depends on: T-089
-  - Read: DESIGN §4.2; DATA_MODEL §11
+  - Read: API_DESIGN §4.2; DATA_MODEL §11
   - Learn: Status transitions as rules
 
 - [ ] **T-091** · `GET /me`
-  - Done when: Returns the account with decrypted values as in DESIGN §4.3; API test
+  - Done when: Returns the account with decrypted values as in API_DESIGN §4.3; API test
   - Depends on: T-076, T-083
-  - Read: DESIGN §4.3
+  - Read: API_DESIGN §4.3
   - Learn: Response schemas
 
 - [ ] **T-092** · `PATCH /me`: name and date of birth
   - Done when: Changing name or date of birth repeats the duplicate check (`possible_existing_account`); API tests
   - Depends on: T-091, T-084
-  - Read: DESIGN §4.3; DATA_MODEL §5
+  - Read: API_DESIGN §4.3; DATA_MODEL §5
   - Learn: Partial updates with PATCH
 
 - [ ] **T-093** · `PATCH /me`: address and profile completion
   - Done when: The three address fields only together; the first complete address sets `profile_completed_at` and `active` and calls an empty trial hook (filled in T-205); API tests
   - Depends on: T-092
-  - Read: DESIGN §4.3; PRD A-04, A-09
+  - Read: API_DESIGN §4.3; PRD A-04, A-09
   - Learn: Side effects of an update
 
 - [ ] **T-094** · Table `user_authority_reference_numbers`
@@ -655,25 +661,25 @@ Total: 384 tasks.
 - [ ] **T-095** · Reference numbers: list and create
   - Done when: `GET` and `POST /me/reference-numbers` with `reference_number_exists` and `authority_not_found`; API tests
   - Depends on: T-094, T-091
-  - Read: DESIGN §4.3
+  - Read: API_DESIGN §4.3
   - Learn: Nested resources
 
 - [ ] **T-096** · Reference numbers: update and delete
   - Done when: `PATCH` and `DELETE /me/reference-numbers/{id}`; another user's id → 404; API tests
   - Depends on: T-095
-  - Read: DESIGN §2.3, §4.3
+  - Read: API_DESIGN §2.3, §4.3
   - Learn: Ownership checks
 
 - [ ] **T-097** · Frontend: registration form
   - Done when: Registration page with React Hook Form and Zod using the field limits; consents and disclaimer text; component tests
   - Depends on: T-054, T-053, T-085
-  - Read: PRD A-01, A-06, §10; DESIGN §1.12
+  - Read: PRD A-01, A-06, §10; API_DESIGN §1.12
   - Learn: Forms with React Hook Form and Zod
 
 - [ ] **T-098** · Frontend: registration results
   - Done when: Success leads to the code page; `possible_existing_account` and `reactivation_available` show the right messages; component tests
   - Depends on: T-097
-  - Read: PRD A-07, A-10; DESIGN §4.2
+  - Read: PRD A-07, A-10; API_DESIGN §4.2
   - Learn: Handling API errors in forms
 
 - [ ] **T-099** · Frontend: verification code page
@@ -685,7 +691,7 @@ Total: 384 tasks.
 - [ ] **T-100** · Frontend: login
   - Done when: Login with Supabase Auth; one general error message; component tests
   - Depends on: T-056, T-099
-  - Read: DESIGN §2.1; SECURITY §4.1
+  - Read: API_DESIGN §2.1; SECURITY §4.1
   - Learn: Login flows in the browser
 
 - [ ] **T-101** · Frontend: logout and expired sessions
@@ -697,7 +703,7 @@ Total: 384 tasks.
 - [ ] **T-102** · Frontend: password reset
   - Done when: Request page and new-password page (Supabase recovery link); component tests
   - Depends on: T-100, T-088
-  - Read: DESIGN §4.2
+  - Read: API_DESIGN §4.2
   - Learn: Password reset flows
 
 - [ ] **T-103** · Frontend: reactivation
@@ -709,7 +715,7 @@ Total: 384 tasks.
 - [ ] **T-104** · Frontend: route protection
   - Done when: Logged-out users are sent to login; users with incomplete profile are sent to profile completion; component tests
   - Depends on: T-101, T-091
-  - Read: DESIGN §2.2
+  - Read: API_DESIGN §2.2
   - Learn: Guards in the App Router
 
 - [ ] **T-105** · Frontend: profile completion
@@ -721,7 +727,7 @@ Total: 384 tasks.
 - [ ] **T-106** · Frontend: profile page
   - Done when: Show and edit name, date of birth and address; customer number shown; component tests
   - Depends on: T-105
-  - Read: PRD A-04–A-05; DESIGN §4.3
+  - Read: PRD A-04–A-05; API_DESIGN §4.3
   - Learn: Edit forms with existing data
 
 - [ ] **T-107** · Frontend: reference numbers
@@ -748,7 +754,7 @@ Total: 384 tasks.
 - [ ] **T-110** · Admin access dependency
   - Done when: `require_admin_role` checks role, `aal2` and the 8-hour limit (`forbidden`, `mfa_required`, `admin_session_expired`); API tests
   - Depends on: T-076
-  - Read: DESIGN §2.2; SECURITY §4.2
+  - Read: API_DESIGN §2.2; SECURITY §4.2
   - Learn: Authorisation for privileged users
 
 - [ ] **T-111** · Table `admin_audit_logs`
@@ -766,19 +772,19 @@ Total: 384 tasks.
 - [ ] **T-113** · `GET /authorities`
   - Done when: Active authorities for users (used when a user changes a letter's authority, not for the upload); API test
   - Depends on: T-074, T-076
-  - Read: DESIGN §4.4; PRD E-09
+  - Read: API_DESIGN §4.4; PRD E-09
   - Learn: A read endpoint through all layers
 
 - [ ] **T-114** · Admin: list and create authorities
   - Done when: `GET` and `POST /admin/authorities` with `alternative_names` (at most 20, each 1–100 characters, no duplicates), audit entry and `authority_name_exists`; API tests
   - Depends on: T-112, T-113
-  - Read: DESIGN §5.2, §1.12; RAG §3.1
+  - Read: API_DESIGN §5.2, §1.12; RAG §3.1
   - Learn: Admin endpoints
 
 - [ ] **T-115** · Admin: update authorities
   - Done when: `PATCH /admin/authorities/{id}` (edit, other names, activate, deactivate) with audit entry; API tests
   - Depends on: T-114
-  - Read: DESIGN §5.2
+  - Read: API_DESIGN §5.2
   - Learn: Deactivating instead of deleting
 
 - [ ] **T-116** · Seed command with the six launch authorities
@@ -796,13 +802,13 @@ Total: 384 tasks.
 - [ ] **T-118** · Frontend: admin 2FA gate
   - Done when: Without 2FA the admin sees a page to set it up; `admin_session_expired` asks to log in again; component tests
   - Depends on: T-117, T-108
-  - Read: DESIGN §2.2; SECURITY §4.2
+  - Read: API_DESIGN §2.2; SECURITY §4.2
   - Learn: Step-up authentication
 
 - [ ] **T-119** · Frontend: admin authorities page
   - Done when: List, add, edit (including other names), activate and deactivate authorities; component tests
   - Depends on: T-118, T-115
-  - Read: PRD AD-01; DESIGN §5.2
+  - Read: PRD AD-01; API_DESIGN §5.2
   - Learn: Admin tables and forms
 
 
@@ -886,13 +892,13 @@ Total: 384 tasks.
 - [ ] **T-132** · Upload checks: size and type
   - Done when: Size per file and real type by magic bytes (JPEG, PNG, HEIC, PDF); error codes `file_too_large`, `unsupported_file_type`; unit tests with sample files
   - Depends on: T-006
-  - Read: SECURITY §8; DESIGN §4.5
+  - Read: SECURITY §8; API_DESIGN §4.5
   - Learn: Never trusting file names or browser types
 
 - [ ] **T-133** · Upload checks: PDF rules and page count
   - Done when: Encrypted PDFs, JavaScript, attachments and forms are rejected (`invalid_pdf`); pages of images and PDFs are counted (`too_many_pages`); unit tests
   - Depends on: T-132
-  - Read: SECURITY §8; DESIGN §4.5
+  - Read: SECURITY §8; API_DESIGN §4.5
   - Learn: Dangerous parts of PDF files
 
 - [ ] **T-134** · Image re-encoding
@@ -928,13 +934,13 @@ Total: 384 tasks.
 - [ ] **T-139** · One-time download tokens
   - Done when: `core/download_tokens.py` stores a token in Redis with path, file name, `inline` or `attachment` and 15 minutes lifetime; a token works once; tests
   - Depends on: T-079
-  - Read: DESIGN §1.8; SECURITY §7
+  - Read: API_DESIGN §1.8; SECURITY §7
   - Learn: Short-lived, single-use tokens
 
 - [ ] **T-140** · `GET /api/v1/downloads/{download_token}`
-  - Done when: Checks the token, decrypts the file and returns it whole with the headers of DESIGN §4.7; invalid → `404 download_token_invalid`; API tests
+  - Done when: Checks the token, decrypts the file and returns it whole with the headers of API_DESIGN §4.7; invalid → `404 download_token_invalid`; API tests
   - Depends on: T-139, T-131
-  - Read: DESIGN §4.7; SECURITY §7
+  - Read: API_DESIGN §4.7; SECURITY §7
   - Learn: Streaming files from an API
 
 
@@ -1120,31 +1126,31 @@ Total: 384 tasks.
 - [ ] **T-170** · Admin: list and read knowledge sources
   - Done when: `GET /admin/knowledge-sources` (filters, pagination) and `GET /admin/knowledge-sources/{id}`; API tests
   - Depends on: T-167, T-112, T-026
-  - Read: DESIGN §5.3
+  - Read: API_DESIGN §5.3
   - Learn: List and detail endpoints
 
 - [ ] **T-171** · Admin: create text and URL sources
   - Done when: `POST /admin/knowledge-sources` for `text` and `url` with audit entry; status `pending` (task enqueue added in T-185); API tests
   - Depends on: T-170
-  - Read: DESIGN §5.3; PRD AD-02
+  - Read: API_DESIGN §5.3; PRD AD-02
   - Learn: Validating input that depends on a type field
 
 - [ ] **T-172** · Admin: edit and delete sources
   - Done when: `PATCH` (any change → `pending`) and `DELETE` with audit entries; API tests
   - Depends on: T-171
-  - Read: DESIGN §5.3; PRD AD-05
+  - Read: API_DESIGN §5.3; PRD AD-05
   - Learn: Edits that trigger reprocessing
 
 - [ ] **T-173** · Admin: PDF sources
   - Done when: `POST /admin/knowledge-sources/pdf-uploads` and `POST …/{id}/pdf-file` with the upload checks and encrypted storage in `sources`; API tests
   - Depends on: T-172, T-133, T-131
-  - Read: DESIGN §5.3
+  - Read: API_DESIGN §5.3
   - Learn: Multipart uploads
 
 - [ ] **T-174** · Admin: settings
   - Done when: `GET` and `PATCH /admin/settings` for the re-crawl interval (1–365) with audit entry; API tests
   - Depends on: T-169, T-112
-  - Read: DESIGN §5.4
+  - Read: API_DESIGN §5.4
   - Learn: Global settings
 
 - [ ] **T-175** · Crawler: robots.txt and page fetch
@@ -1234,7 +1240,7 @@ Total: 384 tasks.
 - [ ] **T-189** · Admin: re-index now
   - Done when: `POST /admin/knowledge-sources/{id}/reindex` (URL → crawl, others → ingest; `invalid_state` while processing); API tests
   - Depends on: T-186
-  - Read: DESIGN §5.3; PRD AD-03
+  - Read: API_DESIGN §5.3; PRD AD-03
   - Learn: Manual triggers
 
 - [ ] **T-190** · Command `reindex_all_sources`
@@ -1294,7 +1300,7 @@ Total: 384 tasks.
 - [ ] **T-199** · Frontend: admin source list
   - Done when: Sources per authority with status, error code and dates; polling while `processing`; component tests
   - Depends on: T-119, T-170, T-057
-  - Read: PRD AD-04; DESIGN §5.3
+  - Read: PRD AD-04; API_DESIGN §5.3
   - Learn: Showing background status
 
 - [ ] **T-200** · Frontend: add and edit sources
@@ -1306,7 +1312,7 @@ Total: 384 tasks.
 - [ ] **T-201** · Frontend: source actions and settings
   - Done when: Delete with confirmation, re-index, re-crawl interval setting; component tests
   - Depends on: T-200, T-189
-  - Read: PRD AD-03, AD-05; DESIGN §5.4
+  - Read: PRD AD-03, AD-05; API_DESIGN §5.4
   - Learn: Confirmation for destructive actions
 
 
@@ -1339,7 +1345,7 @@ Total: 384 tasks.
 - [ ] **T-206** · Read-only status and the Plan user level
   - Done when: Read-only is computed from subscriptions; the Plan user dependency uses it; `is_read_only` in `GET /me`; tests
   - Depends on: T-205, T-077
-  - Read: DESIGN §2.2; PRD B-09
+  - Read: API_DESIGN §2.2; PRD B-09
   - Learn: Deriving permissions from data
 
 - [ ] **T-207** · Monthly limit counting
@@ -1355,9 +1361,9 @@ Total: 384 tasks.
   - Learn: Daily business jobs
 
 - [ ] **T-209** · `GET /billing/plans` and `GET /billing/subscription`
-  - Done when: Plans with synced prices; current subscription and usage as in DESIGN §4.8; API tests
+  - Done when: Plans with synced prices; current subscription and usage as in API_DESIGN §4.8; API tests
   - Depends on: T-207, T-206
-  - Read: DESIGN §4.8
+  - Read: API_DESIGN §4.8
   - Learn: Composing a response from several services
 
 - [ ] **T-210** · Frontend: plan and usage
@@ -1369,7 +1375,7 @@ Total: 384 tasks.
 - [ ] **T-211** · Frontend: read-only banner
   - Done when: A banner and disabled AI actions when `is_read_only`; component tests
   - Depends on: T-210
-  - Read: PRD B-09; DESIGN §2.2
+  - Read: PRD B-09; API_DESIGN §2.2
   - Learn: Reflecting permissions in the UI
 
 
@@ -1396,25 +1402,25 @@ Total: 384 tasks.
 - [ ] **T-215** · `POST /letters`: request and checks
   - Done when: Multipart parsing (`pages` only, no authority), Plan user, upload rate limit, file checks, total monthly limit (`transaction_limit_reached`); nothing is stored yet on errors; API tests for all error codes
   - Depends on: T-213, T-207, T-206, T-133, T-080
-  - Read: DESIGN §4.5; PRD U-08
+  - Read: API_DESIGN §4.5; PRD U-08
   - Learn: Validating multipart uploads
 
 - [ ] **T-216** · `POST /letters`: create transaction and letter
   - Done when: Transaction (authority not yet known), letter and pages are created; pages stored encrypted; `process_letter` (empty task for now) enqueued after commit; `202` response; API tests
   - Depends on: T-215, T-131, T-036, T-123
-  - Read: DESIGN §4.5; ARCHITECTURE §7.1 steps 1–6
+  - Read: API_DESIGN §4.5; ARCHITECTURE §7.1 steps 1–6
   - Learn: Transactions spanning database and storage
 
 - [ ] **T-217** · `GET /letters`
-  - Done when: Paginated history items as in DESIGN §4.5; API tests
+  - Done when: Paginated history items as in API_DESIGN §4.5; API tests
   - Depends on: T-216, T-026
-  - Read: DESIGN §4.5
+  - Read: API_DESIGN §4.5
   - Learn: List responses
 
 - [ ] **T-218** · `GET /letters/{letter_id}`
   - Done when: Detail response with `authority` (`null` until recognised), `authority_recognition_confidence`, `authority_changed_by_user_at` and explanation (`null` until ready); another user's letter → 404; API tests
   - Depends on: T-217
-  - Read: DESIGN §4.5, §2.3
+  - Read: API_DESIGN §4.5, §2.3
   - Learn: Nested response schemas
 
 - [ ] **T-219** · `process_letter`: scanning step
@@ -1462,13 +1468,13 @@ Total: 384 tasks.
 - [ ] **T-226** · Authority recognition: no authority and invalid answers
   - Done when: `null` → letter `failed` with `authority_not_supported` (not retryable), transaction `failed`; an id that was not in the `list_authorities` result counts as invalid output (retry, fallback, `invalid_llm_output`); task tests
   - Depends on: T-225
-  - Read: RAG §7.9, §8.1; DESIGN §3.4; PRD E-10
+  - Read: RAG §7.9, §8.1; API_DESIGN §3.4; PRD E-10
   - Learn: Never trusting a model's answer without checking it
 
 - [ ] **T-227** · `process_letter`: per-authority limit
   - Done when: After recognition, plans with a per-authority limit are checked; reached → `failed` with `transaction_limit_reached`, transaction `failed` (not counted); task tests
   - Depends on: T-226, T-207
-  - Read: DATA_MODEL §5; PRD B-07; DESIGN §3.4
+  - Read: DATA_MODEL §5; PRD B-07; API_DESIGN §3.4
   - Learn: Checking a limit when the needed information arrives later
 
 - [ ] **T-228** · Prompt and schema: explanation
@@ -1504,25 +1510,25 @@ Total: 384 tasks.
 - [ ] **T-233** · Failed letters and retry
   - Done when: Retryable failures, `authority_not_supported` and `transaction_limit_reached` set the transaction to `failed`; `POST /letters/{id}/retry` only for retryable codes sets it back and restarts; `letter_not_retryable`; API and task tests
   - Depends on: T-231, T-232
-  - Read: DESIGN §4.5, §3.4; DATA_MODEL §11
+  - Read: API_DESIGN §4.5, §3.4; DATA_MODEL §11
   - Learn: Recovering from failures fairly
 
 - [ ] **T-234** · `DELETE /letters/{letter_id}`
   - Done when: Content deleted in any status; a running task stops quietly; `delete_letter_files`; transaction kept; API and task tests
   - Depends on: T-233
-  - Read: DESIGN §4.5; ARCHITECTURE §7.4
+  - Read: API_DESIGN §4.5; ARCHITECTURE §7.4
   - Learn: Safe deletion while work is running
 
 - [ ] **T-235** · Original page view
   - Done when: `POST /letters/{id}/pages/{page_id}/download-token` (inline); API test
   - Depends on: T-218, T-140
-  - Read: DESIGN §4.5, §1.8
+  - Read: API_DESIGN §4.5, §1.8
   - Learn: Reusing the download-token mechanism
 
 - [ ] **T-236** · `PATCH /letters/{letter_id}`
   - Done when: Correct `user_deadline`, recipient address and file reference; reminder rescheduling wired in T-317; API tests
   - Depends on: T-218
-  - Read: DESIGN §4.5; PRD E-07, R-03
+  - Read: API_DESIGN §4.5; PRD E-07, R-03
   - Learn: Partial updates
 
 - [ ] **T-237** · Frontend: add pages
@@ -1540,7 +1546,7 @@ Total: 384 tasks.
 - [ ] **T-239** · Frontend: compress and submit
   - Done when: HEIC handling, image compression, size and page checks, submit with progress, limit and read-only messages; component tests
   - Depends on: T-238
-  - Read: PRD U-07, U-09; DESIGN §4.5
+  - Read: PRD U-07, U-09; API_DESIGN §4.5
   - Learn: Client-side compression and upload progress
 
 - [ ] **T-240** · Frontend: letter history
@@ -1552,13 +1558,13 @@ Total: 384 tasks.
 - [ ] **T-241** · Frontend: processing status
   - Done when: Polling with step display (scanning, reading, analysing); failure message; retry button for retryable failures; for `authority_not_supported` a message that the authority is not supported (the button to pick one comes in T-283); component tests
   - Depends on: T-240, T-233, T-057
-  - Read: DESIGN §1.7, §4.5; PRD E-08
+  - Read: API_DESIGN §1.7, §4.5; PRD E-08
   - Learn: Progress feedback for slow work
 
 - [ ] **T-242** · Frontend: explanation
   - Done when: Recognised authority on top (with the check note when confidence is low), deadline, summary, actions, reply needed with reason, sources ("source updated"), the fixed "nothing found" sentence when `official_sources_found` is false, uncertainty message with contact, disclaimer; component tests
   - Depends on: T-241
-  - Read: PRD E-01–E-06, E-09, §10; RAG §8.2; DESIGN §4.5
+  - Read: PRD E-01–E-06, E-09, §10; RAG §8.2; API_DESIGN §4.5
   - Learn: Displaying AI results honestly
 
 - [ ] **T-243** · Frontend: deadline and address correction
@@ -1613,15 +1619,15 @@ Total: 384 tasks.
   - Learn: Chaining background tasks
 
 - [ ] **T-251** · `GET /letters/{letter_id}/reply`
-  - Done when: The reply state of DESIGN §4.6 (preview, chat with `answer_basis` and `sources` per answer, draft, versions; empty state for letters not ready); API tests
+  - Done when: The reply state of API_DESIGN §4.6 (preview, chat with `answer_basis` and `sources` per answer, draft, versions; empty state for letters not ready); API tests
   - Depends on: T-250
-  - Read: DESIGN §4.6
+  - Read: API_DESIGN §4.6
   - Learn: One read endpoint for a whole screen
 
 - [ ] **T-252** · `POST /letters/{letter_id}/reply/preview`
   - Done when: Creates the preview when none exists or the last one failed; Plan user; `invalid_state`; API tests
   - Depends on: T-251
-  - Read: DESIGN §4.6; PRD R-01
+  - Read: API_DESIGN §4.6; PRD R-01
   - Learn: Starting work on demand
 
 - [ ] **T-253** · Prompt and schema: chat answer
@@ -1639,7 +1645,7 @@ Total: 384 tasks.
 - [ ] **T-255** · `POST …/reply/chat-messages`
   - Done when: Saves the user message and a queued assistant message; plan chat limit, 1,000 characters, chat rate limit, state rules; API tests
   - Depends on: T-251, T-205
-  - Read: DESIGN §4.6; PRD R-02, R-12
+  - Read: API_DESIGN §4.6; PRD R-02, R-12
   - Learn: Limits and validation for chat
 
 - [ ] **T-256** · Task `answer_reply_chat_message`
@@ -1657,7 +1663,7 @@ Total: 384 tasks.
 - [ ] **T-258** · Retry a failed chat answer
   - Done when: `POST …/chat-messages/{id}/retry` for failed assistant messages; not counted as a user message; API tests
   - Depends on: T-257
-  - Read: DESIGN §4.6
+  - Read: API_DESIGN §4.6
   - Learn: Retry without double counting
 
 - [ ] **T-259** **[Check K-15]** · WeasyPrint system packages
@@ -1693,31 +1699,31 @@ Total: 384 tasks.
 - [ ] **T-264** · Draft generation
   - Done when: `POST …/reply/draft` and `generate_german_letter`: single draft row, `generation_requested_at`, encrypted PDF in `replies`; tokens recorded; API and task tests
   - Depends on: T-258, T-261, T-263, T-131
-  - Read: DESIGN §4.6; ARCHITECTURE §7.2 step 4
+  - Read: API_DESIGN §4.6; ARCHITECTURE §7.2 step 4
   - Learn: Replacing a draft safely
 
 - [ ] **T-265** · Outdated draft and chat blocking
   - Done when: `is_outdated` in the reply state; chat blocked while a draft is generated; tests
   - Depends on: T-264
-  - Read: DESIGN §4.6; PRD R-05
+  - Read: API_DESIGN §4.6; PRD R-05
   - Learn: Avoiding race conditions
 
 - [ ] **T-266** · Draft PDF preview
   - Done when: `POST …/reply/draft/preview-token` (inline); `invalid_state` when not ready; API tests
   - Depends on: T-264, T-140
-  - Read: DESIGN §4.6
+  - Read: API_DESIGN §4.6
   - Learn: Previewing without locking
 
 - [ ] **T-267** · Lock a draft
   - Done when: `POST …/reply/draft/lock` creates the next version, completes the transaction on first lock, returns a download token for `download`; double click → 409; API tests
   - Depends on: T-265
-  - Read: DESIGN §4.6; DATA_MODEL §5; PRD R-06–R-08
+  - Read: API_DESIGN §4.6; DATA_MODEL §5; PRD R-06–R-08
   - Learn: Turning a draft into an unchangeable record
 
 - [ ] **T-268** · Version download and sent date
   - Done when: Version download token (sets `downloaded_at`) and `PATCH` sent date; API tests
   - Depends on: T-267
-  - Read: DESIGN §4.6; PRD R-09–R-10
+  - Read: API_DESIGN §4.6; PRD R-09–R-10
   - Learn: Records that keep history
 
 - [ ] **T-269** **[Developer]** **[Check K-17]** · Mailjet account
@@ -1735,13 +1741,13 @@ Total: 384 tasks.
 - [ ] **T-271** · "Email me" delivery
   - Done when: `send_reply_letter_email` sends the locked PDF to the verified email with retries; `email_delivery_status` updated; task tests
   - Depends on: T-267, T-270, T-126
-  - Read: DESIGN §4.6; SECURITY §14a
+  - Read: API_DESIGN §4.6; SECURITY §14a
   - Learn: Reliable delivery with retries
 
 - [ ] **T-272** · Send a version again
   - Done when: `POST …/versions/{id}/email`; `invalid_state` while queued; API tests
   - Depends on: T-271
-  - Read: DESIGN §4.6; DATA_MODEL §11
+  - Read: API_DESIGN §4.6; DATA_MODEL §11
   - Learn: Re-triggering background work
 
 - [ ] **T-273** **[Check K-20]** · PDF preview with one-time tokens
@@ -1789,7 +1795,7 @@ Total: 384 tasks.
 - [ ] **T-280** · `POST /letters/{letter_id}/authority-change`: checks
   - Done when: Plan user; allowed for a `ready` letter without a locked version; new authority active and different; per-authority limit; codes `authority_change_not_allowed`, `authority_not_found`, `authority_unchanged`, `transaction_limit_reached`; `can_change_authority` in the detail response; API tests
   - Depends on: T-278, T-227
-  - Read: DESIGN §4.5; ARCHITECTURE §7.1 step 10; DATA_MODEL §5; PRD E-09
+  - Read: API_DESIGN §4.5; ARCHITECTURE §7.1 step 10; DATA_MODEL §5; PRD E-09
   - Learn: Redoing part of a pipeline safely when the user corrects the AI
 
 - [ ] **T-281** · Authority change: reset and new explanation
@@ -1801,13 +1807,13 @@ Total: 384 tasks.
 - [ ] **T-282** · Authority change after `authority_not_supported`
   - Done when: The same endpoint also works for a letter failed with `authority_not_supported`: `failed → processing`, transaction `failed → started`; API and task tests
   - Depends on: T-281
-  - Read: DESIGN §4.5; DATA_MODEL §11; PRD E-10
+  - Read: API_DESIGN §4.5; DATA_MODEL §11; PRD E-10
   - Learn: Allowed status transitions in one place
 
 - [ ] **T-283** · Frontend: change the authority
   - Done when: A "wrong authority?" action next to the recognised authority and a "pick the authority" action on the unsupported message: list of active authorities, warning that preview, chat and draft are removed, polling after the change; hidden when `can_change_authority` is false; component tests
   - Depends on: T-282, T-242, T-113
-  - Read: PRD E-09, E-10; DESIGN §4.4–§4.5
+  - Read: PRD E-09, E-10; API_DESIGN §4.4–§4.5
   - Learn: Letting the user correct the AI in the UI
 
 
@@ -1816,7 +1822,7 @@ Total: 384 tasks.
 - [ ] **T-284** **[Check K-24]** · MCP Python SDK and specification
   - Done when: It is confirmed how the current official MCP Python SDK (FastMCP) mounts its Streamable HTTP app in FastAPI at `/mcp`, reads the `Authorization` header and runs over stdio, and which specification version it implements; result in MEMORY.md
   - Depends on: T-015
-  - Read: ARCHITECTURE §3, §7.12, §13.5; DESIGN §6
+  - Read: ARCHITECTURE §3, §7.12, §13.5; API_DESIGN §6
   - Learn: What MCP is: a standard way for AI clients to use tools, resources and prompts
 
 - [ ] **T-285** **[Check K-25, K-26]** · MCP clients and the `Origin` rule
@@ -1834,7 +1840,7 @@ Total: 384 tasks.
 - [ ] **T-287** · Admin: MCP access token endpoints
   - Done when: `GET /admin/mcp-access-tokens`, `POST /admin/mcp-access-tokens` (token only in this response) and `POST …/{id}/revoke` (`invalid_state` when already revoked), with audit entries without the token; API tests
   - Depends on: T-286, T-110, T-026
-  - Read: DESIGN §5.9, §1.12; PRD AD-14
+  - Read: API_DESIGN §5.9, §1.12; PRD AD-14
   - Learn: Showing a secret once and never again
 
 - [ ] **T-288** · MCP server with the public tools
@@ -1852,19 +1858,19 @@ Total: 384 tasks.
 - [ ] **T-290** · MCP over HTTP at `/mcp`
   - Done when: `app/main.py` mounts the MCP app at `/mcp` (Streamable HTTP); a test client from the SDK lists tools against the test app
   - Depends on: T-289
-  - Read: ARCHITECTURE §4, §7.12; DESIGN §6; PRD MC-03
+  - Read: ARCHITECTURE §4, §7.12; API_DESIGN §6; PRD MC-03
   - Learn: Mounting a second protocol inside a FastAPI app
 
 - [ ] **T-291** · MCP token check
   - Done when: `mcp_server/access.py` checks `Authorization: Bearer` via `mcp_access.service` on every request; missing, wrong, revoked or expired tokens all get `401 invalid_mcp_access_token` as Problem Details with `WWW-Authenticate: Bearer`; last use updated; API tests
   - Depends on: T-290, T-286
-  - Read: SECURITY §10a.2; DESIGN §6, §3; PRD MC-05
+  - Read: SECURITY §10a.2; API_DESIGN §6, §3; PRD MC-05
   - Learn: Authenticating machines instead of people
 
 - [ ] **T-292** · MCP: browser block and rate limits
   - Done when: Requests with an `Origin` header → `403 browser_origin_not_allowed`; no CORS for `/mcp`; rate-limit group `mcp` (30 per minute, 1,000 per day per token, `RATE_LIMIT_MCP_PER_MINUTE_TOKEN`, `RATE_LIMIT_MCP_PER_DAY_TOKEN`); failed token checks use the authentication limit per IP; API tests
   - Depends on: T-291, T-080, T-285
-  - Read: SECURITY §10a.2, §11; DESIGN §1.9, §6; ARCHITECTURE §11
+  - Read: SECURITY §10a.2, §11; API_DESIGN §1.9, §6; ARCHITECTURE §11
   - Learn: Protecting an endpoint that costs money per call
 
 - [ ] **T-293** · MCP tool-call log and query tokens
@@ -1906,7 +1912,7 @@ Total: 384 tasks.
 - [ ] **T-299** · Frontend: admin MCP access tokens
   - Done when: List with partner, prefix, expiry, last use and validity; create with optional expiry, show the token once with a copy button and a warning; revoke with confirmation; component tests
   - Depends on: T-287, T-118
-  - Read: PRD AD-14; DESIGN §5.9
+  - Read: PRD AD-14; API_DESIGN §5.9
   - Learn: UI for secrets that are shown only once
 
 - [ ] **T-300** · README: connecting an MCP client
@@ -1939,25 +1945,25 @@ Total: 384 tasks.
 - [ ] **T-304** · `POST /billing/checkout-sessions`
   - Done when: Checkout session for the current price; `subscription_already_active`, `plan_not_available`; API tests
   - Depends on: T-303, T-209
-  - Read: DESIGN §4.8
+  - Read: API_DESIGN §4.8
   - Learn: Hosted payment pages
 
 - [ ] **T-305** · `POST /billing/portal-sessions`
   - Done when: Portal session; `no_billing_account`; API tests
   - Depends on: T-304
-  - Read: DESIGN §4.8
+  - Read: API_DESIGN §4.8
   - Learn: Self-service subscription management
 
 - [ ] **T-306** · `GET /billing/invoices`
   - Done when: Own invoices, paginated; API tests
   - Depends on: T-203, T-026, T-076
-  - Read: DESIGN §4.8; PRD B-06
+  - Read: API_DESIGN §4.8; PRD B-06
   - Learn: Showing documents from a provider
 
 - [ ] **T-307** · Webhook: signature and deduplication
   - Done when: `POST /billing/webhook` reads the raw body, verifies the signature, stores each event id once; `invalid_stripe_signature`; API tests
   - Depends on: T-302, T-203
-  - Read: SECURITY §14; DESIGN §4.8
+  - Read: SECURITY §14; API_DESIGN §4.8
   - Learn: Webhook security and idempotency
 
 - [ ] **T-308** · Webhook: subscription events
@@ -2026,7 +2032,7 @@ Total: 384 tasks.
 - [ ] **T-318** · `PATCH /me/notification-settings`
   - Done when: Validation (1–60, distinct) and rescheduling; API tests
   - Depends on: T-317, T-091
-  - Read: DESIGN §4.3
+  - Read: API_DESIGN §4.3
   - Learn: Settings with side effects
 
 - [ ] **T-319** · Web push adapter
@@ -2038,7 +2044,7 @@ Total: 384 tasks.
 - [ ] **T-320** · Push subscription endpoints
   - Done when: `GET`, `POST` (update when the endpoint exists) and `DELETE /me/push-subscriptions`; API tests
   - Depends on: T-319, T-076
-  - Read: DESIGN §4.3
+  - Read: API_DESIGN §4.3
   - Learn: Storing device subscriptions
 
 - [ ] **T-321** · Task `send_due_reminders`
@@ -2071,43 +2077,43 @@ Total: 384 tasks.
 - [ ] **T-325** · `GET /admin/transactions`
   - Done when: Filters, pagination, tokens per transaction; no content; API tests
   - Depends on: T-145, T-110, T-026
-  - Read: DESIGN §5.6; PRD AD-06
+  - Read: API_DESIGN §5.6; PRD AD-06
   - Learn: Joining and aggregating data
 
 - [ ] **T-326** · `GET /admin/statistics`
   - Done when: Default period; counts per authority, user and ingestion tokens, fallback calls, letters with an unsupported or user-changed authority, tool calls per tool, MCP calls and query tokens per token; API tests
   - Depends on: T-325, T-157, T-281
-  - Read: DESIGN §5.6; PRD AD-07
+  - Read: API_DESIGN §5.6; PRD AD-07
   - Learn: Aggregation queries
 
 - [ ] **T-327** · `GET /admin/users`
   - Done when: Search by customer number or email; audit entry per view; no encrypted columns except names; API tests
   - Depends on: T-112, T-083
-  - Read: DESIGN §5.7; PRD AD-08
+  - Read: API_DESIGN §5.7; PRD AD-08
   - Learn: Privacy-aware admin queries
 
 - [ ] **T-328** · `GET /admin/invoices`
   - Done when: Filters, pagination, payment method type only; audit entry per view; API tests
   - Depends on: T-112, T-203
-  - Read: DESIGN §5.7; PRD AD-09
+  - Read: API_DESIGN §5.7; PRD AD-09
   - Learn: Showing only what is allowed
 
 - [ ] **T-329** · Admin: list and create plans
   - Done when: `GET` and `POST /admin/plans` with audit; Stripe sync started for paid plans; API tests
   - Depends on: T-303, T-112
-  - Read: DESIGN §5.5; PRD AD-11
+  - Read: API_DESIGN §5.5; PRD AD-11
   - Learn: Admin-configured business values
 
 - [ ] **T-330** · Admin: update plans and set prices
   - Done when: `PATCH /admin/plans/{id}` and `POST /admin/plans/{id}/prices`; `active_trial_plan_exists`, `price_not_allowed_for_trial_plan`; API tests
   - Depends on: T-329
-  - Read: DESIGN §5.5
+  - Read: API_DESIGN §5.5
   - Learn: Versioned prices
 
 - [ ] **T-331** · `GET /admin/audit-logs`
   - Done when: Filters and pagination; read only; API tests
   - Depends on: T-112, T-026
-  - Read: DESIGN §5.8
+  - Read: API_DESIGN §5.8
   - Learn: Filtering logs
 
 - [ ] **T-332** · Frontend: admin transactions and statistics
@@ -2146,7 +2152,7 @@ Total: 384 tasks.
 - [ ] **T-337** · `DELETE /me`
   - Done when: Recent login and confirmation required; account set to `deleted`; Auth user disabled and sessions revoked; API tests
   - Depends on: T-076, T-082
-  - Read: DESIGN §4.3, §2.4; PRD H-05
+  - Read: API_DESIGN §4.3, §2.4; PRD H-05
   - Learn: Re-authentication for dangerous actions
 
 - [ ] **T-338** · Account deletion clean-up
@@ -2158,7 +2164,7 @@ Total: 384 tasks.
 - [ ] **T-339** · Data export: table and endpoints
   - Done when: Table `data_exports`; `POST` and `GET /me/data-exports`; download token; export rate limit; `data_export_expired`; API tests
   - Depends on: T-140, T-080
-  - Read: DESIGN §4.3; DATA_MODEL `data_exports`
+  - Read: API_DESIGN §4.3; DATA_MODEL `data_exports`
   - Learn: Data portability
 
 - [ ] **T-340** · Task `export_user_data`
@@ -2224,7 +2230,7 @@ Total: 384 tasks.
 - [ ] **T-350** · Frontend: delete account
   - Done when: Password re-entry, confirmation and the result page; component tests
   - Depends on: T-338, T-106
-  - Read: PRD H-05; DESIGN §2.4
+  - Read: PRD H-05; API_DESIGN §2.4
   - Learn: Dangerous actions in the UI
 
 - [ ] **T-351** · Frontend: download my data
@@ -2441,3 +2447,4 @@ Total: 384 tasks.
 | 2026-11-21 | 0.4 | Final review before the first task: AI coding assistant settings (M00) and `.mcp.json` task (M14); `mcp_access_tokens` table before `token_usages`; MCP query tokens; MCP prompt version setting; five tasks split to one idea each (tool format and registry, recognition and its checks, chat answer and its sources, authority change checks and reset, MCP tests over HTTP and locally); 382 tasks; renumbered before any task was started |
 | 2026-11-22 | 0.5 | New task T-383 in M00 (AI assistant's files stay local, MEMORY D-036); notes on T-002 and T-003; T-295 uses a local `.mcp.json`; 383 tasks |
 | 2026-11-22 | 0.6 | New task T-384 in M00 (neutral name for the coding assistant, MEMORY D-101); §1, T-002, T-003, T-295 and change log 0.4 reworded; 384 tasks |
+| 2026-11-22 | 0.7 | New task T-385 in M00 (API design document renamed, MEMORY D-105); references changed to `API_DESIGN §`; 385 tasks |
