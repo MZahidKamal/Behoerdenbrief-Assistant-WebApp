@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.12
+**Document Version:** 0.13
 **Status:** Draft
 **Last updated:** 2026-11-22
 
@@ -536,6 +536,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: Only `D`, `DTZ` and Ruff's default rules (rejected: too few bug and security checks).
 - Details: RULES §1.5, §3.2, §4.5; `server_side/pyproject.toml` `[tool.ruff]`
 
+#### D-103 · 2026-11-22 · Pydantic plugin for mypy
+- Decision: mypy runs in strict mode with the Pydantic plugin (`pydantic.mypy`); the plugin's extra options stay off.
+- Reason: Without the plugin, mypy reports a missing argument for every settings class created without arguments (values come from environment variables); this would need `# type: ignore` in `core/config.py`. The plugin ships with pydantic, so no new package is needed.
+- Alternatives: Plain mypy strict without the plugin (rejected).
+- Details: RULES §4.6; `server_side/pyproject.toml` `[tool.mypy]`
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -658,3 +664,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-22 | 0.10 | D-101 (neutral name for the coding assistant); D-020, D-035, D-090, D-091, D-096, D-097, D-098, D-100, K-29 and change log 0.5 and 0.7 reworded |
 | 2026-11-22 | 0.11 | K-03 done: Python 3.14 (D-030 fallback applies) |
 | 2026-11-22 | 0.12 | D-102 (Ruff rule set) |
+| 2026-11-22 | 0.13 | D-103 (Pydantic plugin for mypy) |
