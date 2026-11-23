@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.22
+**Document Version:** 0.23
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -597,6 +597,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: A JSON list (rejected: easy to get wrong); accepting a network error for `500` answers (rejected).
 - Details: SECURITY §12; ARCHITECTURE §11.1; `server_side/app/main.py`, `server_side/app/core/config.py`, `server_side/app/core/exceptions.py`
 
+#### D-113 · 2026-11-23 · Own request size limit middleware
+- Decision: An own plain ASGI middleware (`core/request_size_limit.py`) enforces `MAX_UPLOAD_REQUEST_MB` (default 30, 1 MB = 1024 × 1024 bytes) on every request body: first by `Content-Length`, then by counting the bytes. It raises `RequestBodyTooLargeError`, a subclass of Starlette's `HTTPException(413)` and not of `AppException` (an exception to RULES §2); the `HTTPException` handler returns `413 request_too_large`.
+- Reason: Developer decision. FastAPI's built-in `max_body_size` answers with plain text and outside our middleware when a route does not read the body (no Problem Details, no security headers, no CORS). FastAPI turns every error during body reading into `400`, except an `HTTPException`.
+- Alternatives: FastAPI's built-in `max_body_size` (rejected: the gap above); an `AppException` (rejected: it becomes a wrong `400`).
+- Details: API_DESIGN §1.8, §3.3; ARCHITECTURE §4.1; `server_side/app/core/request_size_limit.py`
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -729,3 +735,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-23 | 0.20 | D-110 (pointers for request parts; codes for other HTTP statuses) |
 | 2026-11-23 | 0.21 | D-111 (security header values of the API) |
 | 2026-11-23 | 0.22 | D-112 (CORS rules of the API) |
+| 2026-11-23 | 0.23 | D-113 (own request size limit middleware) |

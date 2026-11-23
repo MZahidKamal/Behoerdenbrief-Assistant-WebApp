@@ -17,7 +17,13 @@ from app.core.config import (
 pytestmark = [allure.feature("server")]
 
 # The environment variables that these tests set and remove.
-SETTING_NAMES = ["APP_ENV", "LOG_LEVEL", "FRONTEND_BASE_URL", "CORS_ALLOWED_ORIGINS"]
+SETTING_NAMES = [
+    "APP_ENV",
+    "LOG_LEVEL",
+    "FRONTEND_BASE_URL",
+    "CORS_ALLOWED_ORIGINS",
+    "MAX_UPLOAD_REQUEST_MB",
+]
 
 # An invented address for the required FRONTEND_BASE_URL.
 EXAMPLE_FRONTEND_BASE_URL = "https://app.example.test"
@@ -259,6 +265,55 @@ def test_load_settings_splits_cors_origins_when_value_has_commas(
         "http://localhost:3000",
         "https://app.example.test",
     )
+
+
+def test_load_settings_uses_30_mb_upload_limit_when_limit_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+
+    # Act
+    settings = load_settings(environment_file=None)
+
+    # Assert: the value of API_DESIGN §1.8.
+    assert settings.max_upload_request_mb == 30
+
+
+def test_load_settings_reads_upload_limit_when_limit_is_set(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("MAX_UPLOAD_REQUEST_MB", "5")
+
+    # Act
+    settings = load_settings(environment_file=None)
+
+    # Assert
+    assert settings.max_upload_request_mb == 5
+
+
+@pytest.mark.parametrize("wrong_limit", ["0", "-1", "thirty"])
+def test_load_settings_raises_invalid_settings_error_when_upload_limit_is_wrong(
+    monkeypatch: pytest.MonkeyPatch, wrong_limit: str
+) -> None:
+    # Arrange
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("MAX_UPLOAD_REQUEST_MB", wrong_limit)
+
+    # Act
+    with pytest.raises(InvalidSettingsError) as error_information:
+        load_settings(environment_file=None)
+
+    # Assert
+    assert "MAX_UPLOAD_REQUEST_MB" in str(error_information.value)
 
 
 def test_settings_keeps_cors_origins_when_value_is_already_list() -> None:
