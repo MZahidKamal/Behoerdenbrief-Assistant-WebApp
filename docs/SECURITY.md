@@ -1,7 +1,7 @@
 # Security
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.13
+**Document Version:** 0.14
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -262,7 +262,7 @@ Values come from configuration (ARCHITECTURE §11) so they can be tuned without 
 
 | Area | Rule |
 |---|---|
-| CORS | Only `CORS_ALLOWED_ORIGINS` (frontend URLs); no wildcard |
+| CORS | Only `CORS_ALLOWED_ORIGINS` (frontend URLs); no wildcard. Each origin is exactly `http(s)://host[:port]`; methods `GET, POST, PATCH, DELETE`; request headers `Authorization, Content-Type`; exposed header `Retry-After`; no credentials (Bearer tokens, no cookies); the `500` handler adds the permission itself, because it runs outside all middleware (MEMORY D-112) |
 | Security headers (frontend and API) | `Strict-Transport-Security`, `Content-Security-Policy` (no inline scripts except Next.js requirements, no third-party scripts except Stripe redirect and Sentry), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera only for the app itself), `frame-ancestors 'none'` |
 | API header values | `Strict-Transport-Security: max-age=63072000; includeSubDomains` (no `preload`); `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, except on Swagger UI (`/docs`, `/docs/oauth2-redirect`, only outside production); `Permissions-Policy: camera=(), microphone=(), geolocation=()`; set by one middleware, and by the `500` handler, which runs outside all middleware (MEMORY D-111) |
 | CSRF | The API uses Bearer tokens, not cookies, so classic CSRF does not apply; the webhook uses Stripe signatures |
@@ -417,3 +417,4 @@ Scheduled jobs perform these deletions; each job's selection rule is tested.
 | 2026-11-22 | 0.11 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |
 | 2026-11-23 | 0.12 | §12: ReDoc (`/redoc`) disabled in every environment (MEMORY D-109) |
 | 2026-11-23 | 0.13 | §12: exact security header values of the API (MEMORY D-111) |
+| 2026-11-23 | 0.14 | §12: exact CORS rules of the API (MEMORY D-112) |
