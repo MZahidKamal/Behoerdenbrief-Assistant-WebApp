@@ -9,6 +9,7 @@ from fastapi import APIRouter, FastAPI
 from pydantic import BaseModel
 
 from app.core.config import get_settings
+from app.core.logging import configure_logging
 
 
 class HealthResponse(BaseModel):
@@ -51,6 +52,9 @@ def create_app() -> FastAPI:
     # Read the settings first. If one is missing or wrong, the app stops
     # here with a clear message, before it can run in a broken state.
     settings = get_settings()
+
+    # Set up the log format next, so every later step can already log.
+    configure_logging(settings)
 
     # The API documentation is a full map of all endpoints. It helps us while
     # we build, but in production it would only help an attacker, so there

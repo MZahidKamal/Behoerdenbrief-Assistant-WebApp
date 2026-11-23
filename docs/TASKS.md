@@ -196,7 +196,7 @@ Total: 387 tasks.
   - Read: SECURITY §12; API_DESIGN §1.11
   - Learn: OpenAPI and Swagger UI in FastAPI
 
-- [ ] **T-018** · Logging setup
+- [x] **T-018** · Logging setup
   - Done when: `core/logging.py` writes JSON lines in production and readable text locally, with time, level, logger and message; unit tests
   - Depends on: T-014
   - Read: RULES §8; SECURITY §15
