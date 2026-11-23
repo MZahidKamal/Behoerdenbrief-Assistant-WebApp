@@ -12,7 +12,10 @@ from app.core.config import InvalidSettingsError, get_settings, load_settings
 pytestmark = [allure.feature("server")]
 
 # The environment variables that these tests set and remove.
-SETTING_NAMES = ["APP_ENV", "LOG_LEVEL"]
+SETTING_NAMES = ["APP_ENV", "LOG_LEVEL", "FRONTEND_BASE_URL"]
+
+# An invented address for the required FRONTEND_BASE_URL.
+EXAMPLE_FRONTEND_BASE_URL = "https://app.example.test"
 
 
 @pytest.fixture(autouse=True)
@@ -44,6 +47,7 @@ def test_load_settings_returns_values_when_environment_is_valid(
     # Arrange
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("LOG_LEVEL", "WARNING")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -51,6 +55,7 @@ def test_load_settings_returns_values_when_environment_is_valid(
     # Assert
     assert settings.app_env == "production"
     assert settings.log_level == "WARNING"
+    assert str(settings.frontend_base_url) == f"{EXAMPLE_FRONTEND_BASE_URL}/"
 
 
 def test_load_settings_uses_info_log_level_when_log_level_is_missing(
@@ -58,6 +63,7 @@ def test_load_settings_uses_info_log_level_when_log_level_is_missing(
 ) -> None:
     # Arrange
     monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -72,6 +78,7 @@ def test_load_settings_uses_info_log_level_when_log_level_is_empty(
     # Arrange
     monkeypatch.setenv("APP_ENV", "development")
     monkeypatch.setenv("LOG_LEVEL", "")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -127,6 +134,7 @@ def test_load_settings_hides_value_in_error_message_when_value_is_invalid(
     value_to_hide = "do-not-show-this-value"
     monkeypatch.setenv("APP_ENV", "development")
     monkeypatch.setenv("LOG_LEVEL", value_to_hide)
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     with pytest.raises(InvalidSettingsError) as error_information:
@@ -143,7 +151,10 @@ def test_load_settings_reads_values_when_environment_file_exists(
 ) -> None:
     # Arrange
     environment_file = tmp_path / ".env"
-    environment_file.write_text("APP_ENV=test\nLOG_LEVEL=DEBUG\n", encoding="utf-8")
+    environment_file.write_text(
+        f"APP_ENV=test\nLOG_LEVEL=DEBUG\nFRONTEND_BASE_URL={EXAMPLE_FRONTEND_BASE_URL}\n",
+        encoding="utf-8",
+    )
 
     # Act
     settings = load_settings(environment_file=environment_file)
@@ -161,6 +172,7 @@ def test_load_settings_prefers_environment_variable_when_file_has_same_setting(
     environment_file = tmp_path / ".env"
     environment_file.write_text("APP_ENV=test\n", encoding="utf-8")
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     settings = load_settings(environment_file=environment_file)
@@ -172,9 +184,10 @@ def test_load_settings_prefers_environment_variable_when_file_has_same_setting(
 def test_get_settings_returns_same_object_when_called_twice(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Arrange: set both values, so a local `.env` file cannot change the result.
+    # Arrange: set all values, so a local `.env` file cannot change the result.
     monkeypatch.setenv("APP_ENV", "test")
     monkeypatch.setenv("LOG_LEVEL", "INFO")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     first_settings = get_settings()
@@ -183,3 +196,33 @@ def test_get_settings_returns_same_object_when_called_twice(
     # Assert
     assert first_settings is second_settings
     assert first_settings.app_env == "test"
+
+
+def test_load_settings_raises_invalid_settings_error_when_frontend_url_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange: the fixture has removed FRONTEND_BASE_URL.
+    monkeypatch.setenv("APP_ENV", "development")
+
+    # Act
+    with pytest.raises(InvalidSettingsError) as error_information:
+        load_settings(environment_file=None)
+
+    # Assert
+    assert "FRONTEND_BASE_URL" in str(error_information.value)
+    assert "required" in str(error_information.value)
+
+
+def test_load_settings_raises_invalid_settings_error_when_frontend_url_is_not_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", "not a url")
+
+    # Act
+    with pytest.raises(InvalidSettingsError) as error_information:
+        load_settings(environment_file=None)
+
+    # Assert
+    assert "FRONTEND_BASE_URL" in str(error_information.value)

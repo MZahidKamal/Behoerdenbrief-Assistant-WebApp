@@ -9,6 +9,7 @@ from fastapi import APIRouter, FastAPI
 from pydantic import BaseModel
 
 from app.core.config import get_settings
+from app.core.exceptions import register_exception_handlers
 from app.core.logging import RequestIdMiddleware, configure_logging
 
 
@@ -74,6 +75,9 @@ def create_app() -> FastAPI:
     # Give every request its own id, so all log lines of one request can be
     # found together (RULES §8).
     application.add_middleware(RequestIdMiddleware)
+
+    # Turn every error into one standard form: Problem Details (API_DESIGN §3).
+    register_exception_handlers(application, settings)
 
     # Connect the routes. `/health` has no `/api/v1` prefix (API_DESIGN §1.1).
     application.include_router(health_router)

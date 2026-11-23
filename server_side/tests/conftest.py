@@ -6,10 +6,13 @@ from collections.abc import AsyncIterator
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-# Importing `app.main` builds the app, and that needs APP_ENV.
-# pytest loads this file before any test module, so every test runs
-# as "test", also on a computer or CI runner without a `.env` file.
+# Importing `app.main` builds the app, and that needs the required settings.
+# pytest loads this file before any test module, so every test runs with
+# these values, also on a computer or CI runner without a `.env` file.
+# The address is invented; tests check error links against it.
+TEST_FRONTEND_BASE_URL = "https://app.example.test"
 os.environ["APP_ENV"] = "test"
+os.environ["FRONTEND_BASE_URL"] = TEST_FRONTEND_BASE_URL
 
 from app.main import create_app  # noqa: E402  (APP_ENV must be set first)
 
