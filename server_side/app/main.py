@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import RequestIdMiddleware, configure_logging
+from app.core.request_size_limit import RequestSizeLimitMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
 
 # CORS rules (SECURITY §12, MEMORY D-112). Only the methods of API_DESIGN.
@@ -84,6 +85,13 @@ def create_app() -> FastAPI:
     # Give every request its own id, so all log lines of one request can be
     # found together (RULES §8).
     application.add_middleware(RequestIdMiddleware)
+
+    # Stop very large request bodies at `MAX_UPLOAD_REQUEST_MB`, so one
+    # request cannot fill the server's memory (API_DESIGN §1.8).
+    application.add_middleware(
+        RequestSizeLimitMiddleware,
+        max_upload_request_mb=settings.max_upload_request_mb,
+    )
 
     # Only our frontend may read API answers in a browser (SECURITY §12).
     # No cookies are used (Bearer tokens), so no credentials. CORS is only a

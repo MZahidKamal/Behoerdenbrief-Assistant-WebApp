@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 from urllib.parse import urlsplit
 
-from pydantic import HttpUrl, ValidationError, field_validator
+from pydantic import Field, HttpUrl, ValidationError, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # The local `.env` file sits in `server_side/`, two folders above this file.
@@ -48,6 +48,9 @@ class Settings(BaseSettings):
             one text with commas, for example
             `http://localhost:3000,https://app.example`. Each entry is
             `http(s)://host[:port]`, without a path and without `*`.
+        max_upload_request_mb: The largest request body in megabytes
+            (1 MB = 1024 × 1024 bytes). Optional, the default is 30
+            (API_DESIGN §1.8). Must be larger than 0.
     """
 
     model_config = SettingsConfigDict(
@@ -70,6 +73,7 @@ class Settings(BaseSettings):
     # `NoDecode`: pydantic-settings would read a list as JSON. We want a
     # simple text with commas instead, so the validator below splits it.
     cors_allowed_origins: Annotated[tuple[str, ...], NoDecode]
+    max_upload_request_mb: int = Field(default=30, gt=0)
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod

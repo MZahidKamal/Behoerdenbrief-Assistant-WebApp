@@ -238,7 +238,7 @@ Total: 387 tasks.
   - Read: SECURITY §12
   - Learn: What CORS protects and what it does not
 
-- [ ] **T-025** · Request size limit
+- [x] **T-025** · Request size limit
   - Done when: Requests larger than `MAX_UPLOAD_REQUEST_MB` (30) return `413 request_too_large`; test
   - Depends on: T-022
   - Read: API_DESIGN §1.8
