@@ -69,6 +69,13 @@ def _get_utc_time(record: logging.LogRecord) -> datetime:
     return datetime.fromtimestamp(record.created, tz=UTC)
 
 
+def _get_message(record: logging.LogRecord) -> str:
+    # Some messages end with a newline, for example Uvicorn's
+    # "Exception in ASGI application\n". Without it, the extra fields
+    # (like `request_id`) stay on the same line as the message.
+    return record.getMessage().rstrip()
+
+
 class JsonLogFormatter(logging.Formatter):
     """Write each log record as one line of JSON (used in production)."""
 
@@ -87,7 +94,7 @@ class JsonLogFormatter(logging.Formatter):
             "time": _get_utc_time(record).isoformat(timespec="milliseconds"),
             "level": record.levelname,
             "logger": record.name,
-            "message": record.getMessage(),
+            "message": _get_message(record),
         }
 
         # Add the structured fields from `extra=` (RULES §8). They never
@@ -121,7 +128,7 @@ class TextLogFormatter(logging.Formatter):
         # columns line up and the lines are easy to scan.
         time_text = _get_utc_time(record).strftime("%Y-%m-%d %H:%M:%S UTC")
         line = (
-            f"{time_text}  {record.levelname:<8} {record.name}: {record.getMessage()}"
+            f"{time_text}  {record.levelname:<8} {record.name}: {_get_message(record)}"
         )
 
         # Add the extra fields as `key=value` at the end of the line.
@@ -147,6 +154,8 @@ class RequestIdMiddleware:
     This is a plain ASGI middleware (not Starlette's `BaseHTTPMiddleware`).
     The route then runs in the same context, so it sees the id. The access line
     of Uvicorn is written while the response starts, so it sees the id too.
+    After an unexpected error the id stays set, so the `500` answer, its access
+    line and Uvicorn's traceback line also have it.
 
     Args:
         app: The next part of the app that handles the request.
@@ -169,13 +178,17 @@ class RequestIdMiddleware:
             await self.app(scope, receive, send)
             return
 
-        # Set a new id for this request and remove it again at the end, also
-        # after an error. So no id is left over for code outside the request.
+        # Set a new id for this request.
         reset_token = current_request_id.set(uuid4().hex)
-        try:
-            await self.app(scope, receive, send)
-        finally:
-            current_request_id.reset(reset_token)
+        await self.app(scope, receive, send)
+
+        # After a normal end, remove the id, so no id is left over. After an
+        # error we keep it on purpose: Starlette's error layer (outside this
+        # middleware) and Uvicorn's traceback line run after us, and they need
+        # the id too. It is safe, because Uvicorn runs every request in its
+        # own task, and the id lives only in that task. The next request
+        # always sets a new id.
+        current_request_id.reset(reset_token)
 
 
 class RequestIdLogFilter(logging.Filter):

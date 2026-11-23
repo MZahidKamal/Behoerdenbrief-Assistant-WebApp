@@ -207,6 +207,36 @@ def test_text_log_formatter_writes_one_line_when_record_has_extra_fields() -> No
     assert " UTC " in line
 
 
+def test_text_log_formatter_keeps_fields_on_line_when_message_ends_with_newline() -> (
+    None
+):
+    # Arrange: like Uvicorn's "Exception in ASGI application\n".
+    record = _make_log_record(
+        message="Exception in ASGI application\n", request_id="example-request-id"
+    )
+
+    # Act
+    line = TextLogFormatter().format(record)
+
+    # Assert
+    assert line.endswith(
+        "app.test: Exception in ASGI application  request_id=example-request-id"
+    )
+
+
+def test_json_log_formatter_removes_end_newline_when_message_ends_with_newline() -> (
+    None
+):
+    # Arrange
+    record = _make_log_record(message="Exception in ASGI application\n")
+
+    # Act
+    log_entry = json.loads(JsonLogFormatter().format(record))
+
+    # Assert
+    assert log_entry["message"] == "Exception in ASGI application"
+
+
 def test_text_log_formatter_adds_exception_when_record_has_exception() -> None:
     # Arrange
     record = _make_log_record_with_exception()
@@ -428,9 +458,12 @@ async def test_request_id_middleware_sets_no_request_id_when_scope_is_lifespan()
     assert seen_request_ids == [None]
 
 
-async def test_request_id_middleware_removes_request_id_when_request_fails() -> None:
-    # Arrange: an inner app that fails.
+async def test_request_id_middleware_keeps_request_id_when_request_fails() -> None:
+    # Arrange: an inner app that remembers its id and then fails.
+    seen_request_ids: list[str | None] = []
+
     async def failing_app(scope: Scope, receive: Receive, send: Send) -> None:
+        seen_request_ids.append(current_request_id.get())
         raise RuntimeError("Example error")
 
     middleware = RequestIdMiddleware(failing_app)
@@ -438,6 +471,21 @@ async def test_request_id_middleware_removes_request_id_when_request_fails() -> 
     # Act
     with pytest.raises(RuntimeError):
         await middleware({"type": "http"}, _receive_nothing, _send_nothing)
+
+    # Assert: the error layer and Uvicorn's traceback line still see the id.
+    assert current_request_id.get() is not None
+    assert current_request_id.get() == seen_request_ids[0]
+
+
+async def test_request_id_middleware_removes_request_id_when_request_ends() -> None:
+    # Arrange: an inner app that ends normally.
+    async def working_app(scope: Scope, receive: Receive, send: Send) -> None:
+        return None
+
+    middleware = RequestIdMiddleware(working_app)
+
+    # Act
+    await middleware({"type": "http"}, _receive_nothing, _send_nothing)
 
     # Assert
     assert current_request_id.get() is None
