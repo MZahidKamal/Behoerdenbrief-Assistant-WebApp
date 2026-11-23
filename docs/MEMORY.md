@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.24
+**Document Version:** 0.25
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -451,7 +451,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: `authority_id` in `PATCH /letters/{letter_id}` (rejected); `DELETE` for revoke (rejected: misleading); SDK default error bodies (rejected).
 - Details: API_DESIGN §4.5, §5.6, §5.9, §6
 
-### 2.6 Development Workflow (D-090 – D-109)
+### 2.6 Development Workflow (D-090 – D-129)
 
 #### D-090 · 2026-11-19 · Documents first
 - Decision: All documents in `docs/` are written in English before any code, without duplication, and every decision is asked with options.
@@ -464,6 +464,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: Learning project; the developer controls every decision and document.
 - Alternatives: The developer does all Git work; the assistant updates documents on its own (both rejected).
 - Details: RULES §1.2, §11
+- Status: merging superseded by D-115 (the assistant also merges, with permission per command); the approval rule for docs, decisions and dependencies stays valid
 
 #### D-092 · 2026-11-20 · Git workflow
 - Decision: Feature branches `feat/T-012-…`, squash merge, Conventional Commits.
@@ -609,6 +610,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: `total_pages` 1 for an empty list (rejected: not exact); an upper limit for `page` (rejected: changes the API contract).
 - Details: API_DESIGN §1.6, §1.11; ARCHITECTURE §4.1; `server_side/app/core/pagination.py`
 
+#### D-115 · 2026-11-23 · The assistant also merges pull requests
+- Decision: The assistant does all Git and GitHub work, including the squash merge of pull requests and the clean-up of branches. Before each command (branch, commit, push, pull request, merge, update of `main`, branch deletion) it asks the developer and waits for the permission. `gh pr merge` is never in the allowed permissions. Before deleting a branch, the assistant checks on GitHub that the pull request is merged and that `main` has the same content. Approval of every `docs/` change, new decision and new dependency stays as in D-091.
+- Reason: Developer decision. Merging in the browser failed several times; doing it in the same session with one permission per command is faster and keeps the developer in control.
+- Alternatives: The developer merges (D-091, replaced); allowing `gh pr merge` without asking (rejected).
+- Details: RULES §1.2, §1.3, §11.1
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -743,3 +750,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-23 | 0.22 | D-112 (CORS rules of the API) |
 | 2026-11-23 | 0.23 | D-113 (own request size limit middleware) |
 | 2026-11-23 | 0.24 | D-114 (pagination helper) |
+| 2026-11-23 | 0.25 | D-115 (the assistant also merges pull requests); D-091 merging superseded; area 2.6 range widened to D-129 |
