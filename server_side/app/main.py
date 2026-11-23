@@ -3,9 +3,37 @@
 Start it locally with `uv run uvicorn app.main:app --reload` (ARCHITECTURE §12).
 """
 
-from fastapi import FastAPI
+from typing import Literal
+
+from fastapi import APIRouter, FastAPI
+from pydantic import BaseModel
 
 from app.core.config import get_settings
+
+
+class HealthResponse(BaseModel):
+    """The answer of the health check.
+
+    Attributes:
+        status: Always `ok`. The endpoint is public, so it returns no other
+            data (API_DESIGN §1.1).
+    """
+
+    status: Literal["ok"]
+
+
+# The health check belongs to no feature, so it lives here (ARCHITECTURE §4.1).
+health_router = APIRouter(tags=["health"])
+
+
+@health_router.get("/health", operation_id="get_health")
+async def get_health() -> HealthResponse:
+    """Tell Docker and Render that the app is alive.
+
+    Returns:
+        Always `{"status": "ok"}`.
+    """
+    return HealthResponse(status="ok")
 
 
 def create_app() -> FastAPI:
@@ -25,10 +53,15 @@ def create_app() -> FastAPI:
     get_settings()
 
     # The title and summary are shown in the API documentation (/docs).
-    return FastAPI(
+    application = FastAPI(
         title="Behördenbrief Assistant API",
         summary="Helps Bengali-speaking people understand and answer German letters.",
     )
+
+    # Connect the routes. `/health` has no `/api/v1` prefix (API_DESIGN §1.1).
+    application.include_router(health_router)
+
+    return application
 
 
 # Uvicorn looks for this variable: `uvicorn app.main:app`.
