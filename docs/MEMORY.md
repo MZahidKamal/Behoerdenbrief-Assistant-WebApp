@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.19
+**Document Version:** 0.20
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -579,6 +579,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: ReDoc outside production like `/docs` (rejected).
 - Details: SECURITY §12; `server_side/app/main.py`
 
+#### D-110 · 2026-11-23 · Pointers for request parts; codes for other HTTP statuses
+- Decision: In `422 validation_failed`, body fields have a JSON pointer into the body (`/password`, `/items/0`); other request parts start with their name (`/query/page`, `/path/letter_id`). An `HTTPException` with a status not listed in API_DESIGN §3.3 gets the HTTP status name in snake_case as `code` (`405 method_not_allowed`).
+- Reason: Developer decision. One response can mix body and query errors, so they must not look the same; status names are stable, and the frontend has a fallback text for unknown codes.
+- Alternatives: The same pointer for all request parts (rejected: `?page=0` and a body field `page` would look the same); adding every new code to §3.3 by hand (rejected).
+- Details: API_DESIGN §3.1, §3.3; `server_side/app/core/exceptions.py`
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -708,3 +714,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-23 | 0.17 | D-107 (Node.js version for the frontend) |
 | 2026-11-23 | 0.18 | D-108 (docstrings only where needed; a comment before each block); D-094 superseded |
 | 2026-11-23 | 0.19 | D-109 (only Swagger UI as API documentation; ReDoc off everywhere) |
+| 2026-11-23 | 0.20 | D-110 (pointers for request parts; codes for other HTTP statuses) |

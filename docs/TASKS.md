@@ -214,7 +214,7 @@ Total: 387 tasks.
   - Read: API_DESIGN §3.1–§3.2; RULES §7
   - Learn: Central error handling and RFC 9457
 
-- [ ] **T-021** · Validation and HTTP errors as Problem Details
+- [x] **T-021** · Validation and HTTP errors as Problem Details
   - Done when: Pydantic validation errors return `422 validation_failed` with the `errors` list (JSON pointers); `HTTPException` and unknown routes also return Problem Details; tests
   - Depends on: T-020
   - Read: API_DESIGN §3.1, §3.3

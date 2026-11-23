@@ -1,9 +1,9 @@
 # API_DESIGN
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.8
+**Document Version:** 0.9
 **Status:** Draft
-**Last updated:** 2026-11-22
+**Last updated:** 2026-11-23
 
 > This document answers **what the API looks like from the outside**: conventions, access rules, every endpoint with request, response and errors, the error format, and the MCP endpoint for external AI clients.
 > Product rules: PRD.md · Flows, layers, configuration: ARCHITECTURE.md · Tables and statuses: DATA_MODEL.md · Auth, encryption, rate-limit values, file checks: SECURITY.md · AI steps and their error codes: RAG.md
@@ -226,7 +226,7 @@ Every error response uses **Problem Details for HTTP APIs (RFC 9457)** with medi
 | `detail` | English explanation of this occurrence for developers and logs; **never personal data or letter content** |
 | `instance` | Request path, e.g. `/api/v1/letters` |
 | `code` | Extension: the error code as snake_case string; the frontend translates by this value (§1.10) |
-| `errors` | Extension, only for `422 validation_failed`: list of `{ "pointer": "<JSON pointer>", "code": "<field error code>", "detail": "<English text>" }` |
+| `errors` | Extension, only for `422 validation_failed`: list of `{ "pointer": "<JSON pointer>", "code": "<field error code>", "detail": "<English text>" }`. Body fields have a pointer into the JSON body (`/password`, `/items/0`); other request parts start with their name (`/query/page`, `/path/letter_id`, `/header/<name>`) |
 
 Example (limit reached):
 
@@ -295,6 +295,8 @@ These can occur on many endpoints and are not repeated in the endpoint tables.
 | 503 | `service_unavailable` | A required external service (database, storage, Stripe) is unreachable |
 
 Field error codes inside `errors` include `required`, `too_long`, `too_short`, `invalid_format`, `out_of_range`, `password_too_short`, `consent_required`, `minimum_age_not_met`.
+
+An `HTTPException` with a status that is not listed here gets the HTTP status name in snake_case as `code`, e.g. `405 method_not_allowed`.
 
 ### 3.4 Error codes of background work
 
@@ -1332,3 +1334,4 @@ The MCP server for external AI clients (PRD §6.11, ARCHITECTURE §7.12). It giv
 | 2026-11-21 | 0.6 | Final review: MCP query tokens per access token in the statistics |
 | 2026-11-22 | 0.7 | §1: naming reference reworded without the assistant's file name; change log 0.3 reworded (MEMORY D-101) |
 | 2026-11-22 | 0.8 | Document renamed to `API_DESIGN.md` with `git mv`; title line changed to match (MEMORY D-105) |
+| 2026-11-23 | 0.9 | §3.1: JSON pointers for body fields and other request parts; §3.3: codes for HTTP statuses that are not listed (MEMORY D-110) |
