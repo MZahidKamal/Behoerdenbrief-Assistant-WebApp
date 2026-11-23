@@ -202,7 +202,7 @@ Total: 387 tasks.
   - Read: RULES §8; SECURITY §15
   - Learn: Python logging and structured logs
 
-- [ ] **T-019** · Request id in every log line
+- [x] **T-019** · Request id in every log line
   - Done when: A middleware creates a request id per request and adds it to log lines; the token part of `/api/v1/downloads/…` is masked in access logs; tests
   - Depends on: T-018, T-016
   - Read: RULES §8; SECURITY §15

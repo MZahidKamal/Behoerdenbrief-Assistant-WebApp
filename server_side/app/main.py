@@ -9,7 +9,7 @@ from fastapi import APIRouter, FastAPI
 from pydantic import BaseModel
 
 from app.core.config import get_settings
-from app.core.logging import configure_logging
+from app.core.logging import RequestIdMiddleware, configure_logging
 
 
 class HealthResponse(BaseModel):
@@ -70,6 +70,10 @@ def create_app() -> FastAPI:
         openapi_url=None if is_production else "/openapi.json",
         redoc_url=None,
     )
+
+    # Give every request its own id, so all log lines of one request can be
+    # found together (RULES §8).
+    application.add_middleware(RequestIdMiddleware)
 
     # Connect the routes. `/health` has no `/api/v1` prefix (API_DESIGN §1.1).
     application.include_router(health_router)

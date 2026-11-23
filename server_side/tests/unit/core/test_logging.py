@@ -8,15 +8,24 @@ from datetime import UTC, datetime
 
 import allure
 import pytest
+from starlette.types import Message, Receive, Scope, Send
 
 from app.core.config import Settings
 from app.core.logging import (
     APP_LOG_HANDLER_NAME,
+    MASKED_DOWNLOAD_TOKEN,
     UVICORN_LOGGER_NAMES,
+    DownloadTokenMaskingLogFilter,
     JsonLogFormatter,
+    RequestIdLogFilter,
+    RequestIdMiddleware,
     TextLogFormatter,
     configure_logging,
+    current_request_id,
 )
+
+# An invented download token. Tests check that it never reaches a log line.
+EXAMPLE_DOWNLOAD_TOKEN = "invented-download-token-123"  # noqa: S105  (test value)
 
 # Allure groups the results by feature. Logging belongs to no single feature.
 pytestmark = [allure.feature("server")]
@@ -82,6 +91,27 @@ def _make_log_record_with_exception() -> logging.LogRecord:
                 "exc_info": sys.exc_info(),
             }
         )
+
+
+def _make_access_log_record(path: str) -> logging.LogRecord:
+    # A record like the access line that Uvicorn writes for each request.
+    return logging.makeLogRecord(
+        {
+            "name": "uvicorn.access",
+            "levelname": "INFO",
+            "levelno": logging.INFO,
+            "msg": '%s - "%s %s HTTP/%s" %d',
+            "args": ("127.0.0.1:50000", "GET", path, "1.1", 200),
+        }
+    )
+
+
+async def _receive_nothing() -> Message:
+    return {"type": "lifespan.startup"}
+
+
+async def _send_nothing(message: Message) -> None:
+    return None
 
 
 def _get_app_handlers() -> list[logging.Handler]:
@@ -273,3 +303,141 @@ def test_configure_logging_writes_json_line_to_stdout_when_app_env_is_production
     log_entry = json.loads(capsys.readouterr().out.strip())
     assert log_entry["message"] == "Letter is ready"
     assert log_entry["letter_id"] == 42
+
+
+def test_configure_logging_hides_download_token_when_uvicorn_writes_access_line(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange
+    configure_logging(Settings(app_env="production", log_level="INFO"))
+
+    # Act: the same call that Uvicorn makes for each request.
+    logging.getLogger("uvicorn.access").info(
+        '%s - "%s %s HTTP/%s" %d',
+        "127.0.0.1:50000",
+        "GET",
+        f"/api/v1/downloads/{EXAMPLE_DOWNLOAD_TOKEN}",
+        "1.1",
+        200,
+    )
+
+    # Assert
+    output = capsys.readouterr().out
+    assert EXAMPLE_DOWNLOAD_TOKEN not in output
+    assert f"/api/v1/downloads/{MASKED_DOWNLOAD_TOKEN}" in output
+
+
+def test_request_id_log_filter_adds_request_id_when_request_is_running() -> None:
+    # Arrange
+    record = _make_log_record()
+    reset_token = current_request_id.set("example-request-id")
+
+    # Act
+    try:
+        is_written = RequestIdLogFilter().filter(record)
+    finally:
+        current_request_id.reset(reset_token)
+
+    # Assert
+    assert is_written is True
+    assert record.__dict__["request_id"] == "example-request-id"
+
+
+def test_request_id_log_filter_adds_no_request_id_when_no_request_is_running() -> None:
+    # Arrange: no request id is set.
+    record = _make_log_record()
+
+    # Act
+    is_written = RequestIdLogFilter().filter(record)
+
+    # Assert
+    assert is_written is True
+    assert "request_id" not in record.__dict__
+
+
+@pytest.mark.parametrize(
+    ("path", "expected_path"),
+    [
+        (
+            f"/api/v1/downloads/{EXAMPLE_DOWNLOAD_TOKEN}",
+            f"/api/v1/downloads/{MASKED_DOWNLOAD_TOKEN}",
+        ),
+        (
+            f"/api/v1/downloads/{EXAMPLE_DOWNLOAD_TOKEN}?inline=1",
+            f"/api/v1/downloads/{MASKED_DOWNLOAD_TOKEN}?inline=1",
+        ),
+    ],
+)
+def test_download_token_masking_log_filter_hides_token_when_path_is_download(
+    path: str, expected_path: str
+) -> None:
+    # Arrange
+    record = _make_access_log_record(path)
+
+    # Act
+    is_written = DownloadTokenMaskingLogFilter().filter(record)
+
+    # Assert
+    assert is_written is True
+    assert EXAMPLE_DOWNLOAD_TOKEN not in record.getMessage()
+    assert expected_path in record.getMessage()
+
+
+def test_download_token_masking_log_filter_keeps_path_when_path_is_not_download() -> (
+    None
+):
+    # Arrange
+    record = _make_access_log_record("/health")
+
+    # Act
+    DownloadTokenMaskingLogFilter().filter(record)
+
+    # Assert
+    assert record.getMessage() == '127.0.0.1:50000 - "GET /health HTTP/1.1" 200'
+
+
+def test_download_token_masking_log_filter_keeps_record_when_logger_is_not_access() -> (
+    None
+):
+    # Arrange: an app line, not an access line, with values in `args`.
+    record = _make_log_record(message="Path %s")
+    record.args = ("/api/v1/downloads/x",)
+
+    # Act
+    DownloadTokenMaskingLogFilter().filter(record)
+
+    # Assert
+    assert record.args == ("/api/v1/downloads/x",)
+
+
+async def test_request_id_middleware_sets_no_request_id_when_scope_is_lifespan() -> (
+    None
+):
+    # Arrange: an inner app that remembers the request id it sees.
+    seen_request_ids: list[str | None] = []
+
+    async def inner_app(scope: Scope, receive: Receive, send: Send) -> None:
+        seen_request_ids.append(current_request_id.get())
+
+    middleware = RequestIdMiddleware(inner_app)
+
+    # Act
+    await middleware({"type": "lifespan"}, _receive_nothing, _send_nothing)
+
+    # Assert
+    assert seen_request_ids == [None]
+
+
+async def test_request_id_middleware_removes_request_id_when_request_fails() -> None:
+    # Arrange: an inner app that fails.
+    async def failing_app(scope: Scope, receive: Receive, send: Send) -> None:
+        raise RuntimeError("Example error")
+
+    middleware = RequestIdMiddleware(failing_app)
+
+    # Act
+    with pytest.raises(RuntimeError):
+        await middleware({"type": "http"}, _receive_nothing, _send_nothing)
+
+    # Assert
+    assert current_request_id.get() is None

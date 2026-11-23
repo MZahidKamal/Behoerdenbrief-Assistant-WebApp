@@ -4,14 +4,24 @@ In production every log line is one JSON object, so a log tool can search it.
 Locally every line is readable text. Both formats have the time (UTC), the
 level, the logger name, the message and the extra fields (RULES §8).
 
-This module only formats lines. The code that writes a log line must never
-pass personal data, letter content, tokens or keys (SECURITY §15).
+A middleware gives every request its own request id. A log filter adds this
+id to every line that is written during the request, so we can find all lines
+of one request (RULES §8). Another filter hides the token in download paths
+in the access log (SECURITY §15).
+
+This module does not check the messages themselves. The code that writes a
+log line must never pass personal data, letter content, tokens or keys.
 """
 
 import json
 import logging
+import re
 import sys
+from contextvars import ContextVar
 from datetime import UTC, datetime
+from uuid import uuid4
+
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.core.config import Settings
 
@@ -22,6 +32,20 @@ APP_LOG_HANDLER_NAME = "app_log_handler"
 # Uvicorn writes start-up lines and one access line per request with these
 # loggers. Their lines should look like all our other lines.
 UVICORN_LOGGER_NAMES = ("uvicorn", "uvicorn.error", "uvicorn.access")
+
+# The id of the request that is running now, or None outside a request.
+# A context variable is like a global variable, but each request has its own
+# value. So two requests at the same time never see each other's id.
+current_request_id: ContextVar[str | None] = ContextVar(
+    "current_request_id", default=None
+)
+
+# A download token works like a password for one file. So it must never be in
+# the access log (SECURITY §15, API_DESIGN `GET /api/v1/downloads/{token}`).
+# The pattern finds the token: everything after `/downloads/` up to the next
+# `/`, `?`, `#` or space.
+_DOWNLOAD_TOKEN_PATTERN = re.compile(r"(/api/v1/downloads/)[^/?#\s]+")
+MASKED_DOWNLOAD_TOKEN = "***"  # noqa: S105  (a placeholder, not a password)
 
 # Every log record has these attributes; anything else came from `extra=`.
 # Uvicorn also adds `color_message` (the message with terminal colours),
@@ -113,6 +137,98 @@ class TextLogFormatter(logging.Formatter):
         return line
 
 
+class RequestIdMiddleware:
+    """Give every HTTP and WebSocket request its own new request id.
+
+    The id is a random UUID in hex form (32 characters). We never take an id
+    from the client's `X-Request-ID` header: a client could send fake or very
+    long text, and it would go straight into our logs.
+
+    This is a plain ASGI middleware (not Starlette's `BaseHTTPMiddleware`).
+    The route then runs in the same context, so it sees the id. The access line
+    of Uvicorn is written while the response starts, so it sees the id too.
+
+    Args:
+        app: The next part of the app that handles the request.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """Run one request with a new request id.
+
+        Args:
+            scope: Information about the connection, for example its type.
+            receive: Reads the next message from the client.
+            send: Sends the next message to the client.
+        """
+        # Start-up and shut-down ("lifespan") are not requests, so they get
+        # no id.
+        if scope["type"] not in ("http", "websocket"):
+            await self.app(scope, receive, send)
+            return
+
+        # Set a new id for this request and remove it again at the end, also
+        # after an error. So no id is left over for code outside the request.
+        reset_token = current_request_id.set(uuid4().hex)
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            current_request_id.reset(reset_token)
+
+
+class RequestIdLogFilter(logging.Filter):
+    """Add the current request id to each log record as `request_id`.
+
+    Outside a request (for example at start-up) the record gets no
+    `request_id` field.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Add `request_id` to the record when a request is running.
+
+        Args:
+            record: The log record from Python's logging module.
+
+        Returns:
+            Always True, so the line is still written.
+        """
+        # The formatters write every extra attribute of the record as a field.
+        # We use `__dict__`, because `LogRecord` has no typed `request_id`.
+        request_id = current_request_id.get()
+        if request_id is not None:
+            record.__dict__["request_id"] = request_id
+        return True
+
+
+class DownloadTokenMaskingLogFilter(logging.Filter):
+    """Replace the download token in Uvicorn's access lines with `***`."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Hide the token in `/api/v1/downloads/{download_token}` paths.
+
+        Args:
+            record: The log record from Python's logging module.
+
+        Returns:
+            Always True, so the line is still written, but without the token.
+        """
+        # Uvicorn writes the path as one of the values in `record.args`, not in
+        # the message text. We check every text value, so the token is hidden
+        # even if Uvicorn changes the order of the values (SECURITY §15).
+        if record.name == "uvicorn.access" and isinstance(record.args, tuple):
+            record.args = tuple(
+                _mask_download_token(value) if isinstance(value, str) else value
+                for value in record.args
+            )
+        return True
+
+
+def _mask_download_token(text: str) -> str:
+    return _DOWNLOAD_TOKEN_PATTERN.sub(rf"\g<1>{MASKED_DOWNLOAD_TOKEN}", text)
+
+
 def configure_logging(settings: Settings) -> None:
     """Send all log lines to standard output in the right format.
 
@@ -135,6 +251,11 @@ def configure_logging(settings: Settings) -> None:
     app_handler.set_name(APP_LOG_HANDLER_NAME)
     app_handler.setFormatter(formatter)
     app_handler.setLevel(settings.log_level)
+
+    # Filters on our handler see every line, also the lines that other
+    # loggers pass up to us: add the request id and hide download tokens.
+    app_handler.addFilter(RequestIdLogFilter())
+    app_handler.addFilter(DownloadTokenMaskingLogFilter())
 
     # Remove our handler from an earlier call, so no line is written twice.
     root_logger = logging.getLogger()
