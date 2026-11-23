@@ -23,6 +23,7 @@ from pydantic import BaseModel, HttpUrl
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import Settings
+from app.core.security_headers import SECURITY_HEADERS
 
 # RFC 9457 gives error answers their own media type. So the frontend can see
 # at once that the body is an error and not normal data.
@@ -420,4 +421,9 @@ def register_exception_handlers(application: FastAPI, settings: Settings) -> Non
             title="Internal Server Error",
             detail=_UNEXPECTED_ERROR_DETAIL,
         )
-        return create_problem_details_response(problem_details)
+
+        # This answer is sent outside all middleware, so the security
+        # middleware never sees it. We add the same headers here (SECURITY §12).
+        return create_problem_details_response(
+            problem_details, headers=SECURITY_HEADERS
+        )

@@ -226,7 +226,7 @@ Total: 387 tasks.
   - Read: API_DESIGN §3.2–§3.3, §3.5
   - Learn: Never leaking internals in error responses
 
-- [ ] **T-023** · `Cache-Control: no-store` and security headers
+- [x] **T-023** · `Cache-Control: no-store` and security headers
   - Done when: Every API response has `Cache-Control: no-store` and the security headers of SECURITY §12; tests
   - Depends on: T-016
   - Read: SECURITY §12; API_DESIGN §1.3

@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import RequestIdMiddleware, configure_logging
+from app.core.security_headers import SecurityHeadersMiddleware
 
 
 class HealthResponse(BaseModel):
@@ -75,6 +76,12 @@ def create_app() -> FastAPI:
     # Give every request its own id, so all log lines of one request can be
     # found together (RULES §8).
     application.add_middleware(RequestIdMiddleware)
+
+    # Add `Cache-Control: no-store` and the security headers to every answer
+    # (SECURITY §12). Swagger UI keeps working outside production.
+    application.add_middleware(
+        SecurityHeadersMiddleware, documentation_enabled=not is_production
+    )
 
     # Turn every error into one standard form: Problem Details (API_DESIGN §3).
     register_exception_handlers(application, settings)

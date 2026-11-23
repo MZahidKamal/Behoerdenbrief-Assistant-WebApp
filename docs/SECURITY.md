@@ -1,7 +1,7 @@
 # Security
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.12
+**Document Version:** 0.13
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -264,6 +264,7 @@ Values come from configuration (ARCHITECTURE §11) so they can be tuned without 
 |---|---|
 | CORS | Only `CORS_ALLOWED_ORIGINS` (frontend URLs); no wildcard |
 | Security headers (frontend and API) | `Strict-Transport-Security`, `Content-Security-Policy` (no inline scripts except Next.js requirements, no third-party scripts except Stripe redirect and Sentry), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera only for the app itself), `frame-ancestors 'none'` |
+| API header values | `Strict-Transport-Security: max-age=63072000; includeSubDomains` (no `preload`); `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, except on Swagger UI (`/docs`, `/docs/oauth2-redirect`, only outside production); `Permissions-Policy: camera=(), microphone=(), geolocation=()`; set by one middleware, and by the `500` handler, which runs outside all middleware (MEMORY D-111) |
 | CSRF | The API uses Bearer tokens, not cookies, so classic CSRF does not apply; the webhook uses Stripe signatures |
 | XSS | React escaping; no `dangerouslySetInnerHTML`; AI output and user text always rendered as text |
 | Input validation | Every request body validated by Pydantic schemas; unknown fields rejected |
@@ -415,3 +416,4 @@ Scheduled jobs perform these deletions; each job's selection rule is tested.
 | 2026-11-22 | 0.10 | §12: secret scanning and push protection confirmed for the public repository (MEMORY K-21, D-051) |
 | 2026-11-22 | 0.11 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |
 | 2026-11-23 | 0.12 | §12: ReDoc (`/redoc`) disabled in every environment (MEMORY D-109) |
+| 2026-11-23 | 0.13 | §12: exact security header values of the API (MEMORY D-111) |

@@ -1,7 +1,7 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.35
+**Document Version:** 0.36
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -172,6 +172,7 @@ server_side/
 │   │   ├── exceptions.py             # AppException base + global handlers (RFC 9457 Problem Details, API_DESIGN §3)
 │   │   ├── rate_limit.py             # Redis-backed limiter
 │   │   ├── logging.py                # Structured logging, no personal data
+│   │   ├── security_headers.py       # Cache-Control no-store and security headers on every response (SECURITY §12)
 │   │   └── sentry.py                 # Sentry init with data scrubbing
 │   ├── integrations/                 # Adapters to external systems (each with a fake)
 │   │   ├── llm/
@@ -1092,3 +1093,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-22 | 0.33 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |
 | 2026-11-22 | 0.34 | §2: `.pre-commit-config.yaml` in the repository layout (MEMORY D-106) |
 | 2026-11-23 | 0.35 | §3.2: Node.js 26 runtime; test packages `@testing-library/dom`, `jsdom`, `@vitejs/plugin-react` (developer approval, MEMORY D-107) |
+| 2026-11-23 | 0.36 | §4.1: core/security_headers.py added (MEMORY D-111) |
