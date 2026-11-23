@@ -250,7 +250,7 @@ Total: 387 tasks.
   - Read: API_DESIGN §1.6
   - Learn: Generic Pydantic models and offset pagination
 
-- [ ] **T-027** · Developer command module
+- [x] **T-027** · Developer command module
   - Done when: `python -m app.command_line` lists the available commands and runs one by name; test
   - Depends on: T-015
   - Read: ARCHITECTURE §12.2
