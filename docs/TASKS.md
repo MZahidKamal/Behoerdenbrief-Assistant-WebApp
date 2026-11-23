@@ -160,7 +160,7 @@ Total: 385 tasks.
 
 ### M01 Backend Skeleton
 
-- [ ] **T-014** · Settings class
+- [x] **T-014** · Settings class
   - Done when: `core/config.py` reads `APP_ENV` and `LOG_LEVEL` with pydantic-settings; `server_side/.env.example` exists; a missing required value stops the app with a clear message; unit tests
   - Depends on: T-006, T-009
   - Read: ARCHITECTURE §11; RULES §4.1; SECURITY §13
