@@ -11,12 +11,24 @@ needs the settings loads them itself.
 """
 
 import argparse
+import json
 import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from pathlib import Path
+
+from app.core.config import InvalidSettingsError
 
 # The program name in the help text, so it shows the real way to start it.
 PROGRAM_NAME = "python -m app.command_line"
+
+# The frontend generates its API types from this file (RULES §5). The path is
+# found from this file's place (`server_side/app/`), so the command works from
+# any working directory.
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_OPENAPI_OUTPUT_PATH = (
+    REPOSITORY_ROOT / "client_side" / "lib" / "api" / "openapi.json"
+)
 
 
 @dataclass(frozen=True)
@@ -39,8 +51,59 @@ class DeveloperCommand:
     run: Callable[[argparse.Namespace], int]
 
 
-# All real commands. Later tasks add one entry each (first T-028).
-DEVELOPER_COMMANDS: tuple[DeveloperCommand, ...] = ()
+def _add_export_openapi_schema_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_OPENAPI_OUTPUT_PATH,
+        help="Where to write the file. Default: client_side/lib/api/openapi.json",
+    )
+
+
+def export_openapi_schema(parsed_arguments: argparse.Namespace) -> int:
+    """Write the OpenAPI document of the API to a file, without a server.
+
+    The app is only built in memory and asked for its schema. The frontend
+    turns the file into TypeScript types (RULES §5, ARCHITECTURE §12.2).
+
+    Args:
+        parsed_arguments: The read options; `output` is the file path.
+
+    Returns:
+        0 when the file is written, 1 when a setting is missing or wrong.
+    """
+    # Import here, not at the top: listing the commands must work without
+    # settings, but building the app needs them.
+    from app.main import create_app
+
+    # Build the app. Without correct settings it cannot be built; show the
+    # short message (it never contains values), not a long traceback.
+    try:
+        application = create_app()
+    except InvalidSettingsError as error:
+        print(f"Cannot build the app: {error}", file=sys.stderr)
+        return 1
+
+    # Write readable JSON. Always "\n" line endings, also on Windows, so a
+    # check on Linux (CI) sees no difference. "ü" stays readable.
+    output_path: Path = parsed_arguments.output
+    openapi_document = json.dumps(application.openapi(), indent=2, ensure_ascii=False)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(openapi_document + "\n", encoding="utf-8", newline="\n")
+
+    print(f"Wrote the OpenAPI document to {output_path}.")
+    return 0
+
+
+# All real commands. Later tasks add one entry each.
+DEVELOPER_COMMANDS: tuple[DeveloperCommand, ...] = (
+    DeveloperCommand(
+        name="export_openapi_schema",
+        description="Write the OpenAPI document to client_side/lib/api/openapi.json.",
+        add_arguments=_add_export_openapi_schema_arguments,
+        run=export_openapi_schema,
+    ),
+)
 
 
 def build_argument_parser(

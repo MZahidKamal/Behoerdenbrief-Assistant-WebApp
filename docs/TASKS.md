@@ -256,7 +256,7 @@ Total: 387 tasks.
   - Read: ARCHITECTURE §12.2
   - Learn: Command-line entry points in Python
 
-- [ ] **T-028** · Command `export_openapi_schema`
+- [x] **T-028** · Command `export_openapi_schema`
   - Done when: The command writes `client_side/lib/api/openapi.json` without starting the server; test
   - Depends on: T-027, T-017
   - Read: RULES §5; ARCHITECTURE §12.2
