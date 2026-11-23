@@ -74,6 +74,8 @@ def load_settings(environment_file: Path | None = DEFAULT_ENVIRONMENT_FILE) -> S
         InvalidSettingsError: A required setting is missing, or a setting has
             a wrong value.
     """
+    # Pydantic reads every setting and checks its type and allowed values.
+    # If anything is wrong, it raises one ValidationError with all problems.
     try:
         return Settings(_env_file=environment_file)
     except ValidationError as error:
@@ -83,6 +85,9 @@ def load_settings(environment_file: Path | None = DEFAULT_ENVIRONMENT_FILE) -> S
             f"{str(problem['loc'][0]).upper()} ({problem['msg']})"
             for problem in error.errors()
         ]
+
+        # Stop with one clear message that also says how to fix it.
+        # `from error` keeps the Pydantic error for debugging; it has no values.
         message = (
             "Missing or invalid settings: "
             + "; ".join(problems)

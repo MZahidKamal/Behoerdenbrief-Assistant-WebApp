@@ -1,9 +1,9 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.7
+**Document Version:** 0.8
 **Status:** Draft
-**Last updated:** 2026-11-22
+**Last updated:** 2026-11-23
 
 > This document answers **what to do now and what is still open**: the complete build plan from an empty `server_side/` to launch, in small tasks with one idea each.
 > Each task names the documents to read; the rules themselves are not repeated here. How to work on a task (including the explanations before and after): RULES §1, §1.1a · Branches, commits, pull requests: RULES §11 · Decisions and open checks: MEMORY.md
@@ -29,7 +29,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 
 | Milestone | Tasks | Result |
 |---|---|---|
-| M00 Repository and Tooling | T-001 – T-013, T-383 – T-385 (16) | Clean repository, Python project, checks, hooks, frontend test setup |
+| M00 Repository and Tooling | T-001 – T-013, T-383 – T-387 (18) | Clean repository, Python project, checks, hooks, frontend test setup |
 | M01 Backend Skeleton | T-014 – T-031 (18) | FastAPI app with `/health`, settings, logging, Problem Details, Docker |
 | M02 Database Foundation | T-032 – T-046 (15) | Supabase connection, Alembic, test database, encryption and time helpers |
 | M03 Frontend Foundation | T-047 – T-060 (14) | Layout, translations, API client, generated types, auth client, PWA shell |
@@ -53,7 +53,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 | M21 Deployment | T-372 – T-378 (7) | Production on Render and Netlify through GitHub Actions |
 | M22 Legal and Launch | T-379 – T-382 (4) | Legal pages, legal checks, launch checklist |
 
-Total: 385 tasks.
+Total: 387 tasks.
 
 ## 3. Tasks
 
@@ -156,6 +156,18 @@ Total: 385 tasks.
   - Depends on: —
   - Read: MEMORY D-105
   - Learn: How `git mv` keeps a file's history, and how to rename a document safely in many places
+
+- [x] **T-386** · Docstrings only where needed, a comment before each block
+  - Done when: RULES §3 and MEMORY D-108 describe the new rule for Python and TypeScript; Ruff ignores D105 and D107; all existing code in `server_side/` follows it without any change in behaviour; all backend checks pass
+  - Depends on: —
+  - Read: RULES §3; MEMORY D-108
+  - Learn: When a docstring helps and when a comment inside the function helps more
+
+- [ ] **T-387** · Apply the JSDoc and comment rules to the frontend code
+  - Done when: All existing code in `client_side/` follows RULES §3.3 (JSDoc only on exported code, a comment before each logical block) without any change in behaviour; `npm run lint`, `npx tsc --noEmit` and `npm run test -- --coverage` pass
+  - Depends on: T-386
+  - Read: RULES §3.3; MEMORY D-108
+  - Learn: JSDoc for exported code, and comments inside React components
 
 
 ### M01 Backend Skeleton
@@ -2448,3 +2460,4 @@ Total: 385 tasks.
 | 2026-11-22 | 0.5 | New task T-383 in M00 (AI assistant's files stay local, MEMORY D-036); notes on T-002 and T-003; T-295 uses a local `.mcp.json`; 383 tasks |
 | 2026-11-22 | 0.6 | New task T-384 in M00 (neutral name for the coding assistant, MEMORY D-101); §1, T-002, T-003, T-295 and change log 0.4 reworded; 384 tasks |
 | 2026-11-22 | 0.7 | New task T-385 in M00 (API design document renamed, MEMORY D-105); references changed to `API_DESIGN §`; 385 tasks |
+| 2026-11-23 | 0.8 | New tasks T-386 (docstring and comment rules, docs and `server_side/` code) and T-387 (the same rules for `client_side/` code) in M00 (MEMORY D-108); 387 tasks |
