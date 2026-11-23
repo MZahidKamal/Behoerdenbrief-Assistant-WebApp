@@ -9,7 +9,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import ValidationError
+from pydantic import HttpUrl, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # The local `.env` file sits in `server_side/`, two folders above this file.
@@ -38,6 +38,10 @@ class Settings(BaseSettings):
             (for example, development features in production).
         log_level: The lowest level that is written to the logs. Optional,
             the default is `INFO`.
+        frontend_base_url: The address of the web app, for example
+            `http://localhost:3000`. Required, because a wrong default would
+            send users to wrong links. Used for the `type` link of error
+            responses (API_DESIGN §3.1), and later for Stripe and email links.
     """
 
     model_config = SettingsConfigDict(
@@ -56,6 +60,7 @@ class Settings(BaseSettings):
 
     app_env: Literal["development", "test", "production"]
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    frontend_base_url: HttpUrl
 
 
 def load_settings(environment_file: Path | None = DEFAULT_ENVIRONMENT_FILE) -> Settings:

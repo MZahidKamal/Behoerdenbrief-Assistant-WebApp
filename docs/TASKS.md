@@ -208,7 +208,7 @@ Total: 387 tasks.
   - Read: RULES §8; SECURITY §15
   - Learn: Middleware and context variables
 
-- [ ] **T-020** · `AppException` and the Problem Details response
+- [x] **T-020** · `AppException` and the Problem Details response
   - Done when: `core/exceptions.py` has `AppException` (code, status, title) and a handler that returns `application/problem+json` as in API_DESIGN §3.1; API test with a sample exception
   - Depends on: T-016
   - Read: API_DESIGN §3.1–§3.2; RULES §7
