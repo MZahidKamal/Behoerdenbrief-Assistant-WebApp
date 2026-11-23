@@ -178,7 +178,7 @@ Total: 387 tasks.
   - Read: ARCHITECTURE §11; RULES §4.1; SECURITY §13
   - Learn: Configuration from environment variables
 
-- [ ] **T-015** · App factory
+- [x] **T-015** · App factory
   - Done when: `app/main.py` has `create_app()`; `uv run uvicorn app.main:app --reload` starts the app locally
   - Depends on: T-014
   - Read: ARCHITECTURE §4
