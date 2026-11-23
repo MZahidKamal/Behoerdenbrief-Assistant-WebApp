@@ -262,7 +262,7 @@ Total: 387 tasks.
   - Read: RULES §5; ARCHITECTURE §12.2
   - Learn: The OpenAPI document as a contract
 
-- [ ] **T-029** · Server Dockerfile
+- [x] **T-029** · Server Dockerfile
   - Done when: Multi-stage slim image with a non-root user and the Uvicorn start command; `.dockerignore`; `docker build` succeeds and `docker run` answers `/health`
   - Depends on: T-016
   - Read: ARCHITECTURE §12.2
