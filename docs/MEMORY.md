@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.25
+**Document Version:** 0.26
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -661,6 +661,7 @@ Status: `open` until checked; then `done` with result and date.
 | K-35 | Minimum age 18 is sufficient for contract and consent | API_DESIGN §1.12 | open | |
 | K-36 | TK terms of use allow crawling for a commercial product | RAG §3.2 | open | |
 | K-37 | robots.txt and terms of use of arbeitsagentur.de, bmwsb.bund.de, gesetze-im-internet.de and verwaltung.bund.de allow crawling for a commercial product | RAG §3.2 | open | |
+| K-38 | OpenAPI shows FastAPI's default `HTTPValidationError` for 422 and no Problem Details error answers (API_DESIGN §1.11); add a task before the frontend uses generated error types | API_DESIGN §1.11, §3; RULES §5 | open | |
 
 ### 3.2 Known issues
 
@@ -751,3 +752,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-23 | 0.23 | D-113 (own request size limit middleware) |
 | 2026-11-23 | 0.24 | D-114 (pagination helper) |
 | 2026-11-23 | 0.25 | D-115 (the assistant also merges pull requests); D-091 merging superseded; area 2.6 range widened to D-129 |
+| 2026-11-23 | 0.26 | Open check K-38 (OpenAPI error answers are not Problem Details yet) |

@@ -1,13 +1,22 @@
 """Unit tests for the developer command entry point in `app/command_line.py`."""
 
 import argparse
+import json
 import runpy
 import sys
+from pathlib import Path
 
 import allure
 import pytest
 
-from app.command_line import DEVELOPER_COMMANDS, DeveloperCommand, main
+import app.main
+from app.command_line import (
+    DEFAULT_OPENAPI_OUTPUT_PATH,
+    DEVELOPER_COMMANDS,
+    DeveloperCommand,
+    main,
+)
+from app.core.config import InvalidSettingsError
 
 # Allure groups the results by feature. The commands belong to no feature.
 pytestmark = [allure.feature("server")]
@@ -147,3 +156,78 @@ def test_module_lists_commands_when_started_with_python_m(
     # Assert
     assert system_exit.value.code == 0
     assert "python -m app.command_line" in capsys.readouterr().out
+
+
+def test_main_lists_export_openapi_schema_when_no_command_is_given(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange: the real list of commands.
+
+    # Act
+    exit_code = main([])
+
+    # Assert
+    assert exit_code == 0
+    assert "export_openapi_schema" in capsys.readouterr().out
+
+
+def test_export_openapi_schema_writes_openapi_document_when_output_is_given(
+    tmp_path: Path,
+) -> None:
+    # Arrange: a file in a new folder, so the folder is created too.
+    output_path = tmp_path / "api" / "openapi.json"
+
+    # Act
+    exit_code = main(["export_openapi_schema", "--output", str(output_path)])
+
+    # Assert: a valid OpenAPI document of our app.
+    openapi_document = json.loads(output_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert openapi_document["openapi"].startswith("3.")
+    assert openapi_document["info"]["title"] == "Behördenbrief Assistant API"
+    assert "/health" in openapi_document["paths"]
+
+
+def test_export_openapi_schema_writes_only_newline_endings_when_file_is_written(
+    tmp_path: Path,
+) -> None:
+    # Arrange
+    output_path = tmp_path / "openapi.json"
+
+    # Act
+    main(["export_openapi_schema", "--output", str(output_path)])
+
+    # Assert: "\n" only, also on Windows, and one at the end; "ö" stays as is.
+    file_bytes = output_path.read_bytes()
+    assert b"\r\n" not in file_bytes
+    assert file_bytes.endswith(b"}\n")
+    assert "Behördenbrief".encode() in file_bytes
+
+
+def test_export_openapi_schema_uses_client_side_path_when_output_is_missing() -> None:
+    # Arrange and act: the default value of the option.
+    default_path_parts = DEFAULT_OPENAPI_OUTPUT_PATH.parts[-4:]
+
+    # Assert (RULES §5).
+    assert default_path_parts == ("client_side", "lib", "api", "openapi.json")
+
+
+def test_export_openapi_schema_returns_1_with_message_when_settings_are_missing(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange: the app cannot read its settings.
+    def raise_invalid_settings_error() -> None:
+        raise InvalidSettingsError("Missing or invalid settings: APP_ENV (required).")
+
+    monkeypatch.setattr(app.main, "get_settings", raise_invalid_settings_error)
+    output_path = tmp_path / "openapi.json"
+
+    # Act
+    exit_code = main(["export_openapi_schema", "--output", str(output_path)])
+
+    # Assert: a short message, no file.
+    assert exit_code == 1
+    assert "APP_ENV" in capsys.readouterr().err
+    assert not output_path.exists()
