@@ -220,7 +220,7 @@ Total: 387 tasks.
   - Read: API_DESIGN §3.1, §3.3
   - Learn: How FastAPI validates requests
 
-- [ ] **T-022** · Unexpected errors and common error codes
+- [x] **T-022** · Unexpected errors and common error codes
   - Done when: Unexpected exceptions return `500 internal_error` without internal details; the common error codes of API_DESIGN §3.3 exist as an enum; tests
   - Depends on: T-021
   - Read: API_DESIGN §3.2–§3.3, §3.5

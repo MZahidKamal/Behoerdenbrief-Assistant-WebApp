@@ -9,6 +9,7 @@ from pydantic import HttpUrl
 from app.core.exceptions import (
     PROBLEM_DETAILS_MEDIA_TYPE,
     AppException,
+    CommonErrorCode,
     FieldErrorCode,
     ProblemDetailsResponse,
     build_json_pointer,
@@ -40,6 +41,34 @@ class ExampleItemNotFoundError(AppException):
     code = "not_found"
     status = 404
     title = "Resource not found"
+
+
+def test_common_error_code_has_all_documented_codes_when_enum_is_read() -> None:
+    # Arrange: the table of API_DESIGN §3.3, copied by hand on purpose.
+    documented_codes = {
+        "malformed_request",
+        "authentication_required",
+        "invalid_token",
+        "account_deleted",
+        "profile_incomplete",
+        "account_read_only",
+        "forbidden",
+        "mfa_required",
+        "admin_session_expired",
+        "not_found",
+        "invalid_state",
+        "request_too_large",
+        "validation_failed",
+        "rate_limited",
+        "internal_error",
+        "service_unavailable",
+    }
+
+    # Act
+    enum_codes = {code.value for code in CommonErrorCode}
+
+    # Assert: no code missing, no code too many.
+    assert enum_codes == documented_codes
 
 
 def test_build_problem_type_url_returns_problems_link_when_url_has_no_path() -> None:

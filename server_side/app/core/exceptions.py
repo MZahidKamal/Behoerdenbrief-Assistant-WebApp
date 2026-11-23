@@ -29,6 +29,30 @@ from app.core.config import Settings
 PROBLEM_DETAILS_MEDIA_TYPE = "application/problem+json"
 
 
+class CommonErrorCode(StrEnum):
+    """Error codes that can happen on many endpoints (API_DESIGN §3.3).
+
+    Features add their own codes in their `constants.py` (API_DESIGN §3.5).
+    """
+
+    MALFORMED_REQUEST = "malformed_request"
+    AUTHENTICATION_REQUIRED = "authentication_required"
+    INVALID_TOKEN = "invalid_token"  # noqa: S105  (an error code)
+    ACCOUNT_DELETED = "account_deleted"
+    PROFILE_INCOMPLETE = "profile_incomplete"
+    ACCOUNT_READ_ONLY = "account_read_only"
+    FORBIDDEN = "forbidden"
+    MFA_REQUIRED = "mfa_required"
+    ADMIN_SESSION_EXPIRED = "admin_session_expired"
+    NOT_FOUND = "not_found"
+    INVALID_STATE = "invalid_state"
+    REQUEST_TOO_LARGE = "request_too_large"
+    VALIDATION_FAILED = "validation_failed"
+    RATE_LIMITED = "rate_limited"
+    INTERNAL_ERROR = "internal_error"
+    SERVICE_UNAVAILABLE = "service_unavailable"
+
+
 class FieldErrorCode(StrEnum):
     """The codes of single field errors in the `errors` list (API_DESIGN §3.3)."""
 
@@ -61,15 +85,19 @@ _FIELD_ERROR_CODES_BY_PYDANTIC_TYPE: Mapping[str, FieldErrorCode] = {
 
 # These HTTP statuses have a fixed code in API_DESIGN §3.3. Every other status
 # uses its HTTP name in snake_case, for example `405 method_not_allowed`.
-_DOCUMENTED_ERROR_CODES_BY_STATUS: Mapping[int, str] = {
-    400: "malformed_request",
-    401: "authentication_required",
-    404: "not_found",
-    413: "request_too_large",
-    429: "rate_limited",
-    500: "internal_error",
-    503: "service_unavailable",
+_DOCUMENTED_ERROR_CODES_BY_STATUS: Mapping[int, CommonErrorCode] = {
+    400: CommonErrorCode.MALFORMED_REQUEST,
+    401: CommonErrorCode.AUTHENTICATION_REQUIRED,
+    404: CommonErrorCode.NOT_FOUND,
+    413: CommonErrorCode.REQUEST_TOO_LARGE,
+    429: CommonErrorCode.RATE_LIMITED,
+    500: CommonErrorCode.INTERNAL_ERROR,
+    503: CommonErrorCode.SERVICE_UNAVAILABLE,
 }
+
+# The answer to an unexpected error is always the same. It never says what
+# went wrong inside, because that could help an attacker (SECURITY §12).
+_UNEXPECTED_ERROR_DETAIL = "An unexpected error happened. Please try again later."
 
 
 class AppException(Exception):
@@ -230,7 +258,9 @@ def get_error_code_for_http_status(status_code: int) -> str:
     except ValueError:
         # A status that is not standard. Starlette cannot create one without
         # its own detail, so this is very rare.
-        return "internal_error" if status_code >= 500 else "malformed_request"
+        if status_code >= 500:
+            return CommonErrorCode.INTERNAL_ERROR
+        return CommonErrorCode.MALFORMED_REQUEST
     return re.sub(r"[^a-z0-9]+", "_", status_name.lower()).strip("_")
 
 
@@ -266,9 +296,7 @@ def create_problem_details_response(
 
 
 def register_exception_handlers(application: FastAPI, settings: Settings) -> None:
-    """Connect the error handlers to the app.
-
-    A later task adds the handler for unexpected errors (API_DESIGN §3.2).
+    """Connect the error handlers to the app (API_DESIGN §3.2).
 
     Args:
         application: The FastAPI app.
@@ -327,7 +355,7 @@ def register_exception_handlers(application: FastAPI, settings: Settings) -> Non
         ):
             problem_details = build_problem_details(
                 request,
-                code="malformed_request",
+                code=CommonErrorCode.MALFORMED_REQUEST,
                 status=400,
                 title="Malformed request",
                 detail="The request body is not valid JSON.",
@@ -346,7 +374,7 @@ def register_exception_handlers(application: FastAPI, settings: Settings) -> Non
         ]
         problem_details = build_problem_details(
             request,
-            code="validation_failed",
+            code=CommonErrorCode.VALIDATION_FAILED,
             status=422,
             title="Request validation failed",
             detail="One or more fields are invalid.",
@@ -376,3 +404,20 @@ def register_exception_handlers(application: FastAPI, settings: Settings) -> Non
         # Keep the error's headers, for example `Allow: POST` after a wrong
         # method, or `WWW-Authenticate` after a missing login.
         return create_problem_details_response(problem_details, headers=error.headers)
+
+    # Every other error is a bug or a broken service: `500 internal_error`
+    # with a general text only (API_DESIGN §3.2). Starlette calls this handler
+    # in its outermost layer and then raises the error again. So Uvicorn writes
+    # the traceback to the log once; this handler does not log it a second time.
+    @application.exception_handler(Exception)
+    async def handle_unexpected_error(
+        request: Request, error: Exception
+    ) -> JSONResponse:
+        problem_details = build_problem_details(
+            request,
+            code=CommonErrorCode.INTERNAL_ERROR,
+            status=500,
+            title="Internal Server Error",
+            detail=_UNEXPECTED_ERROR_DETAIL,
+        )
+        return create_problem_details_response(problem_details)

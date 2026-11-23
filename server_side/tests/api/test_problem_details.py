@@ -21,6 +21,9 @@ pytestmark = [allure.feature("server")]
 # An invented value. Tests check that the input never comes back in an error.
 EXAMPLE_PERSONAL_VALUE = "invented-personal-value"
 
+# An invented internal error message. It must never reach the client.
+EXAMPLE_INTERNAL_DETAIL = "internal secret detail in C:/app/example_module.py"
+
 
 class ExampleItemNotFoundError(AppException):
     """An invented error, only for these tests."""
@@ -79,8 +82,16 @@ async def failing_route_client() -> AsyncIterator[AsyncClient]:
     async def get_non_standard_status_example() -> None:
         raise HTTPException(status_code=599, detail="Example non-standard status.")
 
+    # A route with a bug: an error that nobody expects.
+    @application.get("/test/unexpected-error")
+    async def get_unexpected_error_example() -> None:
+        raise RuntimeError(EXAMPLE_INTERNAL_DETAIL)
+
+    # Starlette sends the 500 answer and then raises the error again, for the
+    # server's log. `raise_app_exceptions=False` lets the client return the
+    # answer, like a real server does.
     async with AsyncClient(
-        transport=ASGITransport(app=application),
+        transport=ASGITransport(app=application, raise_app_exceptions=False),
         base_url="http://test",
     ) as client:
         yield client
@@ -292,3 +303,38 @@ async def test_http_exception_returns_general_title_when_status_is_not_standard(
     assert response.json()["title"] == "HTTP error"
     assert response.json()["code"] == "internal_error"
     assert response.json()["detail"] == "Example non-standard status."
+
+
+async def test_unexpected_error_returns_500_internal_error_when_route_has_bug(
+    failing_route_client: AsyncClient,
+) -> None:
+    # Arrange: the route raises a `RuntimeError`.
+
+    # Act
+    response = await failing_route_client.get("/test/unexpected-error")
+
+    # Assert: only the general text (API_DESIGN §3.2).
+    assert response.status_code == 500
+    assert response.headers["content-type"] == "application/problem+json"
+    assert response.json() == {
+        "type": "https://app.example.test/problems/internal_error",
+        "title": "Internal Server Error",
+        "status": 500,
+        "detail": "An unexpected error happened. Please try again later.",
+        "instance": "/test/unexpected-error",
+        "code": "internal_error",
+    }
+
+
+async def test_unexpected_error_never_returns_internal_details_when_route_has_bug(
+    failing_route_client: AsyncClient,
+) -> None:
+    # Arrange: the error message stands for internal details.
+
+    # Act
+    response = await failing_route_client.get("/test/unexpected-error")
+
+    # Assert: no error message, no error type, no traceback (SECURITY §12).
+    assert EXAMPLE_INTERNAL_DETAIL not in response.text
+    assert "RuntimeError" not in response.text
+    assert "Traceback" not in response.text

@@ -30,6 +30,11 @@ def _create_app_with_logging_route() -> FastAPI:
         logging.getLogger("app.test").info("Test route called")
         return {"request_id": current_request_id.get()}
 
+    # A route with a bug, for the lines that are written after a crash.
+    @application.get("/test/crash")
+    async def get_crash_for_test() -> None:
+        raise RuntimeError("Example crash")
+
     return application
 
 
@@ -68,8 +73,10 @@ async def logging_route_client(
         ):
             handler.setStream(log_output)
 
+    # `raise_app_exceptions=False`: after a crash, the client returns the 500
+    # answer instead of raising the error, like a real server.
     async with AsyncClient(
-        transport=ASGITransport(app=application),
+        transport=ASGITransport(app=application, raise_app_exceptions=False),
         base_url="http://test",
     ) as client:
         yield client
@@ -141,3 +148,24 @@ async def test_log_line_contains_request_id_when_written_during_request(
     route_lines = [line for line in log_lines if "Test route called" in line]
     assert len(route_lines) == 1
     assert route_lines[0].endswith(f"request_id={request_id}")
+
+
+async def test_crash_log_line_contains_request_id_when_route_has_crashed(
+    logging_route_client: AsyncClient,
+    log_output: io.StringIO,
+) -> None:
+    # Arrange: the fixture has built the app.
+
+    # Act: a request that crashes, then the line that Uvicorn writes next.
+    response = await logging_route_client.get("/test/crash")
+    logging.getLogger("uvicorn.error").error("Exception in ASGI application")
+
+    # Assert: the crash line still has the request id of the failed request.
+    assert response.status_code == 500
+    crash_lines = [
+        line
+        for line in log_output.getvalue().splitlines()
+        if "Exception in ASGI application" in line
+    ]
+    assert len(crash_lines) == 1
+    assert re.search(r"request_id=[0-9a-f]{32}$", crash_lines[0])
