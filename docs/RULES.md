@@ -1,7 +1,7 @@
 # RULES
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.10
+**Document Version:** 0.11
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -53,6 +53,7 @@ The developer is learning FastAPI, Next.js, AI, RAG, system design, CI/CD and Do
 | Deleting or renaming public things | Endpoints, tables, columns, configuration names, error codes |
 | Anything touching production | Deploy hooks, production secrets, production database |
 | AI tools and MCP | A new tool, a change of a tool's input or scope, adding a tool to a step's tool list, and any new MCP tool, resource or prompt (SECURITY §10a) |
+| Git and GitHub commands | Ask before **each** command that changes the repository or GitHub, and wait for the permission: creating or switching a branch, commit, push, opening a pull request, squash merge, updating `main`, deleting a branch. `gh pr merge` is never added to the allowed permissions, so it always asks (MEMORY D-115) |
 
 ### 1.3 Never
 
@@ -60,7 +61,7 @@ The developer is learning FastAPI, Next.js, AI, RAG, system design, CI/CD and Do
 - Edit generated files by hand (`client_side/lib/api/schema.d.ts`, `uv.lock`, `package-lock.json` except through the tool).
 - Weaken, skip or delete a test to make the build pass; never lower a coverage threshold.
 - Bypass hooks or checks (`--no-verify`, `# type: ignore` without a reason comment, `eslint-disable` without a reason comment).
-- Push to `main`, force-push a shared branch, or merge a pull request (the developer merges).
+- Push to `main` or force-push a shared branch; merge a pull request without the developer's permission for that exact command (§11.1).
 
 ### 1.4 Definition of done
 
@@ -356,7 +357,7 @@ Test levels, tools, scenarios and the test database: **ARCHITECTURE §9**. In ad
 
 - `main` is always deployable and protected: changes only through pull requests with green CI.
 - One short-lived branch per task: **`<type>/<task id>-<short-description>`**, e.g. `feat/T-012-letter-upload` (task ids from TASKS.md).
-- The assistant creates the branch, commits, pushes and opens the pull request; **the developer reviews and merges** (squash merge).
+- The assistant does all Git and GitHub work: creates the branch, commits, pushes, opens the pull request, squash-merges it after the developer's review, checks the merge on GitHub, updates `main` and deletes the branch. **Before each of these commands it asks the developer and waits for the permission** (MEMORY D-115).
 
 ### 11.2 Commits
 
@@ -390,3 +391,4 @@ Managed with the `pre-commit` framework: `ruff check`, `ruff format`, `mypy` (AR
 | 2026-11-22 | 0.8 | §1, §1.1a, §1.6, §11.1: the coding assistant is called "the AI coding assistant", not by its product name; change log 0.1 and 0.5 reworded (MEMORY D-101) |
 | 2026-11-22 | 0.9 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |
 | 2026-11-23 | 0.10 | §3.2, §3.3, §5: docstrings and JSDoc only where needed (public or exported code), a 1–3 line comment before each logical block, blank lines from `ruff format` (MEMORY D-108) |
+| 2026-11-23 | 0.11 | §1.2, §1.3, §11.1: the assistant also merges pull requests and cleans up branches, with the developer's permission before each command (MEMORY D-115) |
