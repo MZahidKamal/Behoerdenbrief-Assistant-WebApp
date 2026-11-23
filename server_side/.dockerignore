@@ -1,0 +1,36 @@
+# Files that never go into the Docker build (ARCHITECTURE §12.2).
+# A small build context makes builds faster and keeps secrets out.
+
+# Secrets and local settings. Never in an image.
+.env
+.env.*
+
+# The local environment; the image builds its own.
+.venv/
+
+# Caches and reports from tools and tests. `**/` also finds them in
+# subfolders (a plain `__pycache__/` matches only the top folder).
+**/__pycache__/
+**/*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+allure-results/
+allure-report/
+
+# Tests are not needed to run the app.
+tests/
+
+# IDE folders, Git data and text documents.
+.idea/
+.vscode/
+.git/
+.gitignore
+*.md
+
+# The Docker files themselves.
+Dockerfile
+.dockerignore
