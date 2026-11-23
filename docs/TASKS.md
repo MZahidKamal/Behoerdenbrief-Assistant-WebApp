@@ -268,7 +268,7 @@ Total: 387 tasks.
   - Read: ARCHITECTURE §12.2
   - Learn: Images, layers, multi-stage builds and non-root containers
 
-- [ ] **T-030** · Docker Compose with Redis
+- [x] **T-030** · Docker Compose with Redis
   - Done when: `docker-compose.yml` with the `redis` service and a healthcheck; `docker compose up redis` works and `redis-cli ping` answers
   - Depends on: T-029
   - Read: ARCHITECTURE §12.3

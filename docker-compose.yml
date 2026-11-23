@@ -1,0 +1,34 @@
+# Local development stack (ARCHITECTURE §12.3).
+# Start Redis:   docker compose up -d redis
+# Stop all:      docker compose down        (keeps the data volume)
+# Later tasks add the services `server`, `worker` and `client`.
+
+# A fixed project name, so containers, network and volume always get the
+# same names, from any folder.
+name: behoerdenbrief
+
+services:
+  # Redis: the queue for background tasks (Celery), task results, rate limits
+  # and one-time download tokens (ARCHITECTURE §3).
+  redis:
+    # An exact version, never "latest", so every computer runs the same Redis.
+    image: redis:8.12.0-alpine
+    restart: unless-stopped
+    ports:
+      # Only this computer can reach the local Redis. It has no password, so
+      # it must never be open to other devices in the network (SECURITY §12).
+      - "127.0.0.1:6379:6379"
+    volumes:
+      # A named volume, so Docker does not create a new nameless one each time.
+      - redis_data:/data
+    healthcheck:
+      # Redis answers "PONG" when it is ready. Other services can wait for
+      # this with `depends_on: condition: service_healthy`.
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  redis_data:
