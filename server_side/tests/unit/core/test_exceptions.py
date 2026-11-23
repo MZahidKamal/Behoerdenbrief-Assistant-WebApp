@@ -3,18 +3,35 @@
 import json
 
 import allure
+import pytest
 from pydantic import HttpUrl
 
 from app.core.exceptions import (
     PROBLEM_DETAILS_MEDIA_TYPE,
     AppException,
+    FieldErrorCode,
     ProblemDetailsResponse,
+    build_json_pointer,
     build_problem_type_url,
     create_problem_details_response,
+    get_error_code_for_http_status,
+    get_field_error_code,
 )
 
 # Allure groups the results by feature. Error handling belongs to no feature.
 pytestmark = [allure.feature("server")]
+
+
+def _make_problem_details() -> ProblemDetailsResponse:
+    # A complete body without `errors`, like every error except 422.
+    return ProblemDetailsResponse(
+        type="https://app.example.test/problems/method_not_allowed",
+        title="Method Not Allowed",
+        status=405,
+        detail="Method Not Allowed",
+        instance="/test",
+        code="method_not_allowed",
+    )
 
 
 class ExampleItemNotFoundError(AppException):
@@ -83,4 +100,106 @@ def test_create_problem_details_response_sets_status_and_media_type_when_called(
     # Assert
     assert response.status_code == 404
     assert response.media_type == PROBLEM_DETAILS_MEDIA_TYPE
-    assert json.loads(bytes(response.body)) == problem_details.model_dump()
+    assert json.loads(bytes(response.body)) == problem_details.model_dump(
+        exclude_none=True
+    )
+
+
+def test_create_problem_details_response_leaves_out_errors_when_errors_missing() -> (
+    None
+):
+    # Arrange
+    problem_details = _make_problem_details()
+
+    # Act
+    response = create_problem_details_response(problem_details)
+
+    # Assert
+    assert "errors" not in json.loads(bytes(response.body))
+
+
+def test_create_problem_details_response_adds_headers_when_headers_are_given() -> None:
+    # Arrange
+    problem_details = _make_problem_details()
+
+    # Act
+    response = create_problem_details_response(
+        problem_details, headers={"Allow": "POST"}
+    )
+
+    # Assert
+    assert response.headers["allow"] == "POST"
+
+
+@pytest.mark.parametrize(
+    ("location", "expected_pointer"),
+    [
+        (("body", "password"), "/password"),
+        (("body", "items", 0), "/items/0"),
+        (("body",), ""),
+        (("query", "page"), "/query/page"),
+        (("path", "letter_id"), "/path/letter_id"),
+        (("body", "a/b", "c~d"), "/a~1b/c~0d"),
+    ],
+)
+def test_build_json_pointer_returns_pointer_when_location_is_given(
+    location: tuple[str | int, ...], expected_pointer: str
+) -> None:
+    # Arrange: the location comes from the parameters.
+
+    # Act
+    pointer = build_json_pointer(location)
+
+    # Assert
+    assert pointer == expected_pointer
+
+
+@pytest.mark.parametrize(
+    ("pydantic_error_type", "expected_code"),
+    [
+        ("missing", FieldErrorCode.REQUIRED),
+        ("string_too_long", FieldErrorCode.TOO_LONG),
+        ("too_short", FieldErrorCode.TOO_SHORT),
+        ("greater_than_equal", FieldErrorCode.OUT_OF_RANGE),
+        ("int_parsing", FieldErrorCode.INVALID_FORMAT),
+        ("url_parsing", FieldErrorCode.INVALID_FORMAT),
+        ("password_too_short", FieldErrorCode.PASSWORD_TOO_SHORT),
+        ("consent_required", FieldErrorCode.CONSENT_REQUIRED),
+    ],
+)
+def test_get_field_error_code_returns_our_code_when_pydantic_type_is_given(
+    pydantic_error_type: str, expected_code: FieldErrorCode
+) -> None:
+    # Arrange: the type comes from the parameters.
+
+    # Act
+    code = get_field_error_code(pydantic_error_type)
+
+    # Assert
+    assert code == expected_code
+
+
+@pytest.mark.parametrize(
+    ("status_code", "expected_code"),
+    [
+        (400, "malformed_request"),
+        (401, "authentication_required"),
+        (404, "not_found"),
+        (413, "request_too_large"),
+        (429, "rate_limited"),
+        (405, "method_not_allowed"),
+        (415, "unsupported_media_type"),
+        (499, "malformed_request"),
+        (599, "internal_error"),
+    ],
+)
+def test_get_error_code_for_http_status_returns_code_when_status_is_given(
+    status_code: int, expected_code: str
+) -> None:
+    # Arrange: the status comes from the parameters.
+
+    # Act
+    code = get_error_code_for_http_status(status_code)
+
+    # Assert
+    assert code == expected_code
