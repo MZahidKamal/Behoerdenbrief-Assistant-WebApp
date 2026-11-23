@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.18
+**Document Version:** 0.19
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -573,6 +573,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: Docstrings and comments everywhere (D-094, replaced); always 2–3 comment lines (rejected: a second line often repeats the first); a comment on every line (rejected); turning off the formatter for custom blank lines (rejected).
 - Details: RULES §3.2, §3.3, §5; `server_side/pyproject.toml` `[tool.ruff.lint]`
 
+#### D-109 · 2026-11-23 · Only Swagger UI as API documentation
+- Decision: The API documentation is only Swagger UI at `/docs` with `/openapi.json`, and both are off in production. ReDoc (`/redoc`) is off in every environment.
+- Reason: Developer decision. One docs page is enough; every extra page is more surface. Without `/openapi.json`, ReDoc would show nothing in production anyway.
+- Alternatives: ReDoc outside production like `/docs` (rejected).
+- Details: SECURITY §12; `server_side/app/main.py`
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -701,3 +707,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-22 | 0.16 | D-106 (pre-commit hook details) |
 | 2026-11-23 | 0.17 | D-107 (Node.js version for the frontend) |
 | 2026-11-23 | 0.18 | D-108 (docstrings only where needed; a comment before each block); D-094 superseded |
+| 2026-11-23 | 0.19 | D-109 (only Swagger UI as API documentation; ReDoc off everywhere) |

@@ -190,7 +190,7 @@ Total: 387 tasks.
   - Read: API_DESIGN §1.1
   - Learn: Routers, path operations and API tests
 
-- [ ] **T-017** · API documentation only outside production
+- [x] **T-017** · API documentation only outside production
   - Done when: `/docs` and `/openapi.json` work locally and return 404 when `APP_ENV=production`; tests
   - Depends on: T-016
   - Read: SECURITY §12; API_DESIGN §1.11

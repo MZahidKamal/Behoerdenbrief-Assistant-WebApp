@@ -50,12 +50,21 @@ def create_app() -> FastAPI:
     """
     # Read the settings first. If one is missing or wrong, the app stops
     # here with a clear message, before it can run in a broken state.
-    get_settings()
+    settings = get_settings()
 
-    # The title and summary are shown in the API documentation (/docs).
+    # The API documentation is a full map of all endpoints. It helps us while
+    # we build, but in production it would only help an attacker, so there
+    # `/docs` and `/openapi.json` do not exist and return 404 (SECURITY §12).
+    is_production = settings.app_env == "production"
+
+    # The title and summary are shown in /docs. We use only Swagger UI
+    # (/docs), so the second docs page ReDoc is off everywhere (MEMORY D-109).
     application = FastAPI(
         title="Behördenbrief Assistant API",
         summary="Helps Bengali-speaking people understand and answer German letters.",
+        docs_url=None if is_production else "/docs",
+        openapi_url=None if is_production else "/openapi.json",
+        redoc_url=None,
     )
 
     # Connect the routes. `/health` has no `/api/v1` prefix (API_DESIGN §1.1).

@@ -1,9 +1,9 @@
 # Security
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.11
+**Document Version:** 0.12
 **Status:** Draft
-**Last updated:** 2026-11-22
+**Last updated:** 2026-11-23
 
 > This document answers **how data and the system are kept safe**.
 > Product rules: PRD.md · Components, flows and configuration names: ARCHITECTURE.md · Tables, encrypted columns, RLS and retention columns: DATA_MODEL.md
@@ -268,7 +268,7 @@ Values come from configuration (ARCHITECTURE §11) so they can be tuned without 
 | XSS | React escaping; no `dangerouslySetInnerHTML`; AI output and user text always rendered as text |
 | Input validation | Every request body validated by Pydantic schemas; unknown fields rejected |
 | Error responses | Uniform error format (API_DESIGN.md) with an error code; no stack traces, SQL or internal ids of other users |
-| API documentation | `/docs` and `/openapi.json` disabled in production |
+| API documentation | `/docs` and `/openapi.json` disabled in production; ReDoc (`/redoc`) disabled everywhere (MEMORY D-109) |
 | Caching | `Cache-Control: no-store` on every API response; the PWA service worker never caches API requests (API_DESIGN §1.3) |
 | Dependencies | GitHub **Dependabot** update pull requests; `pip-audit` and `npm audit` in CI — a known **high or critical** vulnerability fails the build |
 | Secrets in Git | GitHub secret scanning and push protection enabled (public repository, MEMORY D-051) |
@@ -414,3 +414,4 @@ Scheduled jobs perform these deletions; each job's selection rule is tested.
 | 2026-11-21 | 0.9 | Aligned with RULES 0.4: command `run_mcp_server_local`, caller `mcp_local` |
 | 2026-11-22 | 0.10 | §12: secret scanning and push protection confirmed for the public repository (MEMORY K-21, D-051) |
 | 2026-11-22 | 0.11 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |
+| 2026-11-23 | 0.12 | §12: ReDoc (`/redoc`) disabled in every environment (MEMORY D-109) |
