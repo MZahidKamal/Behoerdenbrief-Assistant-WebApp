@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.17
+**Document Version:** 0.18
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -482,6 +482,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: The developer wants to read and learn from every part of the code.
 - Alternatives: Docstrings only where needed (rejected).
 - Details: RULES §3
+- Status: superseded by D-108
 
 #### D-095 · 2026-11-20 · Allowed abbreviations
 - Decision: The full-word naming rule applies, with a fixed list of technical abbreviations (`id`, `url`, `pdf`, `llm`, …).
@@ -565,6 +566,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: Vitest 5 does not support the Node 20 types that create-next-app set (`^20`), so the test setup (T-013) could not be installed. Node 26 is the current LTS and is already used on the developer's computer; the frontend Dockerfile (T-060) and CI (M04) use the same version.
 - Alternatives: Node 24 (older LTS; local and CI would differ); installing with `--force` or `--legacy-peer-deps` (rejected: ignores the conflict).
 - Details: ARCHITECTURE §3.2; `client_side/package.json`
+
+#### D-108 · 2026-11-23 · Docstrings only where needed; a comment before each block
+- Decision: Google-style docstrings only on public modules, packages, classes, functions and methods; private helpers (`_name`) and magic methods need none (the arguments of `__init__` go in the class docstring); test functions still have none. Inside a function, a short comment of 1–3 lines in easy English (CEFR A2–B1) comes before each logical block and says what it does and why (one line for an obvious block, 2–3 lines when the reason needs it); no comment on every line. Blank lines as `ruff format` sets them; the formatter stays on. Ruff ignores `D105` and `D107`. In `client_side/`, JSDoc only on exported functions, hooks, components and types, with the same comment rule; the existing frontend code is changed in T-387.
+- Reason: Developer decision. Docstrings on every small helper only repeat the code; a comment per block explains each step where the reader needs it.
+- Alternatives: Docstrings and comments everywhere (D-094, replaced); always 2–3 comment lines (rejected: a second line often repeats the first); a comment on every line (rejected); turning off the formatter for custom blank lines (rejected).
+- Details: RULES §3.2, §3.3, §5; `server_side/pyproject.toml` `[tool.ruff.lint]`
 
 ## 3. Open Checks and Known Issues
 
@@ -693,3 +700,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-22 | 0.15 | D-105 (API design document renamed to `API_DESIGN.md`); references changed to `API_DESIGN §` |
 | 2026-11-22 | 0.16 | D-106 (pre-commit hook details) |
 | 2026-11-23 | 0.17 | D-107 (Node.js version for the frontend) |
+| 2026-11-23 | 0.18 | D-108 (docstrings only where needed; a comment before each block); D-094 superseded |

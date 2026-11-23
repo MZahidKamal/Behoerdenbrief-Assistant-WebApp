@@ -11,6 +11,7 @@ from app.core.config import InvalidSettingsError, get_settings, load_settings
 # Allure groups the results by feature. Settings belong to no single feature.
 pytestmark = [allure.feature("server")]
 
+# The environment variables that these tests set and remove.
 SETTING_NAMES = ["APP_ENV", "LOG_LEVEL"]
 
 
@@ -26,8 +27,12 @@ def clean_settings_environment(monkeypatch: pytest.MonkeyPatch) -> Iterator[None
     Yields:
         Nothing. The test runs between the setup and the clean-up.
     """
+    # Remove the real values of this computer. Each test sets only what it needs.
     for setting_name in SETTING_NAMES:
         monkeypatch.delenv(setting_name, raising=False)
+
+    # `get_settings` keeps its first result. Empty the cache before and after
+    # the test, so no test sees settings that another test has read.
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()

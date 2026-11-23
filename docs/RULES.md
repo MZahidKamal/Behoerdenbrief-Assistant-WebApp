@@ -1,9 +1,9 @@
 # RULES
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.9
+**Document Version:** 0.10
 **Status:** Draft
-**Last updated:** 2026-11-22
+**Last updated:** 2026-11-23
 
 > This document answers **which project-specific rules must be followed when writing code**.
 > General personal rules of the developer (full-word naming, uv, IDE setup, test database naming) are in the developer's user-level instructions and are not repeated here; this file adds only what is specific to this project.
@@ -141,10 +141,11 @@ All docstrings, comments and log messages are written in **easy English at CEFR 
 
 ### 3.2 Python
 
-- **Every** module, class, function and method has a docstring in **Google style** (checked by Ruff's pydocstyle rules with `convention = "google"`).
+- **Docstrings only where they are needed.** Every **public** module, package, class, function and method has a docstring in **Google style** (checked by Ruff's pydocstyle rules with `convention = "google"`). Private helpers (the name starts with `_`) and magic methods (`__repr__`, `__init__`, …) do not need one; the arguments of `__init__` are described in the class docstring. For very obvious public code, a one-line summary is enough.
 - **Exception — tests:** test functions have no docstring, because the test name already says action, result and condition (§10.2). Test modules, fixtures and factory functions do have docstrings. Inside a test, short comments mark the arrange, act and assert parts. (Ruff: ignore the missing-function-docstring rule only for `tests/`.)
 - Sections: one-line summary; a short paragraph if needed; `Args:`, `Returns:`, `Raises:` when they apply.
-- **Comments** explain the steps inside a function: what a block does and **why**, especially business rules, security reasons and anything that is not obvious. Every business rule in code names its source (`# PRD R-08`, `# DATA_MODEL §5`).
+- **Comments:** inside a function, a short comment comes **before each logical block** of code (a few lines that do one step together). It says what the block does and **why**, especially business rules, security reasons and anything that is not obvious. One line is enough for an obvious block; use 2–3 lines when the reason needs it. A function with several blocks has one comment per block. No comment on every single line. Every business rule in code names its source (`# PRD R-08`, `# DATA_MODEL §5`).
+- **Blank lines:** as `ruff format` sets them (two between top-level definitions). Inside a function, one blank line separates the logical blocks. The formatter is never turned off.
 
 Example:
 
@@ -171,19 +172,22 @@ async def lock_reply_draft(
     """
     draft = await reply_repository.get_draft_by_letter_id(letter_id)
 
-    # We can only lock a finished draft. A second click finds no draft (PRD R-06).
+    # We can only lock a finished draft. A second click finds
+    # no draft, so it does nothing (PRD R-06).
     if draft is None or draft.generation_status != GenerationStatus.READY:
         raise InvalidStateError("The draft is not ready.")
 
-    # The next number is the highest number plus one (DATA_MODEL §5).
+    # The next number is the highest number plus one.
+    # Numbers never repeat (DATA_MODEL §5).
     next_version_number = await reply_repository.get_highest_version_number(letter_id) + 1
     ...
 ```
 
 ### 3.3 TypeScript
 
-- **Every** exported function, hook, component and type has a JSDoc comment (`/** … */`) with a one-line summary and `@param` / `@returns` where they apply.
-- Comments inside functions follow the same rule as Python.
+- **JSDoc only where it is needed.** Every **exported** function, hook, component and type has a JSDoc comment (`/** … */`) with a one-line summary and `@param` / `@returns` where they apply. Functions and types that are not exported do not need one. For very obvious exported code, a one-line summary is enough.
+- **Comments** inside functions and components follow the same rule as Python (§3.2): a short comment of 1–3 lines before each logical block, no comment on every single line.
+- **Blank lines:** there is no formatter for TypeScript (§5). One blank line separates the logical blocks; otherwise keep the style of the surrounding code.
 
 ### 3.4 What not to write
 
@@ -251,6 +255,7 @@ Structure and the general frontend rules: **ARCHITECTURE §6**. In addition:
 | Types | TypeScript strict; no `any`; API types only from `schema.d.ts` |
 | Formatting | No separate formatter: ESLint (Next.js configuration) is the only check; keep the style of the surrounding code (2-space indent, semicolons, double quotes) |
 | Security | AI output and user text rendered as text only; no `dangerouslySetInnerHTML` (SECURITY §12) |
+| Documentation | JSDoc only on exported functions, hooks, components and types; a short comment of 1–3 lines before each logical block; details in §3.3 |
 
 ## 6. LLM Rules
 
@@ -384,3 +389,4 @@ Managed with the `pre-commit` framework: `ruff check`, `ruff format`, `mypy` (AR
 | 2026-11-22 | 0.7 | §1.6: the AI coding assistant's configuration stays local and is not committed (MEMORY D-036) |
 | 2026-11-22 | 0.8 | §1, §1.1a, §1.6, §11.1: the coding assistant is called "the AI coding assistant", not by its product name; change log 0.1 and 0.5 reworded (MEMORY D-101) |
 | 2026-11-22 | 0.9 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |
+| 2026-11-23 | 0.10 | §3.2, §3.3, §5: docstrings and JSDoc only where needed (public or exported code), a 1–3 line comment before each logical block, blank lines from `ruff format` (MEMORY D-108) |

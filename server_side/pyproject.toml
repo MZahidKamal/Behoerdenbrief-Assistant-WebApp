@@ -34,9 +34,12 @@ select = [
     "B",   # flake8-bugbear: common Python traps
     "UP",  # pyupgrade: modern Python syntax
     "S",   # flake8-bandit: security problems
-    "D",   # pydocstyle: docstrings everywhere (RULES §3.2)
+    "D",   # pydocstyle: docstrings on public code (RULES §3.2)
     "DTZ", # flake8-datetimez: no naive datetimes (RULES §4.5)
 ]
+# D105: magic methods need no docstring. D107: `__init__` needs no docstring;
+# its arguments are described in the class docstring (RULES §3.2, MEMORY D-108).
+ignore = ["D105", "D107"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
