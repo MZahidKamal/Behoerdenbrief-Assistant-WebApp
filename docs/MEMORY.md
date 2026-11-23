@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.20
+**Document Version:** 0.21
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -585,6 +585,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: The same pointer for all request parts (rejected: `?page=0` and a body field `page` would look the same); adding every new code to §3.3 by hand (rejected).
 - Details: API_DESIGN §3.1, §3.3; `server_side/app/core/exceptions.py`
 
+#### D-111 · 2026-11-23 · Security header values of the API
+- Decision: HSTS `max-age=63072000; includeSubDomains` without `preload`, in every environment; CSP `default-src 'none'; frame-ancestors 'none'` on every API response except Swagger UI (`/docs`, `/docs/oauth2-redirect`), which exists only outside production; `Permissions-Policy: camera=(), microphone=(), geolocation=()`. The headers live in `core/security_headers.py`, used by the middleware and by the `500` handler.
+- Reason: Developer decision. Two years of HSTS follows OWASP; `preload` is hard to undo and needs a domain decision. The strict CSP is the OWASP rule for JSON APIs, but it breaks Swagger UI. The API never needs a device. A separate module avoids a circular import between `main.py` and `exceptions.py`.
+- Alternatives: HSTS only in production (rejected: browsers ignore it over plain HTTP anyway); a relaxed CSP for Swagger UI (rejected: more rules to keep for a page that production does not have); the middleware in `main.py` (rejected: circular import).
+- Details: SECURITY §12; ARCHITECTURE §4.1; `server_side/app/core/security_headers.py`
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -715,3 +721,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-23 | 0.18 | D-108 (docstrings only where needed; a comment before each block); D-094 superseded |
 | 2026-11-23 | 0.19 | D-109 (only Swagger UI as API documentation; ReDoc off everywhere) |
 | 2026-11-23 | 0.20 | D-110 (pointers for request parts; codes for other HTTP statuses) |
+| 2026-11-23 | 0.21 | D-111 (security header values of the API) |
