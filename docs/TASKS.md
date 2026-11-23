@@ -274,7 +274,7 @@ Total: 387 tasks.
   - Read: ARCHITECTURE §12.3
   - Learn: Compose services and healthchecks
 
-- [ ] **T-031** · Server in Docker Compose
+- [x] **T-031** · Server in Docker Compose
   - Done when: `server` service with `env_file`, source mounted for reload, healthcheck on `/health`, `depends_on` Redis; `docker compose up` shows the API on port 8000
   - Depends on: T-030
   - Read: ARCHITECTURE §12.3–§12.4

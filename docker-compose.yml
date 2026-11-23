@@ -1,7 +1,8 @@
-# Local development stack (ARCHITECTURE §12.3).
-# Start Redis:   docker compose up -d redis
+# Local development stack (ARCHITECTURE §12.3, §12.4).
+# Start all:     docker compose up --build  (API on http://127.0.0.1:8000)
+# Only Redis:    docker compose up -d redis
 # Stop all:      docker compose down        (keeps the data volume)
-# Later tasks add the services `server`, `worker` and `client`.
+# Later tasks add the services `worker` and `client`.
 
 # A fixed project name, so containers, network and volume always get the
 # same names, from any folder.
@@ -29,6 +30,50 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
+
+  # The API, built from server_side/Dockerfile (T-029).
+  server:
+    build: ./server_side
+    # Restart Uvicorn when a file in our code changes. Without the package
+    # `watchfiles`, Uvicorn checks the files every second; this also works
+    # with folders from Windows, where change events often do not arrive.
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+      - --reload-dir
+      - /app/app
+    # The settings come from the developer's own .env file. They are given to
+    # the container when it starts and are never stored in the image.
+    env_file: server_side/.env
+    ports:
+      # Only this computer can reach the development API (it shows /docs).
+      - "127.0.0.1:8000:8000"
+    volumes:
+      # Only the code folder, read-only: saved changes appear at once, but the
+      # container cannot change the code. Mounting all of server_side would
+      # hide the image's Linux .venv behind the Windows .venv.
+      - ./server_side/app:/app/app:ro
+    depends_on:
+      # Start the API only when Redis answers "PONG".
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # The slim image has no curl, so Python asks /health. Any answer that is
+      # not 2xx raises an error, so the check fails.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
 volumes:
   redis_data:
