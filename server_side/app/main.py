@@ -6,12 +6,20 @@ Start it locally with `uv run uvicorn app.main:app --reload` (ARCHITECTURE §12)
 from typing import Literal
 
 from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import RequestIdMiddleware, configure_logging
 from app.core.security_headers import SecurityHeadersMiddleware
+
+# CORS rules (SECURITY §12, MEMORY D-112). Only the methods of API_DESIGN.
+# Only the headers the frontend sends: the login token and the body type.
+# The frontend may read `Retry-After` after `429 rate_limited` (API_DESIGN §1.9).
+CORS_ALLOWED_METHODS = ("GET", "POST", "PATCH", "DELETE")
+CORS_ALLOWED_HEADERS = ("Authorization", "Content-Type")
+CORS_EXPOSED_HEADERS = ("Retry-After",)
 
 
 class HealthResponse(BaseModel):
@@ -76,6 +84,20 @@ def create_app() -> FastAPI:
     # Give every request its own id, so all log lines of one request can be
     # found together (RULES §8).
     application.add_middleware(RequestIdMiddleware)
+
+    # Only our frontend may read API answers in a browser (SECURITY §12).
+    # No cookies are used (Bearer tokens), so no credentials. CORS is only a
+    # browser rule; it never replaces the login check. It is added before the
+    # security headers, so it runs inside them and its preflight answers also
+    # get those headers.
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_allowed_origins,
+        allow_credentials=False,
+        allow_methods=CORS_ALLOWED_METHODS,
+        allow_headers=CORS_ALLOWED_HEADERS,
+        expose_headers=CORS_EXPOSED_HEADERS,
+    )
 
     # Add `Cache-Control: no-store` and the security headers to every answer
     # (SECURITY §12). Swagger UI keeps working outside production.

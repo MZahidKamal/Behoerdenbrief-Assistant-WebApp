@@ -6,13 +6,18 @@ from pathlib import Path
 import allure
 import pytest
 
-from app.core.config import InvalidSettingsError, get_settings, load_settings
+from app.core.config import (
+    InvalidSettingsError,
+    Settings,
+    get_settings,
+    load_settings,
+)
 
 # Allure groups the results by feature. Settings belong to no single feature.
 pytestmark = [allure.feature("server")]
 
 # The environment variables that these tests set and remove.
-SETTING_NAMES = ["APP_ENV", "LOG_LEVEL", "FRONTEND_BASE_URL"]
+SETTING_NAMES = ["APP_ENV", "LOG_LEVEL", "FRONTEND_BASE_URL", "CORS_ALLOWED_ORIGINS"]
 
 # An invented address for the required FRONTEND_BASE_URL.
 EXAMPLE_FRONTEND_BASE_URL = "https://app.example.test"
@@ -48,6 +53,7 @@ def test_load_settings_returns_values_when_environment_is_valid(
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("LOG_LEVEL", "WARNING")
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -64,6 +70,7 @@ def test_load_settings_uses_info_log_level_when_log_level_is_missing(
     # Arrange
     monkeypatch.setenv("APP_ENV", "development")
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -79,6 +86,7 @@ def test_load_settings_uses_info_log_level_when_log_level_is_empty(
     monkeypatch.setenv("APP_ENV", "development")
     monkeypatch.setenv("LOG_LEVEL", "")
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -135,6 +143,7 @@ def test_load_settings_hides_value_in_error_message_when_value_is_invalid(
     monkeypatch.setenv("APP_ENV", "development")
     monkeypatch.setenv("LOG_LEVEL", value_to_hide)
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     with pytest.raises(InvalidSettingsError) as error_information:
@@ -152,7 +161,9 @@ def test_load_settings_reads_values_when_environment_file_exists(
     # Arrange
     environment_file = tmp_path / ".env"
     environment_file.write_text(
-        f"APP_ENV=test\nLOG_LEVEL=DEBUG\nFRONTEND_BASE_URL={EXAMPLE_FRONTEND_BASE_URL}\n",
+        "APP_ENV=test\nLOG_LEVEL=DEBUG\n"
+        f"FRONTEND_BASE_URL={EXAMPLE_FRONTEND_BASE_URL}\n"
+        f"CORS_ALLOWED_ORIGINS={EXAMPLE_FRONTEND_BASE_URL}\n",
         encoding="utf-8",
     )
 
@@ -173,6 +184,7 @@ def test_load_settings_prefers_environment_variable_when_file_has_same_setting(
     environment_file.write_text("APP_ENV=test\n", encoding="utf-8")
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     settings = load_settings(environment_file=environment_file)
@@ -188,6 +200,7 @@ def test_get_settings_returns_same_object_when_called_twice(
     monkeypatch.setenv("APP_ENV", "test")
     monkeypatch.setenv("LOG_LEVEL", "INFO")
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
 
     # Act
     first_settings = get_settings()
@@ -226,3 +239,82 @@ def test_load_settings_raises_invalid_settings_error_when_frontend_url_is_not_ur
 
     # Assert
     assert "FRONTEND_BASE_URL" in str(error_information.value)
+
+
+def test_load_settings_splits_cors_origins_when_value_has_commas(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange: spaces and an empty entry, as a person might type it.
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv(
+        "CORS_ALLOWED_ORIGINS", " http://localhost:3000 , https://app.example.test,"
+    )
+
+    # Act
+    settings = load_settings(environment_file=None)
+
+    # Assert
+    assert settings.cors_allowed_origins == (
+        "http://localhost:3000",
+        "https://app.example.test",
+    )
+
+
+def test_settings_keeps_cors_origins_when_value_is_already_list() -> None:
+    # Arrange and act: code that builds the settings directly, not from text.
+    settings = Settings(
+        app_env="test",
+        frontend_base_url=EXAMPLE_FRONTEND_BASE_URL,
+        cors_allowed_origins=["http://localhost:3000"],
+    )
+
+    # Assert
+    assert settings.cors_allowed_origins == ("http://localhost:3000",)
+
+
+def test_load_settings_raises_invalid_settings_error_when_cors_origins_are_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange: the fixture has removed CORS_ALLOWED_ORIGINS.
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+
+    # Act
+    with pytest.raises(InvalidSettingsError) as error_information:
+        load_settings(environment_file=None)
+
+    # Assert
+    assert "CORS_ALLOWED_ORIGINS" in str(error_information.value)
+    assert "required" in str(error_information.value)
+
+
+@pytest.mark.parametrize(
+    "wrong_origins",
+    [
+        " , ",
+        "*",
+        "https://*.example.test",
+        "https://app.example.test/",
+        "https://app.example.test/path",
+        "app.example.test",
+        "ftp://app.example.test",
+        "https://user@app.example.test",
+        "http://localhost:3000,https://app.example.test?x=1",
+    ],
+)
+def test_load_settings_raises_invalid_settings_error_when_cors_origin_is_wrong(
+    monkeypatch: pytest.MonkeyPatch, wrong_origins: str
+) -> None:
+    # Arrange
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", wrong_origins)
+
+    # Act
+    with pytest.raises(InvalidSettingsError) as error_information:
+        load_settings(environment_file=None)
+
+    # Assert: the message names the setting, but never shows the value.
+    assert "CORS_ALLOWED_ORIGINS" in str(error_information.value)
+    assert "app.example.test" not in str(error_information.value)

@@ -422,8 +422,15 @@ def register_exception_handlers(application: FastAPI, settings: Settings) -> Non
             detail=_UNEXPECTED_ERROR_DETAIL,
         )
 
-        # This answer is sent outside all middleware, so the security
-        # middleware never sees it. We add the same headers here (SECURITY §12).
+        # This answer is sent outside all middleware, so the security and
+        # CORS middleware never see it. We add the same headers here
+        # (SECURITY §12). Without the CORS header, the browser would hide this
+        # answer, and the frontend would see only a network error (MEMORY D-112).
+        response_headers = dict(SECURITY_HEADERS)
+        origin = request.headers.get("origin")
+        if origin is not None and origin in settings.cors_allowed_origins:
+            response_headers["Access-Control-Allow-Origin"] = origin
+            response_headers["Vary"] = "Origin"
         return create_problem_details_response(
-            problem_details, headers=SECURITY_HEADERS
+            problem_details, headers=response_headers
         )

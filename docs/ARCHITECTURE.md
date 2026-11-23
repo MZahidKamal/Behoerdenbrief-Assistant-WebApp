@@ -1,7 +1,7 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.36
+**Document Version:** 0.37
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -794,7 +794,7 @@ Only variable **names** are listed. Values live in `.env` files locally (never c
 |---|---|
 | `APP_ENV` | `development` / `test` / `production` |
 | `LOG_LEVEL` | Logging level |
-| `CORS_ALLOWED_ORIGINS` | Frontend URLs allowed to call the API |
+| `CORS_ALLOWED_ORIGINS` | Frontend URLs allowed to call the API, comma-separated (`http://localhost:3000,https://…`) |
 | `FRONTEND_BASE_URL` | Used for Stripe redirect URLs and links in emails |
 | `DATABASE_URL` | Postgres connection string (application database) |
 | `TEST_DATABASE_URL` | Postgres connection string of `behoerdenbrief_testdb` (tests only) |
@@ -1094,3 +1094,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-22 | 0.34 | §2: `.pre-commit-config.yaml` in the repository layout (MEMORY D-106) |
 | 2026-11-23 | 0.35 | §3.2: Node.js 26 runtime; test packages `@testing-library/dom`, `jsdom`, `@vitejs/plugin-react` (developer approval, MEMORY D-107) |
 | 2026-11-23 | 0.36 | §4.1: core/security_headers.py added (MEMORY D-111) |
+| 2026-11-23 | 0.37 | §11.1: format of CORS_ALLOWED_ORIGINS (MEMORY D-112) |

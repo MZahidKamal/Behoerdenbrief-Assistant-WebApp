@@ -7,10 +7,11 @@ file (ARCHITECTURE §11). Values are never written in the code.
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
+from urllib.parse import urlsplit
 
-from pydantic import HttpUrl, ValidationError
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import HttpUrl, ValidationError, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # The local `.env` file sits in `server_side/`, two folders above this file.
 # We use a full path, so the file is found from any working directory.
@@ -42,6 +43,11 @@ class Settings(BaseSettings):
             `http://localhost:3000`. Required, because a wrong default would
             send users to wrong links. Used for the `type` link of error
             responses (API_DESIGN §3.1), and later for Stripe and email links.
+        cors_allowed_origins: The web addresses whose pages may call the API
+            from a browser (SECURITY §12). Required. In the environment it is
+            one text with commas, for example
+            `http://localhost:3000,https://app.example`. Each entry is
+            `http(s)://host[:port]`, without a path and without `*`.
     """
 
     model_config = SettingsConfigDict(
@@ -61,6 +67,70 @@ class Settings(BaseSettings):
     app_env: Literal["development", "test", "production"]
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     frontend_base_url: HttpUrl
+    # `NoDecode`: pydantic-settings would read a list as JSON. We want a
+    # simple text with commas instead, so the validator below splits it.
+    cors_allowed_origins: Annotated[tuple[str, ...], NoDecode]
+
+    @field_validator("cors_allowed_origins", mode="before")
+    @classmethod
+    def split_cors_allowed_origins(cls, value: object) -> object:
+        """Split the comma text into single origins.
+
+        Args:
+            value: The raw value, for example
+                `"http://localhost:3000, https://app.example"`.
+
+        Returns:
+            The origins without spaces and without empty entries, or the value
+            unchanged if it is not a text.
+        """
+        if isinstance(value, str):
+            return tuple(
+                origin.strip() for origin in value.split(",") if origin.strip()
+            )
+        return value
+
+    @field_validator("cors_allowed_origins")
+    @classmethod
+    def check_cors_allowed_origins(cls, origins: tuple[str, ...]) -> tuple[str, ...]:
+        """Check that every origin is one exact web address.
+
+        A browser sends its origin as `scheme://host[:port]`. Only an exact
+        match gets permission, so a path or a `*` would be a mistake. A `*`
+        would even allow every website (SECURITY §12: no wildcard).
+
+        Args:
+            origins: The split origins.
+
+        Returns:
+            The same origins.
+
+        Raises:
+            ValueError: The list is empty, or an origin has a wrong form. The
+                message never shows the value.
+        """
+        # At least one frontend must be allowed, or the web app cannot work.
+        if not origins:
+            raise ValueError("at least one origin is required")
+
+        # Each origin must be exactly `http(s)://host[:port]`.
+        for origin in origins:
+            parts = urlsplit(origin)
+            has_only_scheme_and_host = (
+                parts.scheme in ("http", "https")
+                and parts.netloc != ""
+                and "@" not in parts.netloc
+                and "*" not in origin
+                and parts.path == ""
+                and parts.query == ""
+                and parts.fragment == ""
+            )
+            if not has_only_scheme_and_host:
+                raise ValueError(
+                    "each origin must look like https://host or http://host:port, "
+                    "without a path and without *"
+                )
+        return origins
 
 
 def load_settings(environment_file: Path | None = DEFAULT_ENVIRONMENT_FILE) -> Settings:

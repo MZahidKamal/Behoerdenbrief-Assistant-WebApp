@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.21
+**Document Version:** 0.22
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -591,6 +591,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: HSTS only in production (rejected: browsers ignore it over plain HTTP anyway); a relaxed CSP for Swagger UI (rejected: more rules to keep for a page that production does not have); the middleware in `main.py` (rejected: circular import).
 - Details: SECURITY §12; ARCHITECTURE §4.1; `server_side/app/core/security_headers.py`
 
+#### D-112 · 2026-11-23 · CORS rules of the API
+- Decision: `CORS_ALLOWED_ORIGINS` is required and comma-separated; each origin must be exactly `http(s)://host[:port]` (no `*`, no path). Starlette's `CORSMiddleware` with methods `GET, POST, PATCH, DELETE`, request headers `Authorization, Content-Type`, exposed header `Retry-After`, no credentials; it runs inside the security headers middleware. The `500` handler adds `Access-Control-Allow-Origin` for allowed origins itself.
+- Reason: Developer decision. A comma list is easy to type in hosting settings; a wrong origin must stop the app. Without the permission on `500`, the browser hides the answer and the frontend sees only a network error.
+- Alternatives: A JSON list (rejected: easy to get wrong); accepting a network error for `500` answers (rejected).
+- Details: SECURITY §12; ARCHITECTURE §11.1; `server_side/app/main.py`, `server_side/app/core/config.py`, `server_side/app/core/exceptions.py`
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -722,3 +728,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-23 | 0.19 | D-109 (only Swagger UI as API documentation; ReDoc off everywhere) |
 | 2026-11-23 | 0.20 | D-110 (pointers for request parts; codes for other HTTP statuses) |
 | 2026-11-23 | 0.21 | D-111 (security header values of the API) |
+| 2026-11-23 | 0.22 | D-112 (CORS rules of the API) |

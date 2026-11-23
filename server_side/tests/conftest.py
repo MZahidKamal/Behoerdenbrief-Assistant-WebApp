@@ -13,6 +13,7 @@ from httpx import ASGITransport, AsyncClient
 TEST_FRONTEND_BASE_URL = "https://app.example.test"
 os.environ["APP_ENV"] = "test"
 os.environ["FRONTEND_BASE_URL"] = TEST_FRONTEND_BASE_URL
+os.environ["CORS_ALLOWED_ORIGINS"] = TEST_FRONTEND_BASE_URL
 
 from app.main import create_app  # noqa: E402  (APP_ENV must be set first)
 

@@ -232,7 +232,7 @@ Total: 387 tasks.
   - Read: SECURITY §12; API_DESIGN §1.3
   - Learn: HTTP security headers
 
-- [ ] **T-024** · CORS
+- [x] **T-024** · CORS
   - Done when: Only `CORS_ALLOWED_ORIGINS` may call the API from a browser; tests for allowed and blocked origins
   - Depends on: T-023
   - Read: SECURITY §12
