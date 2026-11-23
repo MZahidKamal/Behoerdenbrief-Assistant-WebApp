@@ -184,7 +184,7 @@ Total: 387 tasks.
   - Read: ARCHITECTURE §4
   - Learn: How a FastAPI app is created and started with Uvicorn
 
-- [ ] **T-016** · `GET /health` and the first API test
+- [x] **T-016** · `GET /health` and the first API test
   - Done when: `GET /health` returns `200 {"status": "ok"}`; an API test with httpx `AsyncClient` passes
   - Depends on: T-015
   - Read: API_DESIGN §1.1
