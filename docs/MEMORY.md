@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.23
+**Document Version:** 0.24
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -603,6 +603,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: FastAPI's built-in `max_body_size` (rejected: the gap above); an `AppException` (rejected: it becomes a wrong `400`).
 - Details: API_DESIGN §1.8, §3.3; ARCHITECTURE §4.1; `server_side/app/core/request_size_limit.py`
 
+#### D-114 · 2026-11-23 · Pagination helper
+- Decision: `core/pagination.py` holds `PaginationParameters` (`offset`, `limit`, `is_beyond_last_page`), the dependency `get_pagination_parameters` and the generic `PaginatedResponse[ItemType]`. The limits of API_DESIGN §1.6 are constants, not settings. An empty list has `total_pages` 0. Repositories count first and load items only if the page exists, so a huge `page` never reaches the database as a giant `OFFSET`.
+- Reason: Developer decision. 0 pages is exact for an empty list. Checking the page first avoids a database error (`500`) without an upper limit on `page` in the API contract.
+- Alternatives: `total_pages` 1 for an empty list (rejected: not exact); an upper limit for `page` (rejected: changes the API contract).
+- Details: API_DESIGN §1.6, §1.11; ARCHITECTURE §4.1; `server_side/app/core/pagination.py`
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -736,3 +742,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-23 | 0.21 | D-111 (security header values of the API) |
 | 2026-11-23 | 0.22 | D-112 (CORS rules of the API) |
 | 2026-11-23 | 0.23 | D-113 (own request size limit middleware) |
+| 2026-11-23 | 0.24 | D-114 (pagination helper) |

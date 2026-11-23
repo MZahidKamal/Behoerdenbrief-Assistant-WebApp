@@ -1,7 +1,7 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.38
+**Document Version:** 0.39
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -174,6 +174,7 @@ server_side/
 │   │   ├── logging.py                # Structured logging, no personal data
 │   │   ├── security_headers.py       # Cache-Control no-store and security headers on every response (SECURITY §12)
 │   │   ├── request_size_limit.py     # Stops request bodies larger than MAX_UPLOAD_REQUEST_MB with 413 (API_DESIGN §1.8)
+│   │   ├── pagination.py             # page / page_size query helper and PaginatedResponse envelope (API_DESIGN §1.6)
 │   │   └── sentry.py                 # Sentry init with data scrubbing
 │   ├── integrations/                 # Adapters to external systems (each with a fake)
 │   │   ├── llm/
@@ -1097,3 +1098,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-23 | 0.36 | §4.1: core/security_headers.py added (MEMORY D-111) |
 | 2026-11-23 | 0.37 | §11.1: format of CORS_ALLOWED_ORIGINS (MEMORY D-112) |
 | 2026-11-23 | 0.38 | §4.1: core/request_size_limit.py added (MEMORY D-113) |
+| 2026-11-23 | 0.39 | §4.1: core/pagination.py added (MEMORY D-114) |

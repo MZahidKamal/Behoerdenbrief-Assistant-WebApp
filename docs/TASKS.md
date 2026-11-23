@@ -244,7 +244,7 @@ Total: 387 tasks.
   - Read: API_DESIGN §1.8
   - Learn: Protecting a server from very large requests
 
-- [ ] **T-026** · Pagination helper
+- [x] **T-026** · Pagination helper
   - Done when: A generic `PaginatedResponse` schema and a query helper for `page` / `page_size` (limits, empty page beyond the last); unit tests
   - Depends on: T-022
   - Read: API_DESIGN §1.6
