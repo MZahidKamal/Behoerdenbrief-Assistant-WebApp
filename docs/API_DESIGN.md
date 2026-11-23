@@ -1,7 +1,7 @@
 # API_DESIGN
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.9
+**Document Version:** 0.10
 **Status:** Draft
 **Last updated:** 2026-11-23
 
@@ -91,7 +91,7 @@ Response envelope:
 }
 ```
 
-A `page` beyond the last page returns an empty `items` list (not an error). Default order: newest first (`created_at` descending), unless the endpoint says otherwise. Short lists that are naturally small (authorities for users, reference numbers, push subscriptions, chat messages of one letter, reply versions) are returned as a plain `items` array without page fields.
+A `page` beyond the last page returns an empty `items` list (not an error). With no items, `total_items` and `total_pages` are 0. Default order: newest first (`created_at` descending), unless the endpoint says otherwise. Short lists that are naturally small (authorities for users, reference numbers, push subscriptions, chat messages of one letter, reply versions) are returned as a plain `items` array without page fields.
 
 ### 1.7 Background work and polling
 
@@ -1335,3 +1335,4 @@ The MCP server for external AI clients (PRD §6.11, ARCHITECTURE §7.12). It giv
 | 2026-11-22 | 0.7 | §1: naming reference reworded without the assistant's file name; change log 0.3 reworded (MEMORY D-101) |
 | 2026-11-22 | 0.8 | Document renamed to `API_DESIGN.md` with `git mv`; title line changed to match (MEMORY D-105) |
 | 2026-11-23 | 0.9 | §3.1: JSON pointers for body fields and other request parts; §3.3: codes for HTTP statuses that are not listed (MEMORY D-110) |
+| 2026-11-23 | 0.10 | §1.6: total_pages is 0 for an empty list (MEMORY D-114) |
