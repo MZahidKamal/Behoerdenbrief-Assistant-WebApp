@@ -1,9 +1,9 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.39
+**Document Version:** 0.40
 **Status:** Draft
-**Last updated:** 2026-11-23
+**Last updated:** 2026-11-25
 
 > This document answers **how the system is organised and built**.
 > Product requirements: PRD.md · API endpoints: API_DESIGN.md · Tables and RLS: DATA_MODEL.md · RAG pipeline: RAG.md · Security details: SECURITY.md · Coding rules: RULES.md · Decision reasons: MEMORY.md
@@ -84,7 +84,7 @@ One Git repository at the root. The AI coding assistant's configuration and `.mc
 | Tooling | uv | Fast dependency and virtual-environment management |
 | Web framework | FastAPI | Async, typed, automatic OpenAPI schema |
 | File uploads | python-multipart | Required by FastAPI for `multipart/form-data` |
-| Token verification | PyJWT | Verifies Supabase access tokens in `core/security.py` (final method after MEMORY K-04) |
+| Token verification | PyJWT | Verifies Supabase access tokens in `core/security.py` with the public keys of the project's JWKS endpoint (MEMORY D-053; claim names after K-04) |
 | ASGI server | Uvicorn | Standard server for FastAPI |
 | Settings | pydantic-settings | Typed settings from environment variables (`core/config.py`) |
 | Validation | Pydantic v2 | Request/response models, settings |
@@ -798,11 +798,10 @@ Only variable **names** are listed. Values live in `.env` files locally (never c
 | `LOG_LEVEL` | Logging level |
 | `CORS_ALLOWED_ORIGINS` | Frontend URLs allowed to call the API, comma-separated (`http://localhost:3000,https://…`) |
 | `FRONTEND_BASE_URL` | Used for Stripe redirect URLs and links in emails |
-| `DATABASE_URL` | Postgres connection string (application database) |
+| `DATABASE_URL` | Postgres connection string (application database); locally the Supabase Session pooler string (MEMORY D-038) |
 | `TEST_DATABASE_URL` | Postgres connection string of `behoerdenbrief_testdb` (tests only) |
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-side Storage and Auth admin access (never exposed to frontend) |
-| `SUPABASE_JWT_SECRET` | JWT verification (exact mechanism to confirm in Supabase docs) |
+| `SUPABASE_URL` | Supabase project URL; also gives the JWKS address for token verification (MEMORY D-053) |
+| `SUPABASE_SECRET_KEY` | Secret API key (`sb_secret_…`) for server-side Storage and Auth admin access; sent only in the `apikey` header; never exposed to the frontend (MEMORY D-052) |
 | `STORAGE_BUCKET_LETTERS` | Letter pages bucket |
 | `STORAGE_BUCKET_REPLIES` | Reply drafts and versions bucket |
 | `STORAGE_BUCKET_SOURCES` | Knowledge source PDFs bucket |
@@ -868,7 +867,7 @@ Supabase Auth's custom SMTP (Mailjet) is configured in the Supabase dashboard, n
 |---|---|
 | `NEXT_PUBLIC_API_BASE_URL` | FastAPI base URL |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase URL (auth only) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key (auth only) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key (`sb_publishable_…`, auth only, MEMORY D-052) |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push public key for subscribing |
 | `NEXT_PUBLIC_SENTRY_DSN` | Sentry project for frontend |
 | `NEXT_PUBLIC_POLL_INTERVAL_MS` | Status polling interval |
@@ -880,7 +879,7 @@ Supabase Auth's custom SMTP (Mailjet) is configured in the Supabase dashboard, n
 | Secret | Used by |
 |---|---|
 | `TEST_DATABASE_URL` | Integration tests |
-| `DEVELOPMENT_SUPABASE_URL`, `DEVELOPMENT_SUPABASE_SERVICE_ROLE_KEY`, `DEVELOPMENT_SUPABASE_ANON_KEY`, `DEVELOPMENT_SUPABASE_JWT_SECRET`, `DEVELOPMENT_DATABASE_URL` | E2E (real Supabase Auth and Storage of the dev project) |
+| `DEVELOPMENT_SUPABASE_URL`, `DEVELOPMENT_SUPABASE_SECRET_KEY`, `DEVELOPMENT_SUPABASE_PUBLISHABLE_KEY`, `DEVELOPMENT_DATABASE_URL` | E2E (real Supabase Auth and Storage of the dev project) |
 | `STRIPE_TEST_SECRET_KEY`, `STRIPE_TEST_WEBHOOK_SECRET` | E2E (Stripe test mode) |
 | `PRODUCTION_DATABASE_URL` | Alembic migrations before deploy |
 | `RENDER_DEPLOY_HOOK_API`, `RENDER_DEPLOY_HOOK_WORKER` | Triggering Render deploys |
@@ -972,7 +971,7 @@ Database, Auth and Storage come from the Supabase development project, so there 
 | API | Render web service (Docker) | Frankfurt | `server_side/Dockerfile` | Uvicorn (§12.2); health check path `/health`; `/docs` and `/openapi.json` disabled in production |
 | Worker + Beat | Render background worker (same Docker image) | Frankfurt | `server_side/Dockerfile` | Celery worker with `-B`; **exactly one instance** (Beat must not run twice) |
 | Redis | Render Key Value | Frankfurt | Managed | — |
-| Database, Auth, Storage | Supabase (production project, built-in backups) | Frankfurt | Managed | — |
+| Database, Auth, Storage | Supabase (production project, built-in backups) | EU region, the same as Render (MEMORY D-037) | Managed | — |
 | Payments | Stripe (live mode in production, test mode elsewhere) | — | Managed | — |
 | Error monitoring | Sentry | EU data region if available | Managed | — |
 
@@ -1048,8 +1047,8 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 - **E2E verification codes:** confirm that the Supabase Admin API can provide a signup verification code for test users.
 - **Retention after account deletion:** name and date of birth are kept for the duplicate check; the legal basis must be stated in the Datenschutzerklärung (SECURITY.md).
 - **Crawling:** respect robots.txt and each site's terms of use; JavaScript-heavy pages may not be crawlable (PDF upload and text blocks remain available).
-- **Regions:** confirm Frankfurt availability for Render, Render Key Value, Supabase and Sentry's EU data region in their current documentation.
-- **Supabase JWT:** confirm the current recommended verification method in Supabase docs.
+- **Regions:** confirm Frankfurt availability for Render, Render Key Value and Sentry's EU data region in their current documentation; Supabase may use any EU region (MEMORY D-037).
+- **Supabase JWT:** decided: public keys from the JWKS endpoint (MEMORY D-053); claim names still open (K-04).
 - **Test database:** confirm in Supabase docs that an additional database (`behoerdenbrief_testdb`) can be created in the dev project, and enable `pgvector` in it. Alternative if not possible: a separate Supabase project for tests (check free-plan project limits).
 - **Render deploy hooks and disabling auto-deploy:** confirm both options in the current Render and Netlify documentation.
 - **Tool calling on Vertex AI:** confirm that the chosen Gemini and Claude models on Vertex AI support function calling (authority recognition is text-only, RAG §7.9; the chat is text-only), and how tool definitions are passed in the current SDK (MEMORY K-23).
@@ -1099,3 +1098,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-23 | 0.37 | §11.1: format of CORS_ALLOWED_ORIGINS (MEMORY D-112) |
 | 2026-11-23 | 0.38 | §4.1: core/request_size_limit.py added (MEMORY D-113) |
 | 2026-11-23 | 0.39 | §4.1: core/pagination.py added (MEMORY D-114) |
+| 2026-11-25 | 0.40 | §3.1, §11, §13: Supabase in any EU region, production in the same region as Render (MEMORY D-037); Session pooler for the local `DATABASE_URL` (MEMORY D-038); `SUPABASE_SERVICE_ROLE_KEY` renamed to `SUPABASE_SECRET_KEY` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, also the GitHub secrets (MEMORY D-052); token verification with JWKS public keys, `SUPABASE_JWT_SECRET` and `DEVELOPMENT_SUPABASE_JWT_SECRET` removed (MEMORY D-053) |
