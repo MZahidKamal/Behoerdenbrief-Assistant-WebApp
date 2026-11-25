@@ -1,9 +1,9 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.8
+**Document Version:** 0.9
 **Status:** Draft
-**Last updated:** 2026-11-23
+**Last updated:** 2026-11-25
 
 > This document answers **what to do now and what is still open**: the complete build plan from an empty `server_side/` to launch, in small tasks with one idea each.
 > Each task names the documents to read; the rules themselves are not repeated here. How to work on a task (including the explanations before and after): RULES §1, §1.1a · Branches, commits, pull requests: RULES §11 · Decisions and open checks: MEMORY.md
@@ -283,8 +283,8 @@ Total: 387 tasks.
 
 ### M02 Database Foundation
 
-- [ ] **T-032** **[Developer]** **[Check K-10]** · Supabase development project
-  - Done when: A Supabase project in Frankfurt; URL, keys and connection string in `server_side/.env`; Supabase region part of K-10 in MEMORY.md
+- [x] **T-032** **[Developer]** **[Check K-10]** · Supabase development project
+  - Done when: A Supabase project in an EU region (MEMORY D-037); URL, secret API key and Session pooler connection string (MEMORY D-038) in `server_side/.env`; Supabase region part of K-10 in MEMORY.md
   - Depends on: T-014
   - Read: ARCHITECTURE §3, §11
   - Learn: Supabase project settings and keys
@@ -425,7 +425,7 @@ Total: 387 tasks.
   - Learn: Keeping frontend and backend types in sync
 
 - [ ] **T-055** · Supabase auth client
-  - Done when: `lib/supabase.ts` (auth only) with `NEXT_PUBLIC_SUPABASE_URL` and the anon key
+  - Done when: `lib/supabase.ts` (auth only) with `NEXT_PUBLIC_SUPABASE_URL` and the publishable key (`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, MEMORY D-052)
   - Depends on: T-052
   - Read: API_DESIGN §2.1; ARCHITECTURE §7.7
   - Learn: Client-side authentication
@@ -527,7 +527,7 @@ Total: 387 tasks.
   - Learn: Auth provider settings
 
 - [ ] **T-071** **[Check K-04]** · Supabase token verification and claims
-  - Done when: The current verification method and the claim names for MFA level and authentication time are confirmed; result in MEMORY.md
+  - Done when: The claim names for MFA level and authentication time are confirmed (the verification method is decided in MEMORY D-053); result in MEMORY.md
   - Depends on: T-070
   - Read: SECURITY §4.2–§4.3; API_DESIGN §2.4
   - Learn: JWT structure, signature and claims
@@ -551,7 +551,7 @@ Total: 387 tasks.
   - Learn: Reference tables
 
 - [ ] **T-075** · Token verification
-  - Done when: `core/security.py` verifies a Supabase access token (signature, expiry, audience) and reads user id, role, MFA level and authentication time; unit tests with test tokens
+  - Done when: `core/security.py` verifies a Supabase access token with the JWKS public keys (signature, expiry, audience) and reads user id, role, MFA level and authentication time; unit tests with test tokens
   - Depends on: T-071, T-014
   - Read: SECURITY §4.3
   - Learn: Verifying JWTs on the server
@@ -593,7 +593,7 @@ Total: 387 tasks.
   - Learn: Adapters and fakes
 
 - [ ] **T-082** · Supabase auth adapter
-  - Done when: The real adapter with httpx and the service role key; a manual check against the dev project works
+  - Done when: The real adapter with httpx and the secret API key (`SUPABASE_SECRET_KEY`, `apikey` header); a manual check against the dev project works
   - Depends on: T-081
   - Read: ARCHITECTURE §8; SECURITY §13
   - Learn: Calling an admin API safely
@@ -2393,7 +2393,7 @@ Total: 387 tasks.
   - Learn: Processor agreements under the DSGVO
 
 - [ ] **T-374** **[Developer]** · Production Supabase
-  - Done when: Production project in Frankfurt with buckets, Auth settings, custom SMTP and backups; secrets only in Render
+  - Done when: Production project in the same EU region as Render (MEMORY D-037) with buckets, Auth settings, custom SMTP and backups; secrets only in Render
   - Depends on: T-372
   - Read: ARCHITECTURE §11, §13; SECURITY §13
   - Learn: Separating environments
@@ -2461,3 +2461,4 @@ Total: 387 tasks.
 | 2026-11-22 | 0.6 | New task T-384 in M00 (neutral name for the coding assistant, MEMORY D-101); §1, T-002, T-003, T-295 and change log 0.4 reworded; 384 tasks |
 | 2026-11-22 | 0.7 | New task T-385 in M00 (API design document renamed, MEMORY D-105); references changed to `API_DESIGN §`; 385 tasks |
 | 2026-11-23 | 0.8 | New tasks T-386 (docstring and comment rules, docs and `server_side/` code) and T-387 (the same rules for `client_side/` code) in M00 (MEMORY D-108); 387 tasks |
+| 2026-11-25 | 0.9 | T-032 and T-374: Supabase in an EU region (MEMORY D-037), Session pooler (MEMORY D-038); T-055 and T-082: publishable and secret API keys (MEMORY D-052); T-071 and T-075: verification with JWKS public keys (MEMORY D-053) |

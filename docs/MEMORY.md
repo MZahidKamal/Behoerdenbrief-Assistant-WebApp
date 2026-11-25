@@ -1,9 +1,9 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.26
+**Document Version:** 0.27
 **Status:** Draft
-**Last updated:** 2026-11-23
+**Last updated:** 2026-11-25
 
 > This document answers **which decisions were made and why**, which checks are still open, and what was learned.
 > The **rules themselves** live in the other documents (PRD, ARCHITECTURE, DATA_MODEL, SECURITY, RAG, API_DESIGN, RULES). An entry here gives only the decision in one line, the reason, the rejected alternatives, and where the details are. If an entry and a document disagree, the document wins and the entry is corrected (with approval).
@@ -188,6 +188,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: EU hosting, free or low-cost tiers, few platforms; deploys only after tests pass.
 - Alternatives: Cloudinary for files (replaced by Supabase Storage); other clouds not compared.
 - Details: ARCHITECTURE §3, §13
+- Status: Supabase region part superseded by D-037 (any EU region)
 
 #### D-026 · 2026-11-19 · Email and push
 - Decision: Mailjet for app emails and as custom SMTP for Supabase Auth; Web Push with VAPID through pywebpush.
@@ -256,6 +257,18 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: Developer decision: the public repository should not show which AI assistant was used to build it. A rule in `.gitignore` would name the files in public; `.git/info/exclude` is local.
 - Alternatives: Keeping the files in Git (D-035, replaced); rewriting the Git history to remove older mentions (rejected: needs a force push to the protected `main`, and old pull request pages stay on GitHub); ignore rules in `.gitignore` (rejected).
 - Details: RULES §1.6; ARCHITECTURE §2
+
+#### D-037 · 2026-11-25 · Supabase in any EU region
+- Decision: Supabase projects may be in any EU region; Frankfurt is not required. The development project is in `eu-west-1` (Ireland). The production project is in the same region as Render, so database queries stay fast. Other services keep their regions (D-025).
+- Reason: Developer decision. The rule that matters is that user data stays in the EU (ARCHITECTURE §1 principle 6); every EU region meets it. In production, a database in another region than the API would add network time to every query.
+- Alternatives: Frankfurt only (rejected: not needed for data protection); any EU region also for production (rejected: slower queries).
+- Details: ARCHITECTURE §13; K-10
+
+#### D-038 · 2026-11-25 · Session pooler for the development database
+- Decision: Locally, `DATABASE_URL` is the Supabase Session pooler connection string (port 5432).
+- Reason: The direct connection often needs IPv6, which many home networks and Docker setups do not have; the Session pooler works over IPv4. Session mode keeps one database connection per client connection, so asyncpg's prepared statements work.
+- Alternatives: Direct connection (rejected: often IPv6 only); Transaction pooler, port 6543 (rejected: breaks asyncpg's prepared statements).
+- Details: ARCHITECTURE §11.1; T-034
 
 ### 2.3 Data and Security (D-040 – D-059)
 
@@ -330,6 +343,18 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: On GitHub Free, a private personal repository has no protected branches, no secret scanning and no push protection; a public repository has all three for free. Security does not depend on hidden code, and secrets are never in Git (SECURITY §13). The full history was checked for secrets before the change.
 - Alternatives: Private repository with GitHub Pro (protected branches, but still no secret scanning); private repository on GitHub Free without protection (both rejected by the developer).
 - Details: RULES §11.1; SECURITY §12
+
+#### D-052 · 2026-11-25 · Supabase secret and publishable API keys
+- Decision: The backend uses a Supabase secret API key (`sb_secret_…`) in `SUPABASE_SECRET_KEY` instead of the legacy `service_role` key (`SUPABASE_SERVICE_ROLE_KEY`, renamed everywhere). Only the backend sends it, and only in the `apikey` header. The frontend uses the publishable key (`sb_publishable_…`) in `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` instead of the legacy anon key (`NEXT_PUBLIC_SUPABASE_ANON_KEY`, renamed everywhere).
+- Reason: Supabase deprecates the legacy `anon` and `service_role` keys by the end of 2026. A secret key can be revoked and replaced on its own, and Supabase refuses it from browsers.
+- Alternatives: Legacy `anon` and `service_role` keys (rejected: deprecated).
+- Details: ARCHITECTURE §11; SECURITY §7, §13
+
+#### D-053 · 2026-11-25 · Token verification with the JWKS public keys
+- Decision: `core/security.py` verifies Supabase access tokens with the public keys from `<SUPABASE_URL>/auth/v1/.well-known/jwks.json` (current key: ES256, P-256). There is no shared JWT secret; `SUPABASE_JWT_SECRET` and `DEVELOPMENT_SUPABASE_JWT_SECRET` are removed.
+- Reason: The project's current signing key is asymmetric; the legacy HS256 secret is only a previously used key. Public keys are not secret, so nobody can make fake tokens with them, and there is one secret less to protect.
+- Alternatives: Shared HS256 secret (rejected: legacy, a leak allows fake tokens); asking Supabase Auth about every token (rejected: one network call per request).
+- Details: SECURITY §4.3; K-04
 
 ### 2.4 AI and RAG (D-060 – D-079)
 
@@ -627,13 +652,13 @@ Status: `open` until checked; then `done` with result and date.
 | K-01 | Which Claude models Vertex AI offers in EU regions | RAG §2 | open | |
 | K-02 | Which Gemini models are offered in `europe-west3`; current Vertex AI / Google Gen AI Python SDK package | RAG §2; ARCHITECTURE §3 | open | |
 | K-03 | Celery support for Python 3.15 (else 3.14) | ARCHITECTURE §13.5 | done | Python 3.15 final since 2026-10-09, but Celery 5.7.0 (2026-11-05), billiard 4.3.2 and kombu 5.7.0 list Python 3.10–3.14 only; Celery tests 3.15 only on CI. Chosen: Python 3.14 (D-030 fallback). Check again when a Celery release lists 3.15. 2026-11-22 |
-| K-04 | Supabase JWT: verification method, claim for MFA level (`aal2`), claim for authentication time (8-hour admin limit, 5-minute recent login) | SECURITY §4.2–§4.3; API_DESIGN §2.4 | open | |
+| K-04 | Supabase JWT: verification method, claim for MFA level (`aal2`), claim for authentication time (8-hour admin limit, 5-minute recent login) | SECURITY §4.2–§4.3; API_DESIGN §2.4 | open | Verification method done: JWKS public keys, ES256 (D-053). Supabase docs name the claims `aal` and `amr` (with `timestamp`); confirm with a real token in T-071. 2026-11-25 |
 | K-05 | Supabase signup code: `{{ .Token }}` in the "Confirm signup" template and server-side code check; fallback: own code via Mailjet | ARCHITECTURE §13.5; API_DESIGN §4.2 | open | |
 | K-06 | Supabase Admin API provides verification codes for E2E test users | ARCHITECTURE §9.3 | open | |
 | K-07 | Extra database `behoerdenbrief_testdb` with pgvector in the Supabase dev project (else separate test project) | ARCHITECTURE §13.5 | open | |
 | K-08 | Supabase leaked-password check on the chosen plan | SECURITY §4.1 | open | |
 | K-09 | Provider disk encryption, Supabase backup encryption and backup retention | SECURITY §5.2, §6, §16.3 | open | |
-| K-10 | Frankfurt / EU availability: Render, Render Key Value, Supabase, Sentry EU region | ARCHITECTURE §13.5 | open | |
+| K-10 | Frankfurt / EU availability: Render, Render Key Value, Sentry EU region; Supabase in an EU region | ARCHITECTURE §13.5 | open | Supabase done: any EU region, production in the same region as Render (D-037); development project in `eu-west-1`. 2026-11-25 |
 | K-11 | Prices and free-tier limits: Render, Supabase, Sentry, Stripe fees, Mailjet | ARCHITECTURE §13.5 | open | |
 | K-12 | Render: RAM for ClamAV (daemon or per file), deploy hooks, auto-deploy off (also Netlify) | ARCHITECTURE §13.5 | open | |
 | K-13 | Redis TLS on Render Key Value | SECURITY §12 | open | |
@@ -753,3 +778,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-23 | 0.24 | D-114 (pagination helper) |
 | 2026-11-23 | 0.25 | D-115 (the assistant also merges pull requests); D-091 merging superseded; area 2.6 range widened to D-129 |
 | 2026-11-23 | 0.26 | Open check K-38 (OpenAPI error answers are not Problem Details yet) |
+| 2026-11-25 | 0.27 | D-037 (Supabase in any EU region), D-038 (Session pooler for the development database), D-052 (Supabase secret and publishable API keys), D-053 (token verification with the JWKS public keys); D-025 region part superseded; K-04 and K-10 partly done |

@@ -1,9 +1,9 @@
 # Security
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.14
+**Document Version:** 0.15
 **Status:** Draft
-**Last updated:** 2026-11-23
+**Last updated:** 2026-11-25
 
 > This document answers **how data and the system are kept safe**.
 > Product rules: PRD.md · Components, flows and configuration names: ARCHITECTURE.md · Tables, encrypted columns, RLS and retention columns: DATA_MODEL.md
@@ -82,7 +82,7 @@ Rules for the code:
 
 ### 4.3 Token verification
 
-- Every request: verify the Supabase JWT signature, expiry and audience in `core/security.py`; read user id, role and MFA level.
+- Every request: verify the Supabase JWT signature with the public keys from the project's JWKS endpoint (`<SUPABASE_URL>/auth/v1/.well-known/jwks.json`), and check expiry and audience, in `core/security.py`; read user id, role and MFA level. The keys are kept in memory for at most 10 minutes, and fetching them must not block the event loop (RULES §4.3) (MEMORY D-053).
 - The role is taken from the backend's `users.role`, not from client-provided data.
 
 ### 4.4 Public endpoints (no login)
@@ -139,7 +139,7 @@ Rotate immediately if a key may have leaked; otherwise review yearly.
 | Rule | Detail |
 |---|---|
 | Buckets | `letters`, `replies`, `sources`, `exports` — all **private** |
-| Access | Only the backend with the service role key; the frontend never accesses storage directly |
+| Access | Only the backend with the secret API key (`SUPABASE_SECRET_KEY`); the frontend never accesses storage directly |
 | Content | Letter pages, reply PDFs and exports are encrypted (§5.2); source PDFs (public official documents) are stored as they are |
 | Paths | Generated: `<user id>/<letter id>/<random uuid>`; user file names are never used |
 | Viewing and download | No signed storage URLs. After an ownership check the API issues a **one-time download token valid for 15 minutes**, stored in Redis; the download endpoint checks the token, decrypts the file and streams it with `Content-Disposition` and `Cache-Control: no-store`. The endpoint sends the whole file in one response and does not offer partial (range) requests, so a single-use token works for the PDF preview **(verify with the browsers' PDF viewers)** |
@@ -284,7 +284,7 @@ Values come from configuration (ARCHITECTURE §11) so they can be tuned without 
 | Storage | Local: `.env` files (in `.gitignore`); production: Render and Netlify secret settings; CI: GitHub Actions secrets (ARCHITECTURE §11.3) |
 | Frontend | Only public values (`NEXT_PUBLIC_*`); never a secret |
 | Logs and errors | Secrets and MCP access tokens are never logged; Sentry scrubbing removes headers such as `Authorization` |
-| Most sensitive | `ENCRYPTION_KEYS`, `IDENTITY_HASH_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `VAPID_PRIVATE_KEY`, `GOOGLE_CLOUD_CREDENTIALS_JSON` (Vertex AI) and Mailjet keys |
+| Most sensitive | `ENCRYPTION_KEYS`, `IDENTITY_HASH_KEY`, `SUPABASE_SECRET_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `VAPID_PRIVATE_KEY`, `GOOGLE_CLOUD_CREDENTIALS_JSON` (Vertex AI) and Mailjet keys |
 | Rotation | Immediately on suspected leak; encryption keys as in §5.3 |
 | Backup of encryption keys | Stored securely outside the hosting provider (e.g., a password manager); losing all key versions makes all encrypted data unreadable |
 
@@ -418,3 +418,4 @@ Scheduled jobs perform these deletions; each job's selection rule is tested.
 | 2026-11-23 | 0.12 | §12: ReDoc (`/redoc`) disabled in every environment (MEMORY D-109) |
 | 2026-11-23 | 0.13 | §12: exact security header values of the API (MEMORY D-111) |
 | 2026-11-23 | 0.14 | §12: exact CORS rules of the API (MEMORY D-112) |
+| 2026-11-25 | 0.15 | §4.3: token verification with the JWKS public keys, key cache and non-blocking fetch (MEMORY D-053); §7, §13: `SUPABASE_SERVICE_ROLE_KEY` renamed to `SUPABASE_SECRET_KEY` (MEMORY D-052) |
