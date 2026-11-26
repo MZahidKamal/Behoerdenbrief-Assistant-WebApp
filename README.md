@@ -39,6 +39,20 @@ ARCHITECTURE §12.4.
    Do not open the Docker daemon on `tcp://localhost:2375`; Supabase Analytics
    is switched off, so it is not needed.
 
+4. Create the test database (TestDB) for the automated tests. The local
+   Supabase must be running (`supabase start`):
+
+   ```powershell
+   docker exec supabase_db_behoerdenbrief_assistant_webapp psql -U postgres -c "CREATE DATABASE behoerdenbrief_assistant_webapp_testdb;"
+   ```
+
+   - `supabase stop` keeps the TestDB.
+   - `supabase db reset` **deletes** the TestDB (tested with Supabase CLI
+     3.4.0): it builds the database server again with only `postgres`.
+   - `supabase stop --no-backup` **deletes** all local data volumes, so the
+     TestDB is gone too.
+   - After either of these two commands, run the command above again.
+
 ### Every day
 
 ```powershell
