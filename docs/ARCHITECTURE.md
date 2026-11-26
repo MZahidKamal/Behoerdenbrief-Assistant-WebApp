@@ -1,9 +1,9 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.40
+**Document Version:** 0.41
 **Status:** Draft
-**Last updated:** 2026-11-25
+**Last updated:** 2026-11-26
 
 > This document answers **how the system is organised and built**.
 > Product requirements: PRD.md · API endpoints: API_DESIGN.md · Tables and RLS: DATA_MODEL.md · RAG pipeline: RAG.md · Security details: SECURITY.md · Coding rules: RULES.md · Decision reasons: MEMORY.md
@@ -67,6 +67,7 @@ Behoerdenbrief_Assistant_Webapp/
 ├── server_side/             # FastAPI backend + Celery worker
 ├── .github/workflows/       # GitHub Actions CI/CD (§13.3)
 ├── docker-compose.yml       # Local development stack (§12.3)
+├── supabase/                # Local Supabase settings: config.toml (§12.3); no migrations here
 ├── .gitignore
 ├── .gitattributes           # Enforce LF line endings
 └── .pre-commit-config.yaml  # Checks before every commit (RULES §11.3)
@@ -146,6 +147,7 @@ One Git repository at the root. The AI coding assistant's configuration and `.mc
 | LLM tool calling | Function calling of the Gemini and Claude models on Vertex AI, behind one provider-independent loop in `integrations/llm/` | The model decides when to call a tool; same tools for both providers (support for the chosen models to be verified, §13.5) |
 | MCP server | Official MCP Python SDK (`mcp`, its FastMCP API), mounted in the FastAPI app at `/mcp` (Streamable HTTP) and runnable over stdio | Standard protocol for external AI clients; real services and database (transport details to be verified, §13.5) |
 | Containers | Docker (multi-stage, slim) + Docker Compose | Same environment locally, in CI and in deployment |
+| Local Supabase | Supabase CLI (installed with Scoop; pinned version in CI) | Postgres + pgvector, Auth, Storage and Mailpit locally in Docker; the same database image in CI (MEMORY D-039, D-117) |
 | CI/CD | GitHub Actions | Tests, migrations and deploys in one controlled pipeline |
 | Frontend hosting | Netlify | Next.js hosting from a monorepo subfolder |
 | Backend hosting | Render: web service + background worker + Key Value | API, Celery and Redis on one platform in the EU |
@@ -692,8 +694,8 @@ What data is sent to each external service and how long they keep it: SECURITY.m
 
 **Integration tests** (`tests/integration/`)
 
-- Run repositories against a **separate test database** (`behoerdenbrief_testdb`) inside the Supabase development project. It is an exact copy of the application database structure, created by running the same Alembic migrations, with `pgvector` enabled.
-- Tables are emptied before each test run; the development database is never touched by tests.
+- Run repositories against a **separate test database** (`behoerdenbrief_assistant_webapp_testdb`) in the local Supabase (in CI: the Supabase database container, MEMORY D-116). It is an exact copy of the application database structure, created by running the same Alembic migrations, with `pgvector` enabled.
+- Tables are emptied before each test run; the development database (`postgres`) is never touched by tests.
 - Only Postgres and pgvector are needed here; Supabase Auth and Storage are not used in integration tests.
 - Cover: CRUD per repository, vector similarity search with pgvector, migration up/down.
 
@@ -750,8 +752,8 @@ What data is sent to each external service and how long they keep it: SECURITY.m
 **E2E tests** (`tests/e2e/`)
 
 - Playwright against the Docker Compose stack.
-- **External services in E2E:** Supabase Auth and Storage are **real** (Supabase development project); Stripe uses **test mode**; LLM, email, push and crawler are **fake**.
-- Verification codes are obtained through the Supabase Admin API in the test setup instead of reading a mailbox (method to be verified in Supabase docs); test users are created and removed by the test setup.
+- **External services in E2E:** Supabase Auth and Storage are **real** (the local Supabase, started with `supabase start`, locally and in CI); Stripe uses **test mode**; LLM, email, push and crawler are **fake**.
+- Verification codes are obtained in the test setup through the Supabase Admin API or from the local Mailpit instead of a real mailbox (method confirmed in K-06); test users are created and removed by the test setup.
 - Viewports: mobile phone, tablet (iPad) and desktop.
 - Scenarios:
   1. Register → duplicate blocked for same normalised name + date of birth → verification code → login → complete profile → trial active.
@@ -798,8 +800,8 @@ Only variable **names** are listed. Values live in `.env` files locally (never c
 | `LOG_LEVEL` | Logging level |
 | `CORS_ALLOWED_ORIGINS` | Frontend URLs allowed to call the API, comma-separated (`http://localhost:3000,https://…`) |
 | `FRONTEND_BASE_URL` | Used for Stripe redirect URLs and links in emails |
-| `DATABASE_URL` | Postgres connection string (application database); locally the Supabase Session pooler string (MEMORY D-038) |
-| `TEST_DATABASE_URL` | Postgres connection string of `behoerdenbrief_testdb` (tests only) |
+| `DATABASE_URL` | Postgres connection string (application database); locally the `postgres` database of the local Supabase (MEMORY D-039) |
+| `TEST_DATABASE_URL` | Postgres connection string of `behoerdenbrief_assistant_webapp_testdb` in the local Supabase (tests only) |
 | `SUPABASE_URL` | Supabase project URL; also gives the JWKS address for token verification (MEMORY D-053) |
 | `SUPABASE_SECRET_KEY` | Secret API key (`sb_secret_…`) for server-side Storage and Auth admin access; sent only in the `apikey` header; never exposed to the frontend (MEMORY D-052) |
 | `STORAGE_BUCKET_LETTERS` | Letter pages bucket |
@@ -878,12 +880,12 @@ Supabase Auth's custom SMTP (Mailjet) is configured in the Supabase dashboard, n
 
 | Secret | Used by |
 |---|---|
-| `TEST_DATABASE_URL` | Integration tests |
-| `DEVELOPMENT_SUPABASE_URL`, `DEVELOPMENT_SUPABASE_SECRET_KEY`, `DEVELOPMENT_SUPABASE_PUBLISHABLE_KEY`, `DEVELOPMENT_DATABASE_URL` | E2E (real Supabase Auth and Storage of the dev project) |
 | `STRIPE_TEST_SECRET_KEY`, `STRIPE_TEST_WEBHOOK_SECRET` | E2E (Stripe test mode) |
 | `PRODUCTION_DATABASE_URL` | Alembic migrations before deploy |
 | `RENDER_DEPLOY_HOOK_API`, `RENDER_DEPLOY_HOOK_WORKER` | Triggering Render deploys |
 | `NETLIFY_BUILD_HOOK` | Triggering the Netlify build |
+
+Backend tests and E2E use a local Supabase inside the CI runner, so they need no Supabase secret (MEMORY D-116).
 
 Production runtime secrets (LLM keys, Stripe live keys, Mailjet, VAPID, Sentry, encryption key) are stored only in Render and Netlify settings, never in GitHub.
 
@@ -891,7 +893,7 @@ Production runtime secrets (LLM keys, Stripe live keys, Mailjet, VAPID, Sentry, 
 
 ### 12.1 Prerequisites
 
-Git, Docker Desktop, Node.js, uv, a Supabase development project (EU region) with pgvector enabled and `behoerdenbrief_testdb` created, a Stripe account in test mode, Stripe CLI (to forward webhooks locally).
+Git, Docker Desktop, Node.js, uv, the Supabase CLI (installed with Scoop, MEMORY D-117), a Stripe account in test mode, Stripe CLI (to forward webhooks locally).
 
 ### 12.2 Docker images
 
@@ -933,25 +935,29 @@ Git, Docker Desktop, Node.js, uv, a Supabase development project (EU region) wit
 | `worker` | `./server_side` (same image) | Celery worker with `-B` (Beat embedded) | — | `env_file: server_side/.env`; source mounted; `depends_on: redis (healthy)`; exactly one instance |
 | `client` | `./client_side` | `npm run dev` | 3000 | `env_file: client_side/.env.local`; source mounted; `node_modules` kept in the container; `depends_on: server` |
 
-Database, Auth and Storage come from the Supabase development project, so there is no local database container.
+Database, Auth, Storage and Mailpit come from the local Supabase, started with `supabase start` from the repository root (settings in `supabase/config.toml`). Our containers reach it through `host.docker.internal` (to confirm in K-39). Its database server has two databases: `postgres` (DevelopmentDB) and `behoerdenbrief_assistant_webapp_testdb` (TestDB) (MEMORY D-039).
 
 ### 12.4 Start locally
 
 ```
 1. Clone the repository
-2. server_side/.env.example → server_side/.env      (fill in values)
-3. client_side/.env.example → client_side/.env.local (fill in values)
-4. Generate VAPID keys once and put them in both .env files
-5. From the root:  docker compose up --build
-6. Run migrations: docker compose exec server alembic upgrade head
-7. Seed data:     docker compose exec server python -m app.command_line seed_initial_data
+2. Start the local Supabase:  supabase start   (prints the local URL and keys)
+3. Create the TestDB once (command in the README, T-033)
+4. server_side/.env.example → server_side/.env      (fill in the local values)
+5. client_side/.env.example → client_side/.env.local (fill in the local values)
+6. Generate VAPID keys once and put them in both .env files
+7. From the root:  docker compose up --build
+8. Run migrations: docker compose exec server alembic upgrade head
+9. Seed data:     docker compose exec server python -m app.command_line seed_initial_data
    (TK, plans, prices, re-crawl interval, TK URL sources; the worker then crawls the sources)
-8. Register in the app, then make yourself admin: docker compose exec server python -m app.command_line promote_user_to_admin --email <email>
+10. Register in the app, then make yourself admin: docker compose exec server python -m app.command_line promote_user_to_admin --email <email>
    → set up 2FA
-9. Forward Stripe webhooks: stripe listen --forward-to localhost:8000/api/v1/billing/webhook
-10. Open:
-     Frontend:   http://localhost:3000
-     API docs:   http://localhost:8000/docs
+11. Forward Stripe webhooks: stripe listen --forward-to localhost:8000/api/v1/billing/webhook
+12. Open:
+     Frontend:          http://localhost:3000
+     API docs:          http://localhost:8000/docs
+     Supabase Studio:   http://localhost:54323
+     Mailpit (emails):  http://localhost:54324
 ```
 
 **Notes**
@@ -981,10 +987,10 @@ Database, Auth and Storage come from the Supabase development project, so there 
 
 | Environment | Database | External services |
 |---|---|---|
-| `development` | Supabase dev project, main database | Real or fake LLM; Stripe test mode; real Mailjet optional |
-| `test` (automated backend tests) | Supabase dev project, `behoerdenbrief_testdb` | All fakes |
-| `e2e` (CI and local E2E) | Supabase dev project (Auth, Storage, main database) | Supabase real, Stripe test mode, LLM / email / push / crawler fake |
-| `production` | Supabase production project | All real; Stripe live mode |
+| `development` | Local Supabase, database `postgres` | Real or fake LLM; Stripe test mode; real Mailjet optional |
+| `test` (automated backend tests) | Local Supabase, database `behoerdenbrief_assistant_webapp_testdb`; in CI the Supabase database container (`supabase db start`) | All fakes |
+| `e2e` (CI and local E2E) | Local Supabase (Auth, Storage, Mailpit, database `postgres`); in CI started with `supabase start` | Supabase local, Stripe test mode, LLM / email / push / crawler fake |
+| `production` | Supabase cloud project `Behoerdenbrief_Assistant_WebApp_ProductionDB` | All real; Stripe live mode |
 
 ### 13.3 CI/CD pipeline (GitHub Actions)
 
@@ -997,7 +1003,7 @@ ci.yml — on every pull request and every push:
     → pip-audit (fails on high or critical vulnerabilities)
     → ruff check → ruff format --check → mypy
     → pytest: unit, API, Celery tasks (fakes)
-    → pytest: integration (TEST_DATABASE_URL secret; migrations applied first)
+    → supabase db start (pinned Supabase CLI) → create TestDB → pytest: integration (migrations applied first)
     → Allure report uploaded as artifact
   frontend job (runs in client_side/):
     npm ci → npm audit --audit-level=high → eslint → tsc --noEmit → vitest → next build
@@ -1008,8 +1014,8 @@ ci.yml — on every pull request and every push:
 
 deploy.yml — on push to main, only after ci.yml succeeded:
   e2e job:
-    docker compose up (fake LLM / email / push / crawler,
-                       real Supabase dev project, Stripe test mode)
+    supabase start → docker compose up (fake LLM / email / push / crawler,
+                       local Supabase, Stripe test mode)
     → Playwright: mobile, tablet, desktop
     → Playwright report uploaded as artifact
   migrate job (after e2e):
@@ -1043,13 +1049,13 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 - **Push on iPhone/iPad:** web push on iOS works only for PWAs added to the home screen; confirm current iOS/Safari requirements.
 - **Save dialog:** confirm current browser support of the File System Access API (`showSaveFilePicker`).
 - **Mailjet:** verify EU data location, pricing, free-tier limits and attachment size limits; verify the sending domain (SPF, DKIM, DMARC). Supabase Auth emails use Mailjet through Supabase's custom SMTP settings.
-- **Signup verification code:** Supabase `verifyOtp` supports the `signup` type, and email templates can contain a 6-digit `{{ .Token }}`; sources disagree whether `{{ .Token }}` is available in the "Confirm signup" template. Test this in the dev project first; fallback: generate and verify the code in our backend and send it with Mailjet.
+- **Signup verification code:** Supabase `verifyOtp` supports the `signup` type, and email templates can contain a 6-digit `{{ .Token }}`; sources disagree whether `{{ .Token }}` is available in the "Confirm signup" template. Test this in the local Supabase first (emails in Mailpit); fallback: generate and verify the code in our backend and send it with Mailjet.
 - **E2E verification codes:** confirm that the Supabase Admin API can provide a signup verification code for test users.
 - **Retention after account deletion:** name and date of birth are kept for the duplicate check; the legal basis must be stated in the Datenschutzerklärung (SECURITY.md).
 - **Crawling:** respect robots.txt and each site's terms of use; JavaScript-heavy pages may not be crawlable (PDF upload and text blocks remain available).
 - **Regions:** confirm Frankfurt availability for Render, Render Key Value and Sentry's EU data region in their current documentation; Supabase may use any EU region (MEMORY D-037).
 - **Supabase JWT:** decided: public keys from the JWKS endpoint (MEMORY D-053); claim names still open (K-04).
-- **Test database:** confirm in Supabase docs that an additional database (`behoerdenbrief_testdb`) can be created in the dev project, and enable `pgvector` in it. Alternative if not possible: a separate Supabase project for tests (check free-plan project limits).
+- **Local Supabase (K-39):** confirm that local Auth can sign tokens with an asymmetric key and serves `/auth/v1/.well-known/jwks.json` (MEMORY D-053), and how our Compose containers reach the local Supabase (`host.docker.internal`, or a shared Docker network with `--network-id`).
 - **Render deploy hooks and disabling auto-deploy:** confirm both options in the current Render and Netlify documentation.
 - **Tool calling on Vertex AI:** confirm that the chosen Gemini and Claude models on Vertex AI support function calling (authority recognition is text-only, RAG §7.9; the chat is text-only), and how tool definitions are passed in the current SDK (MEMORY K-23).
 - **MCP SDK:** confirm how the current official MCP Python SDK mounts its Streamable HTTP app inside FastAPI at `/mcp` and runs over stdio, and how it reads the `Authorization` header.
@@ -1099,3 +1105,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-23 | 0.38 | §4.1: core/request_size_limit.py added (MEMORY D-113) |
 | 2026-11-23 | 0.39 | §4.1: core/pagination.py added (MEMORY D-114) |
 | 2026-11-25 | 0.40 | §3.1, §11, §13: Supabase in any EU region, production in the same region as Render (MEMORY D-037); Session pooler for the local `DATABASE_URL` (MEMORY D-038); `SUPABASE_SERVICE_ROLE_KEY` renamed to `SUPABASE_SECRET_KEY` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, also the GitHub secrets (MEMORY D-052); token verification with JWKS public keys, `SUPABASE_JWT_SECRET` and `DEVELOPMENT_SUPABASE_JWT_SECRET` removed (MEMORY D-053) |
+| 2026-11-26 | 0.41 | §2, §3.3, §9.2, §9.3, §11, §12, §13.2, §13.3, §13.5: local Supabase with two databases for development and tests, one cloud project for production (MEMORY D-039); CI with the Supabase database container, no Supabase secrets in CI (MEMORY D-116); Supabase CLI with Scoop (MEMORY D-117) |

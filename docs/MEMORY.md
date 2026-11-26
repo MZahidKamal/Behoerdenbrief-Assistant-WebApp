@@ -1,9 +1,9 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.27
+**Document Version:** 0.28
 **Status:** Draft
-**Last updated:** 2026-11-25
+**Last updated:** 2026-11-26
 
 > This document answers **which decisions were made and why**, which checks are still open, and what was learned.
 > The **rules themselves** live in the other documents (PRD, ARCHITECTURE, DATA_MODEL, SECURITY, RAG, API_DESIGN, RULES). An entry here gives only the decision in one line, the reason, the rejected alternatives, and where the details are. If an entry and a document disagree, the document wins and the entry is corrected (with approval).
@@ -213,6 +213,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: Real Postgres + pgvector behaviour without touching development data; E2E close to production without paid or external side effects.
 - Alternatives: Fake integrations everywhere in E2E (rejected: Stripe and Auth flows would be untested).
 - Details: ARCHITECTURE §9
+- Status: superseded by D-039 (local TestDB) and D-116 (CI)
 
 #### D-030 · 2026-11-19 · Python version
 - Decision: Python 3.15 with uv; fall back to 3.14 if Celery does not support 3.15 (K-03).
@@ -232,6 +233,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: Same Supabase features (Auth, Storage, pgvector) as production without running them locally.
 - Alternatives: Local Postgres container (rejected).
 - Details: ARCHITECTURE §12
+- Status: superseded by D-039 (local Supabase)
 
 #### D-033 · 2026-11-21 · Tool-calling design
 - Decision: One provider-independent loop (`integrations/llm/tool_calling.py`), at most 5 rounds (`LLM_MAX_TOOL_ROUNDS`); tools defined once, one handler per tool in the owning feature's `tools.py`, collected by `tool_registry.py` and marked `public` or `user_scoped`; the scope always comes from the backend; errors return as results. Only authority recognition and the chat use tools; explanation retrieval stays code-driven.
@@ -263,12 +265,20 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: Developer decision. The rule that matters is that user data stays in the EU (ARCHITECTURE §1 principle 6); every EU region meets it. In production, a database in another region than the API would add network time to every query.
 - Alternatives: Frankfurt only (rejected: not needed for data protection); any EU region also for production (rejected: slower queries).
 - Details: ARCHITECTURE §13; K-10
+- Status: development part superseded by D-039 (no cloud development project); the production rule stays
 
 #### D-038 · 2026-11-25 · Session pooler for the development database
 - Decision: Locally, `DATABASE_URL` is the Supabase Session pooler connection string (port 5432).
 - Reason: The direct connection often needs IPv6, which many home networks and Docker setups do not have; the Session pooler works over IPv4. Session mode keeps one database connection per client connection, so asyncpg's prepared statements work.
 - Alternatives: Direct connection (rejected: often IPv6 only); Transaction pooler, port 6543 (rejected: breaks asyncpg's prepared statements).
 - Details: ARCHITECTURE §11.1; T-034
+- Status: superseded by D-039 (local database, no pooler)
+
+#### D-039 · 2026-11-26 · Local Supabase for development and tests; one cloud project for production
+- Decision: Development and tests run on a local Supabase, started with the Supabase CLI (`supabase start`, `project_id = "behoerdenbrief_assistant_webapp"`): Postgres with pgvector, Auth, Storage and Mailpit in Docker. Its database server has two databases: `postgres` (DevelopmentDB) and `behoerdenbrief_assistant_webapp_testdb` (TestDB). Our Docker Compose (API, worker with ClamAV, Redis, frontend) connects to it. Local Auth settings and storage buckets are in the committed `supabase/config.toml`; `db.major_version` matches the production project. Alembic stays the only migration tool; `supabase/migrations/` is not used. The Supabase Cloud has one project only: `Behoerdenbrief_Assistant_WebApp_ProductionDB`, in the same region as Render (D-037). All names use ASCII `Behoerdenbrief`.
+- Reason: Developer decision. Local work costs nothing, works offline and never touches production data; settings as code are the same on every computer and in CI. One stack is enough, because tests need only Postgres and pgvector. Docker and Postgres names cannot contain `ö`.
+- Alternatives: Cloud development project with a test database in it (D-029, D-032, replaced); two local Supabase projects at the same time (rejected: needs the experimental `supabase stack` feature); a plain Postgres container (rejected: no Supabase roles, no Auth and no Storage).
+- Details: ARCHITECTURE §9, §12, §13.2; DATA_MODEL §9
 
 ### 2.3 Data and Security (D-040 – D-059)
 
@@ -641,6 +651,18 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: The developer merges (D-091, replaced); allowing `gh pr merge` without asking (rejected).
 - Details: RULES §1.2, §1.3, §11.1
 
+#### D-116 · 2026-11-26 · CI tests use the Supabase database container
+- Decision: The backend CI job installs the Supabase CLI with `supabase/setup-cli` (pinned version), starts only the database with `supabase db start`, creates the TestDB and runs pytest against it. The E2E job starts the full local Supabase with `supabase start`. CI needs no Supabase secret.
+- Reason: The Supabase database image has pgvector and the roles `anon` and `authenticated`, which our migrations need (DATA_MODEL §8). CI and the developer's computer use the same image.
+- Alternatives: Plain `pgvector/pgvector` image (rejected: no Supabase roles, so the RLS migrations fail); a cloud test database with a secret (rejected: D-039).
+- Details: ARCHITECTURE §11.3, §13.3
+
+#### D-117 · 2026-11-26 · Supabase CLI as a developer tool
+- Decision: The Supabase CLI is installed on the developer's computer with Scoop; it is not a project package. CI uses a pinned version. The version is written in the README.
+- Reason: It is a command-line tool like the Stripe CLI, not code that the app imports; a pinned version makes CI runs repeatable.
+- Alternatives: npm dev dependency in `client_side/` (rejected: the tool serves the whole repository, not only the frontend).
+- Details: ARCHITECTURE §3.3, §12.1
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -655,10 +677,10 @@ Status: `open` until checked; then `done` with result and date.
 | K-04 | Supabase JWT: verification method, claim for MFA level (`aal2`), claim for authentication time (8-hour admin limit, 5-minute recent login) | SECURITY §4.2–§4.3; API_DESIGN §2.4 | open | Verification method done: JWKS public keys, ES256 (D-053). Supabase docs name the claims `aal` and `amr` (with `timestamp`); confirm with a real token in T-071. 2026-11-25 |
 | K-05 | Supabase signup code: `{{ .Token }}` in the "Confirm signup" template and server-side code check; fallback: own code via Mailjet | ARCHITECTURE §13.5; API_DESIGN §4.2 | open | |
 | K-06 | Supabase Admin API provides verification codes for E2E test users | ARCHITECTURE §9.3 | open | |
-| K-07 | Extra database `behoerdenbrief_testdb` with pgvector in the Supabase dev project (else separate test project) | ARCHITECTURE §13.5 | open | |
+| K-07 | Extra database `behoerdenbrief_testdb` with pgvector in the Supabase dev project (else separate test project) | ARCHITECTURE §13.5 | done | Not needed: the TestDB is a second database in the local Supabase (D-039); CI uses `supabase db start` (D-116). 2026-11-26 |
 | K-08 | Supabase leaked-password check on the chosen plan | SECURITY §4.1 | open | |
 | K-09 | Provider disk encryption, Supabase backup encryption and backup retention | SECURITY §5.2, §6, §16.3 | open | |
-| K-10 | Frankfurt / EU availability: Render, Render Key Value, Sentry EU region; Supabase in an EU region | ARCHITECTURE §13.5 | open | Supabase done: any EU region, production in the same region as Render (D-037); development project in `eu-west-1`. 2026-11-25 |
+| K-10 | Frankfurt / EU availability: Render, Render Key Value, Sentry EU region; Supabase in an EU region | ARCHITECTURE §13.5 | open | Supabase done: any EU region; production in the same region as Render (D-037). 2026-11-25 |
 | K-11 | Prices and free-tier limits: Render, Supabase, Sentry, Stripe fees, Mailjet | ARCHITECTURE §13.5 | open | |
 | K-12 | Render: RAM for ClamAV (daemon or per file), deploy hooks, auto-deploy off (also Netlify) | ARCHITECTURE §13.5 | open | |
 | K-13 | Redis TLS on Render Key Value | SECURITY §12 | open | |
@@ -687,6 +709,7 @@ Status: `open` until checked; then `done` with result and date.
 | K-36 | TK terms of use allow crawling for a commercial product | RAG §3.2 | open | |
 | K-37 | robots.txt and terms of use of arbeitsagentur.de, bmwsb.bund.de, gesetze-im-internet.de and verwaltung.bund.de allow crawling for a commercial product | RAG §3.2 | open | |
 | K-38 | OpenAPI shows FastAPI's default `HTTPValidationError` for 422 and no Problem Details error answers (API_DESIGN §1.11); add a task before the frontend uses generated error types | API_DESIGN §1.11, §3; RULES §5 | open | |
+| K-39 | Local Supabase: asymmetric signing key and `/auth/v1/.well-known/jwks.json` in local Auth (D-053); how Compose containers reach the local Supabase (`host.docker.internal` or `--network-id`) | ARCHITECTURE §12.3, §13.5; T-388 | open | |
 
 ### 3.2 Known issues
 
@@ -779,3 +802,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-23 | 0.25 | D-115 (the assistant also merges pull requests); D-091 merging superseded; area 2.6 range widened to D-129 |
 | 2026-11-23 | 0.26 | Open check K-38 (OpenAPI error answers are not Problem Details yet) |
 | 2026-11-25 | 0.27 | D-037 (Supabase in any EU region), D-038 (Session pooler for the development database), D-052 (Supabase secret and publishable API keys), D-053 (token verification with the JWKS public keys); D-025 region part superseded; K-04 and K-10 partly done |
+| 2026-11-26 | 0.28 | D-039 (local Supabase for development and tests; one cloud project for production), D-116 (CI with the Supabase database container), D-117 (Supabase CLI with Scoop); D-029, D-032, D-038 and the development part of D-037 superseded; K-07 done; K-10 reworded; new open check K-39; area 2.2 is now full |
