@@ -1,4 +1,6 @@
 # Local development stack (ARCHITECTURE §12.3, §12.4).
+# First start the local Supabase from the repository root: supabase start
+# (database, Auth, Storage and Mailpit; see the README).
 # Start all:     docker compose up --build  (API on http://127.0.0.1:8000)
 # Only Redis:    docker compose up -d redis
 # Stop all:      docker compose down        (keeps the data volume)
@@ -50,6 +52,11 @@ services:
     # The settings come from the developer's own .env file. They are given to
     # the container when it starts and are never stored in the image.
     env_file: server_side/.env
+    # The local Supabase runs outside this Compose file. The container reaches
+    # it through the name host.docker.internal. Docker Desktop knows this name
+    # already; Linux (for example in CI) needs this line (MEMORY K-39).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       # Only this computer can reach the development API (it shows /docs).
       - "127.0.0.1:8000:8000"
