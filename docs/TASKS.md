@@ -288,7 +288,7 @@ Total: 388 tasks.
   - Depends on: T-014
   - Read: ARCHITECTURE §3, §11
   - Learn: Supabase project settings and keys
-  - Note: Replaced by the local setup (MEMORY D-039, T-388); the cloud development project is no longer used
+  - Note: Replaced by the local setup (MEMORY D-039, T-388); the cloud project stays unused until T-374 makes it the production project (MEMORY D-054)
 
 - [ ] **T-388** **[Check K-39]** · Local Supabase with the Supabase CLI
   - Done when: The Supabase CLI is installed with Scoop (version in the README); `supabase/config.toml` (TOML) has `project_id = "behoerdenbrief_assistant_webapp"` and the Postgres major version of new Supabase cloud projects; `supabase start` runs; local URL, keys and `DATABASE_URL` are in `server_side/.env`; the `server` container reaches the local Supabase; K-39 result in MEMORY.md
@@ -2400,13 +2400,13 @@ Total: 388 tasks.
   - Learn: Processor agreements under the DSGVO
 
 - [ ] **T-374** **[Developer]** · Production Supabase
-  - Done when: Production project `Behoerdenbrief_Assistant_WebApp_ProductionDB` in the same EU region as Render (MEMORY D-037, D-039) with buckets, Auth settings as in `supabase/config.toml`, custom SMTP and backups; secrets only in Render
+  - Done when: The existing cloud project in `eu-west-1` is renamed to `Behoerdenbrief_Assistant_WebApp_ProductionDB` (MEMORY D-054), with buckets, Auth settings as in `supabase/config.toml`, custom SMTP and backups; the secret API key from T-032 is revoked and a new one is created for Render only; secrets only in Render
   - Depends on: T-372
   - Read: ARCHITECTURE §11, §13; SECURITY §13
   - Learn: Separating environments
 
 - [ ] **T-375** **[Developer]** · Production Render services
-  - Done when: Web service, one background worker and Key Value in Frankfurt; environment variables set; auto-deploy off
+  - Done when: Web service, one background worker and Key Value in one EU region (MEMORY D-054); environment variables set; auto-deploy off
   - Depends on: T-374
   - Read: ARCHITECTURE §13
   - Learn: Platform-as-a-service hosting
@@ -2469,4 +2469,4 @@ Total: 388 tasks.
 | 2026-11-22 | 0.7 | New task T-385 in M00 (API design document renamed, MEMORY D-105); references changed to `API_DESIGN §`; 385 tasks |
 | 2026-11-23 | 0.8 | New tasks T-386 (docstring and comment rules, docs and `server_side/` code) and T-387 (the same rules for `client_side/` code) in M00 (MEMORY D-108); 387 tasks |
 | 2026-11-25 | 0.9 | T-032 and T-374: Supabase in an EU region (MEMORY D-037), Session pooler (MEMORY D-038); T-055 and T-082: publishable and secret API keys (MEMORY D-052); T-071 and T-075: verification with JWKS public keys (MEMORY D-053) |
-| 2026-11-26 | 0.10 | New task T-388 in M02 (local Supabase with the Supabase CLI, MEMORY D-039, D-117); T-033 local test database; T-061 and T-063 CI without a test database secret (MEMORY D-116); T-070, T-072, T-082, T-128, T-130, T-357, T-358 against the local Supabase; T-315 production only; T-374 project name; T-377 E2E with `supabase start`; note on T-032; 388 tasks |
+| 2026-11-26 | 0.10 | New task T-388 in M02 (local Supabase with the Supabase CLI, MEMORY D-039, D-117); T-033 local test database; T-061 and T-063 CI without a test database secret (MEMORY D-116); T-070, T-072, T-082, T-128, T-130, T-357, T-358 against the local Supabase; T-315 production only; T-374 project name; T-377 E2E with `supabase start`; note on T-032; 388 tasks; T-374 uses the existing cloud project, T-375 any EU region (MEMORY D-054) |

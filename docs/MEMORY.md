@@ -188,7 +188,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: EU hosting, free or low-cost tiers, few platforms; deploys only after tests pass.
 - Alternatives: Cloudinary for files (replaced by Supabase Storage); other clouds not compared.
 - Details: ARCHITECTURE §3, §13
-- Status: Supabase region part superseded by D-037 (any EU region)
+- Status: Supabase region part superseded by D-037 and D-054; Render region part superseded by D-054
 
 #### D-026 · 2026-11-19 · Email and push
 - Decision: Mailjet for app emails and as custom SMTP for Supabase Auth; Web Push with VAPID through pywebpush.
@@ -265,7 +265,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: Developer decision. The rule that matters is that user data stays in the EU (ARCHITECTURE §1 principle 6); every EU region meets it. In production, a database in another region than the API would add network time to every query.
 - Alternatives: Frankfurt only (rejected: not needed for data protection); any EU region also for production (rejected: slower queries).
 - Details: ARCHITECTURE §13; K-10
-- Status: development part superseded by D-039 (no cloud development project); the production rule stays
+- Status: superseded — development part by D-039, production rule by D-054
 
 #### D-038 · 2026-11-25 · Session pooler for the development database
 - Decision: Locally, `DATABASE_URL` is the Supabase Session pooler connection string (port 5432).
@@ -275,7 +275,7 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Status: superseded by D-039 (local database, no pooler)
 
 #### D-039 · 2026-11-26 · Local Supabase for development and tests; one cloud project for production
-- Decision: Development and tests run on a local Supabase, started with the Supabase CLI (`supabase start`, `project_id = "behoerdenbrief_assistant_webapp"`): Postgres with pgvector, Auth, Storage and Mailpit in Docker. Its database server has two databases: `postgres` (DevelopmentDB) and `behoerdenbrief_assistant_webapp_testdb` (TestDB). Our Docker Compose (API, worker with ClamAV, Redis, frontend) connects to it. Local Auth settings and storage buckets are in the committed `supabase/config.toml`; `db.major_version` matches the production project. Alembic stays the only migration tool; `supabase/migrations/` is not used. The Supabase Cloud has one project only: `Behoerdenbrief_Assistant_WebApp_ProductionDB`, in the same region as Render (D-037). All names use ASCII `Behoerdenbrief`.
+- Decision: Development and tests run on a local Supabase, started with the Supabase CLI (`supabase start`, `project_id = "behoerdenbrief_assistant_webapp"`): Postgres with pgvector, Auth, Storage and Mailpit in Docker. Its database server has two databases: `postgres` (DevelopmentDB) and `behoerdenbrief_assistant_webapp_testdb` (TestDB). Our Docker Compose (API, worker with ClamAV, Redis, frontend) connects to it. Local Auth settings and storage buckets are in the committed `supabase/config.toml`; `db.major_version` matches the production project. Alembic stays the only migration tool; `supabase/migrations/` is not used. The Supabase Cloud has one project only: the existing project in `eu-west-1`, renamed to `Behoerdenbrief_Assistant_WebApp_ProductionDB` in T-374 (D-054). All names use ASCII `Behoerdenbrief`.
 - Reason: Developer decision. Local work costs nothing, works offline and never touches production data; settings as code are the same on every computer and in CI. One stack is enough, because tests need only Postgres and pgvector. Docker and Postgres names cannot contain `ö`.
 - Alternatives: Cloud development project with a test database in it (D-029, D-032, replaced); two local Supabase projects at the same time (rejected: needs the experimental `supabase stack` feature); a plain Postgres container (rejected: no Supabase roles, no Auth and no Storage).
 - Details: ARCHITECTURE §9, §12, §13.2; DATA_MODEL §9
@@ -365,6 +365,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: The project's current signing key is asymmetric; the legacy HS256 secret is only a previously used key. Public keys are not secret, so nobody can make fake tokens with them, and there is one secret less to protect.
 - Alternatives: Shared HS256 secret (rejected: legacy, a leak allows fake tokens); asking Supabase Auth about every token (rejected: one network call per request).
 - Details: SECURITY §4.3; K-04
+
+#### D-054 · 2026-11-26 · Supabase and Render in any EU region
+- Decision: Production Supabase and Render may each be in any EU region; they do not need the same region or city. Render's web service, background worker and Key Value stay together in one Render region. The existing cloud project in `eu-west-1` (Ireland) becomes the production project in T-374 and is renamed `Behoerdenbrief_Assistant_WebApp_ProductionDB`. Netlify stays for the frontend.
+- Reason: Developer decision. Data protection needs only the EU (ARCHITECTURE §1 principle 6), and the project already exists. Render's services talk over Render's private network only inside one region (to confirm in K-10). Accepted trade-off: if Supabase and Render are in different regions, every database query takes more network time.
+- Alternatives: Production Supabase in the same region as Render (D-037, replaced); Frankfurt for all services (D-025, replaced).
+- Details: ARCHITECTURE §13.1, §13.5; K-10
 
 ### 2.4 AI and RAG (D-060 – D-079)
 
@@ -680,7 +686,7 @@ Status: `open` until checked; then `done` with result and date.
 | K-07 | Extra database `behoerdenbrief_testdb` with pgvector in the Supabase dev project (else separate test project) | ARCHITECTURE §13.5 | done | Not needed: the TestDB is a second database in the local Supabase (D-039); CI uses `supabase db start` (D-116). 2026-11-26 |
 | K-08 | Supabase leaked-password check on the chosen plan | SECURITY §4.1 | open | |
 | K-09 | Provider disk encryption, Supabase backup encryption and backup retention | SECURITY §5.2, §6, §16.3 | open | |
-| K-10 | Frankfurt / EU availability: Render, Render Key Value, Sentry EU region; Supabase in an EU region | ARCHITECTURE §13.5 | open | Supabase done: any EU region; production in the same region as Render (D-037). 2026-11-25 |
+| K-10 | EU availability: Render (web service, background worker and Key Value in one EU region), Sentry EU region; Supabase in an EU region | ARCHITECTURE §13.5 | open | Supabase done: any EU region (D-054); production is the existing project in `eu-west-1`. 2026-11-26 |
 | K-11 | Prices and free-tier limits: Render, Supabase, Sentry, Stripe fees, Mailjet | ARCHITECTURE §13.5 | open | |
 | K-12 | Render: RAM for ClamAV (daemon or per file), deploy hooks, auto-deploy off (also Netlify) | ARCHITECTURE §13.5 | open | |
 | K-13 | Redis TLS on Render Key Value | SECURITY §12 | open | |
@@ -802,4 +808,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-23 | 0.25 | D-115 (the assistant also merges pull requests); D-091 merging superseded; area 2.6 range widened to D-129 |
 | 2026-11-23 | 0.26 | Open check K-38 (OpenAPI error answers are not Problem Details yet) |
 | 2026-11-25 | 0.27 | D-037 (Supabase in any EU region), D-038 (Session pooler for the development database), D-052 (Supabase secret and publishable API keys), D-053 (token verification with the JWKS public keys); D-025 region part superseded; K-04 and K-10 partly done |
-| 2026-11-26 | 0.28 | D-039 (local Supabase for development and tests; one cloud project for production), D-116 (CI with the Supabase database container), D-117 (Supabase CLI with Scoop); D-029, D-032, D-038 and the development part of D-037 superseded; K-07 done; K-10 reworded; new open check K-39; area 2.2 is now full |
+| 2026-11-26 | 0.28 | D-039 (local Supabase for development and tests; one cloud project for production), D-116 (CI with the Supabase database container), D-117 (Supabase CLI with Scoop); D-029, D-032, D-038 and the development part of D-037 superseded; K-07 done; K-10 reworded; new open check K-39; area 2.2 is now full; D-054 (Supabase and Render in any EU region); D-025 and D-037 superseded; K-10 reworded |

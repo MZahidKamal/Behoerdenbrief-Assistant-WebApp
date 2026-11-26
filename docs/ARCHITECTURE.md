@@ -974,10 +974,10 @@ Database, Auth, Storage and Mailpit come from the local Supabase, started with `
 | Part | Platform | Region | Source | Start command |
 |---|---|---|---|---|
 | Frontend (PWA) | Netlify | Global CDN (no user data stored) | `client_side/` | Netlify Next.js build |
-| API | Render web service (Docker) | Frankfurt | `server_side/Dockerfile` | Uvicorn (§12.2); health check path `/health`; `/docs` and `/openapi.json` disabled in production |
-| Worker + Beat | Render background worker (same Docker image) | Frankfurt | `server_side/Dockerfile` | Celery worker with `-B`; **exactly one instance** (Beat must not run twice) |
-| Redis | Render Key Value | Frankfurt | Managed | — |
-| Database, Auth, Storage | Supabase (production project, built-in backups) | EU region, the same as Render (MEMORY D-037) | Managed | — |
+| API | Render web service (Docker) | Any EU region; API, worker and Key Value in one Render region (MEMORY D-054) | `server_side/Dockerfile` | Uvicorn (§12.2); health check path `/health`; `/docs` and `/openapi.json` disabled in production |
+| Worker + Beat | Render background worker (same Docker image) | Same Render region as the API | `server_side/Dockerfile` | Celery worker with `-B`; **exactly one instance** (Beat must not run twice) |
+| Redis | Render Key Value | Same Render region as the API | Managed | — |
+| Database, Auth, Storage | Supabase (production project, built-in backups) | Any EU region; the existing project is in `eu-west-1` (MEMORY D-054) | Managed | — |
 | Payments | Stripe (live mode in production, test mode elsewhere) | — | Managed | — |
 | Error monitoring | Sentry | EU data region if available | Managed | — |
 
@@ -1053,7 +1053,7 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 - **E2E verification codes:** confirm that the Supabase Admin API can provide a signup verification code for test users.
 - **Retention after account deletion:** name and date of birth are kept for the duplicate check; the legal basis must be stated in the Datenschutzerklärung (SECURITY.md).
 - **Crawling:** respect robots.txt and each site's terms of use; JavaScript-heavy pages may not be crawlable (PDF upload and text blocks remain available).
-- **Regions:** confirm Frankfurt availability for Render, Render Key Value and Sentry's EU data region in their current documentation; Supabase may use any EU region (MEMORY D-037).
+- **Regions:** confirm that Render (web service, background worker, Key Value) is available in an EU region, and Sentry's EU data region, in their current documentation; Supabase may use any EU region (MEMORY D-054).
 - **Supabase JWT:** decided: public keys from the JWKS endpoint (MEMORY D-053); claim names still open (K-04).
 - **Local Supabase (K-39):** confirm that local Auth can sign tokens with an asymmetric key and serves `/auth/v1/.well-known/jwks.json` (MEMORY D-053), and how our Compose containers reach the local Supabase (`host.docker.internal`, or a shared Docker network with `--network-id`).
 - **Render deploy hooks and disabling auto-deploy:** confirm both options in the current Render and Netlify documentation.
@@ -1105,4 +1105,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-23 | 0.38 | §4.1: core/request_size_limit.py added (MEMORY D-113) |
 | 2026-11-23 | 0.39 | §4.1: core/pagination.py added (MEMORY D-114) |
 | 2026-11-25 | 0.40 | §3.1, §11, §13: Supabase in any EU region, production in the same region as Render (MEMORY D-037); Session pooler for the local `DATABASE_URL` (MEMORY D-038); `SUPABASE_SERVICE_ROLE_KEY` renamed to `SUPABASE_SECRET_KEY` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, also the GitHub secrets (MEMORY D-052); token verification with JWKS public keys, `SUPABASE_JWT_SECRET` and `DEVELOPMENT_SUPABASE_JWT_SECRET` removed (MEMORY D-053) |
-| 2026-11-26 | 0.41 | §2, §3.3, §9.2, §9.3, §11, §12, §13.2, §13.3, §13.5: local Supabase with two databases for development and tests, one cloud project for production (MEMORY D-039); CI with the Supabase database container, no Supabase secrets in CI (MEMORY D-116); Supabase CLI with Scoop (MEMORY D-117) |
+| 2026-11-26 | 0.41 | §2, §3.3, §9.2, §9.3, §11, §12, §13.2, §13.3, §13.5: local Supabase with two databases for development and tests, one cloud project for production (MEMORY D-039); CI with the Supabase database container, no Supabase secrets in CI (MEMORY D-116); Supabase CLI with Scoop (MEMORY D-117); §13.1, §13.5: Supabase and Render each in any EU region (MEMORY D-054) |
