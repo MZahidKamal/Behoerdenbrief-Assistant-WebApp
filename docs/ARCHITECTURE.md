@@ -1,7 +1,7 @@
 # Architecture
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.41
+**Document Version:** 0.42
 **Status:** Draft
 **Last updated:** 2026-11-26
 
@@ -893,7 +893,7 @@ Production runtime secrets (LLM keys, Stripe live keys, Mailjet, VAPID, Sentry, 
 
 ### 12.1 Prerequisites
 
-Git, Docker Desktop, Node.js, uv, the Supabase CLI (installed with Scoop, MEMORY D-117), a Stripe account in test mode, Stripe CLI (to forward webhooks locally).
+Git, Docker Desktop, Node.js, uv, the Supabase CLI (installed with Scoop, MEMORY D-117) and the firewall rule for its ports (README, MEMORY K-39), a Stripe account in test mode, Stripe CLI (to forward webhooks locally).
 
 ### 12.2 Docker images
 
@@ -935,7 +935,7 @@ Git, Docker Desktop, Node.js, uv, the Supabase CLI (installed with Scoop, MEMORY
 | `worker` | `./server_side` (same image) | Celery worker with `-B` (Beat embedded) | — | `env_file: server_side/.env`; source mounted; `depends_on: redis (healthy)`; exactly one instance |
 | `client` | `./client_side` | `npm run dev` | 3000 | `env_file: client_side/.env.local`; source mounted; `node_modules` kept in the container; `depends_on: server` |
 
-Database, Auth, Storage and Mailpit come from the local Supabase, started with `supabase start` from the repository root (settings in `supabase/config.toml`). Our containers reach it through `host.docker.internal` (to confirm in K-39). Its database server has two databases: `postgres` (DevelopmentDB) and `behoerdenbrief_assistant_webapp_testdb` (TestDB) (MEMORY D-039).
+Database, Auth, Storage and Mailpit come from the local Supabase, started with `supabase start` from the repository root (settings in `supabase/config.toml`). Our containers reach it through `host.docker.internal`; on Linux the `server` service needs `extra_hosts` `host.docker.internal:host-gateway` (MEMORY K-39). Its database server has two databases: `postgres` (DevelopmentDB) and `behoerdenbrief_assistant_webapp_testdb` (TestDB) (MEMORY D-039).
 
 ### 12.4 Start locally
 
@@ -1055,7 +1055,7 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 - **Crawling:** respect robots.txt and each site's terms of use; JavaScript-heavy pages may not be crawlable (PDF upload and text blocks remain available).
 - **Regions:** confirm that Render (web service, background worker, Key Value) is available in an EU region, and Sentry's EU data region, in their current documentation; Supabase may use any EU region (MEMORY D-054).
 - **Supabase JWT:** decided: public keys from the JWKS endpoint (MEMORY D-053); claim names still open (K-04).
-- **Local Supabase (K-39):** confirm that local Auth can sign tokens with an asymmetric key and serves `/auth/v1/.well-known/jwks.json` (MEMORY D-053), and how our Compose containers reach the local Supabase (`host.docker.internal`, or a shared Docker network with `--network-id`).
+- **Local Supabase (K-39):** done; only the E2E job in CI must confirm `host.docker.internal` on Linux (MEMORY K-39).
 - **Render deploy hooks and disabling auto-deploy:** confirm both options in the current Render and Netlify documentation.
 - **Tool calling on Vertex AI:** confirm that the chosen Gemini and Claude models on Vertex AI support function calling (authority recognition is text-only, RAG §7.9; the chat is text-only), and how tool definitions are passed in the current SDK (MEMORY K-23).
 - **MCP SDK:** confirm how the current official MCP Python SDK mounts its Streamable HTTP app inside FastAPI at `/mcp` and runs over stdio, and how it reads the `Authorization` header.
@@ -1106,3 +1106,4 @@ deploy.yml — on push to main, only after ci.yml succeeded:
 | 2026-11-23 | 0.39 | §4.1: core/pagination.py added (MEMORY D-114) |
 | 2026-11-25 | 0.40 | §3.1, §11, §13: Supabase in any EU region, production in the same region as Render (MEMORY D-037); Session pooler for the local `DATABASE_URL` (MEMORY D-038); `SUPABASE_SERVICE_ROLE_KEY` renamed to `SUPABASE_SECRET_KEY` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, also the GitHub secrets (MEMORY D-052); token verification with JWKS public keys, `SUPABASE_JWT_SECRET` and `DEVELOPMENT_SUPABASE_JWT_SECRET` removed (MEMORY D-053) |
 | 2026-11-26 | 0.41 | §2, §3.3, §9.2, §9.3, §11, §12, §13.2, §13.3, §13.5: local Supabase with two databases for development and tests, one cloud project for production (MEMORY D-039); CI with the Supabase database container, no Supabase secrets in CI (MEMORY D-116); Supabase CLI with Scoop (MEMORY D-117); §13.1, §13.5: Supabase and Render each in any EU region (MEMORY D-054) |
+| 2026-11-26 | 0.42 | §12.1, §12.3, §13.5: results of K-39 (`host.docker.internal`, firewall rule for the local Supabase ports) |
