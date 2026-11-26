@@ -1,7 +1,7 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.11
+**Document Version:** 0.12
 **Status:** Draft
 **Last updated:** 2026-11-26
 
@@ -296,7 +296,7 @@ Total: 388 tasks.
   - Read: ARCHITECTURE §12; MEMORY D-039, D-117
   - Learn: Running Supabase locally with Docker
 
-- [ ] **T-033** · Local test database
+- [x] **T-033** · Local test database
   - Done when: `behoerdenbrief_assistant_webapp_testdb` exists in the local Supabase with pgvector available; the command that creates it is in the README; `TEST_DATABASE_URL` is set in `server_side/.env`
   - Depends on: T-388
   - Read: ARCHITECTURE §9.2, §12.4; MEMORY D-039
@@ -2472,3 +2472,4 @@ Total: 388 tasks.
 | 2026-11-25 | 0.9 | T-032 and T-374: Supabase in an EU region (MEMORY D-037), Session pooler (MEMORY D-038); T-055 and T-082: publishable and secret API keys (MEMORY D-052); T-071 and T-075: verification with JWKS public keys (MEMORY D-053) |
 | 2026-11-26 | 0.10 | New task T-388 in M02 (local Supabase with the Supabase CLI, MEMORY D-039, D-117); T-033 local test database; T-061 and T-063 CI without a test database secret (MEMORY D-116); T-070, T-072, T-082, T-128, T-130, T-357, T-358 against the local Supabase; T-315 production only; T-374 project name; T-377 E2E with `supabase start`; note on T-032; 388 tasks; T-374 uses the existing cloud project, T-375 any EU region (MEMORY D-054) |
 | 2026-11-26 | 0.11 | T-388 done; note on T-038 (`auto_expose_new_tables`) |
+| 2026-11-26 | 0.12 | T-033 done; README: TestDB create command; supabase db reset deletes the TestDB |
