@@ -1,7 +1,7 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.10
+**Document Version:** 0.11
 **Status:** Draft
 **Last updated:** 2026-11-26
 
@@ -290,7 +290,7 @@ Total: 388 tasks.
   - Learn: Supabase project settings and keys
   - Note: Replaced by the local setup (MEMORY D-039, T-388); the cloud project stays unused until T-374 makes it the production project (MEMORY D-054)
 
-- [ ] **T-388** **[Check K-39]** · Local Supabase with the Supabase CLI
+- [x] **T-388** **[Check K-39]** · Local Supabase with the Supabase CLI
   - Done when: The Supabase CLI is installed with Scoop (version in the README); `supabase/config.toml` (TOML) has `project_id = "behoerdenbrief_assistant_webapp"` and the Postgres major version of new Supabase cloud projects; `supabase start` runs; local URL, keys and `DATABASE_URL` are in `server_side/.env`; the `server` container reaches the local Supabase; K-39 result in MEMORY.md
   - Depends on: T-031
   - Read: ARCHITECTURE §12; MEMORY D-039, D-117
@@ -331,6 +331,7 @@ Total: 388 tasks.
   - Depends on: T-037
   - Read: DATA_MODEL §1, §6, §9
   - Learn: Database extensions and trigger functions
+  - Note: Decide `auto_expose_new_tables` in `supabase/config.toml` (default true: new tables in `public` are open to the roles `anon` and `authenticated`). `false` would be a second lock next to the revoked rights of DATA_MODEL §8
 
 - [ ] **T-039** · Test database fixtures
   - Done when: `tests/conftest.py` runs migrations on the test database, gives each test a session and empties tables between tests; `tests/factories/` exists
@@ -2470,3 +2471,4 @@ Total: 388 tasks.
 | 2026-11-23 | 0.8 | New tasks T-386 (docstring and comment rules, docs and `server_side/` code) and T-387 (the same rules for `client_side/` code) in M00 (MEMORY D-108); 387 tasks |
 | 2026-11-25 | 0.9 | T-032 and T-374: Supabase in an EU region (MEMORY D-037), Session pooler (MEMORY D-038); T-055 and T-082: publishable and secret API keys (MEMORY D-052); T-071 and T-075: verification with JWKS public keys (MEMORY D-053) |
 | 2026-11-26 | 0.10 | New task T-388 in M02 (local Supabase with the Supabase CLI, MEMORY D-039, D-117); T-033 local test database; T-061 and T-063 CI without a test database secret (MEMORY D-116); T-070, T-072, T-082, T-128, T-130, T-357, T-358 against the local Supabase; T-315 production only; T-374 project name; T-377 E2E with `supabase start`; note on T-032; 388 tasks; T-374 uses the existing cloud project, T-375 any EU region (MEMORY D-054) |
+| 2026-11-26 | 0.11 | T-388 done; note on T-038 (`auto_expose_new_tables`) |

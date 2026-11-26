@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.28
+**Document Version:** 0.29
 **Status:** Draft
 **Last updated:** 2026-11-26
 
@@ -715,7 +715,7 @@ Status: `open` until checked; then `done` with result and date.
 | K-36 | TK terms of use allow crawling for a commercial product | RAG §3.2 | open | |
 | K-37 | robots.txt and terms of use of arbeitsagentur.de, bmwsb.bund.de, gesetze-im-internet.de and verwaltung.bund.de allow crawling for a commercial product | RAG §3.2 | open | |
 | K-38 | OpenAPI shows FastAPI's default `HTTPValidationError` for 422 and no Problem Details error answers (API_DESIGN §1.11); add a task before the frontend uses generated error types | API_DESIGN §1.11, §3; RULES §5 | open | |
-| K-39 | Local Supabase: asymmetric signing key and `/auth/v1/.well-known/jwks.json` in local Auth (D-053); how Compose containers reach the local Supabase (`host.docker.internal` or `--network-id`) | ARCHITECTURE §12.3, §13.5; T-388 | open | |
+| K-39 | Local Supabase: asymmetric signing key and `/auth/v1/.well-known/jwks.json` in local Auth (D-053); how Compose containers reach the local Supabase (`host.docker.internal` or `--network-id`) | ARCHITECTURE §12.3, §13.5; T-388 | done | Local Auth serves an ES256 (P-256) public key at `/auth/v1/.well-known/jwks.json` without an own signing key file; that user tokens use it is confirmed with a real token in T-071 (K-04). Our containers reach the local Supabase through `host.docker.internal` (tested from the server image: API 200, database port open), so no shared Docker network is needed; Linux needs `extra_hosts` `host.docker.internal:host-gateway` (in `docker-compose.yml`; the E2E job in CI confirms it). The CLI publishes its ports on `0.0.0.0` and has no bind setting, so a Windows Firewall rule blocks incoming TCP 54320–54329 (README); Supabase Analytics is off (it would need the Docker daemon on tcp 2375). Supabase CLI 3.4.0. 2026-11-26 |
 
 ### 3.2 Known issues
 
@@ -809,3 +809,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-23 | 0.26 | Open check K-38 (OpenAPI error answers are not Problem Details yet) |
 | 2026-11-25 | 0.27 | D-037 (Supabase in any EU region), D-038 (Session pooler for the development database), D-052 (Supabase secret and publishable API keys), D-053 (token verification with the JWKS public keys); D-025 region part superseded; K-04 and K-10 partly done |
 | 2026-11-26 | 0.28 | D-039 (local Supabase for development and tests; one cloud project for production), D-116 (CI with the Supabase database container), D-117 (Supabase CLI with Scoop); D-029, D-032, D-038 and the development part of D-037 superseded; K-07 done; K-10 reworded; new open check K-39; area 2.2 is now full; D-054 (Supabase and Render in any EU region); D-025 and D-037 superseded; K-10 reworded |
+| 2026-11-26 | 0.29 | K-39 done (local JWKS, host.docker.internal, firewall rule, Analytics off) |
