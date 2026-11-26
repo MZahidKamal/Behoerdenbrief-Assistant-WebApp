@@ -1,9 +1,9 @@
 # Data Model
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.15
+**Document Version:** 0.16
 **Status:** Draft
-**Last updated:** 2026-11-22
+**Last updated:** 2026-11-26
 
 > This document answers **what is stored in the database and how**.
 > Product rules: PRD.md · Flows, layers and configuration: ARCHITECTURE.md · Encryption method, keys and GDPR: SECURITY.md · Chunking and embedding model: RAG.md
@@ -777,14 +777,15 @@ Storage bucket access rules: SECURITY.md.
 | Topic | Rule |
 |---|---|
 | Tool | Alembic with the async engine; migration files in `server_side/migrations/` |
+| Supabase CLI | Its migration folder (`supabase/migrations/`) is not used; Alembic is the only migration tool (MEMORY D-039) |
 | Creation | Generated with Alembic autogenerate from the SQLAlchemy models, then **reviewed and completed by hand** (triggers, partial indexes, CHECK constraints, RLS statements, extensions) |
 | File names | Alembic revision id plus a descriptive name in full words, e.g. `add_reply_documents_table` |
 | Downgrade | **Every migration has a working downgrade** |
-| Testing | Integration tests run upgrade to head, downgrade to base and upgrade again on `behoerdenbrief_testdb` |
+| Testing | Integration tests run upgrade to head, downgrade to base and upgrade again on `behoerdenbrief_assistant_webapp_testdb` (local, and in CI the Supabase database container) |
 | Applied migrations | Never edited; corrections are new migrations |
 | Backward compatibility | Migrations run before the new code is deployed (ARCHITECTURE §13.3), so each migration must work with the currently running code: add first, remove in a later release |
 | Production | Applied only by the CI/CD pipeline (`alembic upgrade head` against the production database) |
-| Local and test | `alembic upgrade head` against the development database or `behoerdenbrief_testdb` |
+| Local and test | `alembic upgrade head` against the local development database (`postgres`) or `behoerdenbrief_assistant_webapp_testdb` |
 | Initial data | Never inside migrations; created by the seed command (§12) |
 | First migration | Enables `pgvector` (and `pgcrypto` if `gen_random_uuid()` is not available), creates the number sequences and the shared trigger functions `set_updated_at()`, `reject_delete()` and `reject_locked_document_change()` |
 | Triggers per table | The migration that creates a table also attaches its triggers (`set_updated_at`, and `reject_delete` for append-only tables) |
@@ -886,3 +887,4 @@ Development-only test users are not part of the seed; automated tests create the
 | 2026-11-21 | 0.13 | Aligned with RULES 0.4: `llm_tool_calls.caller_type` value `mcp_local` (was `mcp_stdio`); `letters.extracted_deadline` (was `ai_deadline`, naming rule) |
 | 2026-11-21 | 0.14 | Final review: `token_usages.mcp_access_token_id` and operation type `mcp_query`, so the embedding cost of MCP searches is recorded (CHECK, relationship, index, ERD) |
 | 2026-11-22 | 0.15 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |
+| 2026-11-26 | 0.16 | §9: TestDB name, local Supabase and CI database container; Supabase CLI migrations not used (MEMORY D-039, D-116) |

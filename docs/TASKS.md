@@ -1,9 +1,9 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.9
+**Document Version:** 0.10
 **Status:** Draft
-**Last updated:** 2026-11-25
+**Last updated:** 2026-11-26
 
 > This document answers **what to do now and what is still open**: the complete build plan from an empty `server_side/` to launch, in small tasks with one idea each.
 > Each task names the documents to read; the rules themselves are not repeated here. How to work on a task (including the explanations before and after): RULES §1, §1.1a · Branches, commits, pull requests: RULES §11 · Decisions and open checks: MEMORY.md
@@ -31,7 +31,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 |---|---|---|
 | M00 Repository and Tooling | T-001 – T-013, T-383 – T-387 (18) | Clean repository, Python project, checks, hooks, frontend test setup |
 | M01 Backend Skeleton | T-014 – T-031 (18) | FastAPI app with `/health`, settings, logging, Problem Details, Docker |
-| M02 Database Foundation | T-032 – T-046 (15) | Supabase connection, Alembic, test database, encryption and time helpers |
+| M02 Database Foundation | T-032 – T-046, T-388 (16) | Local Supabase, Alembic, test database, encryption and time helpers |
 | M03 Frontend Foundation | T-047 – T-060 (14) | Layout, translations, API client, generated types, auth client, PWA shell |
 | M04 Continuous Integration | T-061 – T-069 (9) | Every pull request is checked automatically |
 | M05 Users and Authentication | T-070 – T-108 (39) | Register, verify, log in, profile, reference numbers |
@@ -53,7 +53,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 | M21 Deployment | T-372 – T-378 (7) | Production on Render and Netlify through GitHub Actions |
 | M22 Legal and Launch | T-379 – T-382 (4) | Legal pages, legal checks, launch checklist |
 
-Total: 387 tasks.
+Total: 388 tasks.
 
 ## 3. Tasks
 
@@ -288,11 +288,18 @@ Total: 387 tasks.
   - Depends on: T-014
   - Read: ARCHITECTURE §3, §11
   - Learn: Supabase project settings and keys
+  - Note: Replaced by the local setup (MEMORY D-039, T-388); the cloud project stays unused until T-374 makes it the production project (MEMORY D-054)
 
-- [ ] **T-033** **[Check K-07]** · Test database in Supabase
-  - Done when: `behoerdenbrief_testdb` exists with pgvector (or the alternative of ARCHITECTURE §13.5 is chosen); `TEST_DATABASE_URL` set; result in MEMORY.md
-  - Depends on: T-032
-  - Read: ARCHITECTURE §9.2, §13.5
+- [ ] **T-388** **[Check K-39]** · Local Supabase with the Supabase CLI
+  - Done when: The Supabase CLI is installed with Scoop (version in the README); `supabase/config.toml` (TOML) has `project_id = "behoerdenbrief_assistant_webapp"` and the Postgres major version of new Supabase cloud projects; `supabase start` runs; local URL, keys and `DATABASE_URL` are in `server_side/.env`; the `server` container reaches the local Supabase; K-39 result in MEMORY.md
+  - Depends on: T-031
+  - Read: ARCHITECTURE §12; MEMORY D-039, D-117
+  - Learn: Running Supabase locally with Docker
+
+- [ ] **T-033** · Local test database
+  - Done when: `behoerdenbrief_assistant_webapp_testdb` exists in the local Supabase with pgvector available; the command that creates it is in the README; `TEST_DATABASE_URL` is set in `server_side/.env`
+  - Depends on: T-388
+  - Read: ARCHITECTURE §9.2, §12.4; MEMORY D-039
   - Learn: Why tests need their own database
 
 - [ ] **T-034** · Async database engine
@@ -464,8 +471,8 @@ Total: 387 tasks.
 ### M04 Continuous Integration
 
 - [ ] **T-061** **[Developer]** · GitHub secrets for CI
-  - Done when: The CI secrets of ARCHITECTURE §11 needed for tests (test database first) are set in GitHub
-  - Depends on: T-004, T-033
+  - Done when: The CI secrets of ARCHITECTURE §11.3 needed for E2E (Stripe test mode) are set in GitHub; backend tests need no secret (MEMORY D-116)
+  - Depends on: T-004
   - Read: ARCHITECTURE §11; SECURITY §13
   - Learn: Secrets in GitHub Actions
 
@@ -476,8 +483,8 @@ Total: 387 tasks.
   - Learn: Workflows, jobs, steps and runners
 
 - [ ] **T-063** · CI: backend tests
-  - Done when: The job runs pytest against the test database with coverage ≥ 80 % and uploads the Allure results as an artifact
-  - Depends on: T-062, T-061, T-040
+  - Done when: The job starts the database with `supabase/setup-cli` (pinned version) and `supabase db start`, creates the TestDB, runs pytest against it with coverage ≥ 80 % and uploads the Allure results as an artifact (MEMORY D-116)
+  - Depends on: T-062, T-040
   - Read: ARCHITECTURE §13; RULES §10
   - Learn: Secrets, artifacts and test reports in CI
 
@@ -521,8 +528,8 @@ Total: 387 tasks.
 ### M05 Users and Authentication
 
 - [ ] **T-070** **[Developer]** **[Check K-08]** · Supabase Auth settings
-  - Done when: Email signup with code, 30-day user sessions, TOTP MFA and the leaked-password check (if the plan offers it) are configured in the dev project; K-08 result in MEMORY.md
-  - Depends on: T-032
+  - Done when: Email signup with code, 30-day user sessions and TOTP MFA are configured in `supabase/config.toml` (MEMORY D-039); the leaked-password check of the production plan is checked; K-08 result in MEMORY.md
+  - Depends on: T-388
   - Read: SECURITY §4.1–§4.2
   - Learn: Auth provider settings
 
@@ -533,7 +540,7 @@ Total: 387 tasks.
   - Learn: JWT structure, signature and claims
 
 - [ ] **T-072** **[Check K-05]** · Signup verification code
-  - Done when: It is tested in the dev project whether "Confirm signup" can send a 6-digit code and how the backend checks it; the chosen way is in MEMORY.md
+  - Done when: It is tested in the local Supabase (emails in Mailpit) whether "Confirm signup" can send a 6-digit code and how the backend checks it; the chosen way is in MEMORY.md
   - Depends on: T-070
   - Read: ARCHITECTURE §7.8, §13.5; API_DESIGN §4.2
   - Learn: Email one-time-code flows
@@ -593,7 +600,7 @@ Total: 387 tasks.
   - Learn: Adapters and fakes
 
 - [ ] **T-082** · Supabase auth adapter
-  - Done when: The real adapter with httpx and the secret API key (`SUPABASE_SECRET_KEY`, `apikey` header); a manual check against the dev project works
+  - Done when: The real adapter with httpx and the secret API key (`SUPABASE_SECRET_KEY`, `apikey` header); a manual check against the local Supabase works
   - Depends on: T-081
   - Read: ARCHITECTURE §8; SECURITY §13
   - Learn: Calling an admin API safely
@@ -877,9 +884,9 @@ Total: 387 tasks.
 
 ### M08 Files
 
-- [ ] **T-128** **[Developer]** · Storage buckets
-  - Done when: Private buckets `letters`, `replies`, `sources`, `exports` exist in the dev project
-  - Depends on: T-032
+- [ ] **T-128** · Storage buckets
+  - Done when: Private buckets `letters`, `replies`, `sources`, `exports` are defined in `supabase/config.toml` and exist in the local Supabase
+  - Depends on: T-388
   - Read: SECURITY §7
   - Learn: Private object storage
 
@@ -890,7 +897,7 @@ Total: 387 tasks.
   - Learn: Interfaces for external services
 
 - [ ] **T-130** · Supabase storage adapter
-  - Done when: The real adapter; a manual check uploads and downloads a file in the dev project
+  - Done when: The real adapter; a manual check uploads and downloads a file in the local Supabase
   - Depends on: T-129, T-128
   - Read: ARCHITECTURE §8; SECURITY §7
   - Learn: Object storage APIs
@@ -2024,8 +2031,8 @@ Total: 387 tasks.
   - Learn: Email templates without personal content
 
 - [ ] **T-315** **[Developer]** · Supabase Auth emails through Mailjet
-  - Done when: Supabase Auth uses Mailjet as custom SMTP in the dev project; a verification email arrives
-  - Depends on: T-269
+  - Done when: Supabase Auth of the production project uses Mailjet as custom SMTP; a verification email arrives (the local Supabase uses Mailpit)
+  - Depends on: T-269, T-374
   - Read: ARCHITECTURE §3, §13.5
   - Learn: SMTP relays
 
@@ -2288,13 +2295,13 @@ Total: 387 tasks.
 ### M20 End-to-End and Hardening
 
 - [ ] **T-357** **[Check K-06]** · Verification codes for E2E
-  - Done when: The way to get verification codes for test users is confirmed; result in MEMORY.md
+  - Done when: The way to get verification codes for test users is confirmed (the local Mailpit is one possible way); result in MEMORY.md
   - Depends on: T-072
   - Read: ARCHITECTURE §9.3
   - Learn: Test setup against real auth
 
 - [ ] **T-358** · Playwright setup
-  - Done when: Playwright runs against the Compose stack with phone, tablet and desktop viewports; test users created and removed
+  - Done when: Playwright runs against the Compose stack and the local Supabase with phone, tablet and desktop viewports; test users created and removed
   - Depends on: T-357, T-060
   - Read: ARCHITECTURE §9.3
   - Learn: End-to-end test infrastructure
@@ -2393,13 +2400,13 @@ Total: 387 tasks.
   - Learn: Processor agreements under the DSGVO
 
 - [ ] **T-374** **[Developer]** · Production Supabase
-  - Done when: Production project in the same EU region as Render (MEMORY D-037) with buckets, Auth settings, custom SMTP and backups; secrets only in Render
+  - Done when: The existing cloud project in `eu-west-1` is renamed to `Behoerdenbrief_Assistant_WebApp_ProductionDB` (MEMORY D-054), with buckets, Auth settings as in `supabase/config.toml`, custom SMTP and backups; the secret API key from T-032 is revoked and a new one is created for Render only; secrets only in Render
   - Depends on: T-372
   - Read: ARCHITECTURE §11, §13; SECURITY §13
   - Learn: Separating environments
 
 - [ ] **T-375** **[Developer]** · Production Render services
-  - Done when: Web service, one background worker and Key Value in Frankfurt; environment variables set; auto-deploy off
+  - Done when: Web service, one background worker and Key Value in one EU region (MEMORY D-054); environment variables set; auto-deploy off
   - Depends on: T-374
   - Read: ARCHITECTURE §13
   - Learn: Platform-as-a-service hosting
@@ -2411,7 +2418,7 @@ Total: 387 tasks.
   - Learn: Static and hybrid frontend hosting
 
 - [ ] **T-377** · Deploy workflow
-  - Done when: `deploy.yml` on `main`: E2E, migrations, seed, then the Render and Netlify deploy hooks
+  - Done when: `deploy.yml` on `main`: E2E (with `supabase start`), migrations, seed, then the Render and Netlify deploy hooks
   - Depends on: T-376, T-366, T-367
   - Read: ARCHITECTURE §13
   - Learn: Continuous deployment with gates
@@ -2462,3 +2469,4 @@ Total: 387 tasks.
 | 2026-11-22 | 0.7 | New task T-385 in M00 (API design document renamed, MEMORY D-105); references changed to `API_DESIGN §`; 385 tasks |
 | 2026-11-23 | 0.8 | New tasks T-386 (docstring and comment rules, docs and `server_side/` code) and T-387 (the same rules for `client_side/` code) in M00 (MEMORY D-108); 387 tasks |
 | 2026-11-25 | 0.9 | T-032 and T-374: Supabase in an EU region (MEMORY D-037), Session pooler (MEMORY D-038); T-055 and T-082: publishable and secret API keys (MEMORY D-052); T-071 and T-075: verification with JWKS public keys (MEMORY D-053) |
+| 2026-11-26 | 0.10 | New task T-388 in M02 (local Supabase with the Supabase CLI, MEMORY D-039, D-117); T-033 local test database; T-061 and T-063 CI without a test database secret (MEMORY D-116); T-070, T-072, T-082, T-128, T-130, T-357, T-358 against the local Supabase; T-315 production only; T-374 project name; T-377 E2E with `supabase start`; note on T-032; 388 tasks; T-374 uses the existing cloud project, T-375 any EU region (MEMORY D-054) |
