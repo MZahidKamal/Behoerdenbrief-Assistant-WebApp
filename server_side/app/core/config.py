@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 from urllib.parse import urlsplit
 
-from pydantic import Field, HttpUrl, ValidationError, field_validator
+from pydantic import Field, HttpUrl, SecretStr, ValidationError, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # The local `.env` file sits in `server_side/`, two folders above this file.
@@ -51,6 +51,13 @@ class Settings(BaseSettings):
         max_upload_request_mb: The largest request body in megabytes
             (1 MB = 1024 × 1024 bytes). Optional, the default is 30
             (API_DESIGN §1.8). Must be larger than 0.
+        database_url: The connection string of the application database, for
+            example `postgresql://user:password@host:5432/postgres`. Required.
+            Locally it is the `postgres` database of the local Supabase
+            (MEMORY D-039). Kept as a secret, because it holds the password.
+        test_database_url: The connection string of the test database
+            `behoerdenbrief_assistant_webapp_testdb` (ARCHITECTURE §11).
+            Optional: only the automated tests use it, never the app.
     """
 
     model_config = SettingsConfigDict(
@@ -74,6 +81,10 @@ class Settings(BaseSettings):
     # simple text with commas instead, so the validator below splits it.
     cors_allowed_origins: Annotated[tuple[str, ...], NoDecode]
     max_upload_request_mb: int = Field(default=30, gt=0)
+    # `SecretStr` shows `**********` when printed, so a log line or an error
+    # can never show the database password (SECURITY §13).
+    database_url: SecretStr
+    test_database_url: SecretStr | None = None
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod
@@ -135,6 +146,43 @@ class Settings(BaseSettings):
                     "without a path and without *"
                 )
         return origins
+
+    @field_validator("database_url", "test_database_url")
+    @classmethod
+    def check_database_url(cls, database_url: SecretStr | None) -> SecretStr | None:
+        """Check that a database URL is a full Postgres connection string.
+
+        We accept only the normal form `postgresql://...` that Supabase shows.
+        `core/database.py` adds the async driver itself, so `.env` never needs
+        to know which driver the code uses.
+
+        Args:
+            database_url: The URL as a secret, or `None` when it is not set.
+
+        Returns:
+            The same URL.
+
+        Raises:
+            ValueError: The URL has a wrong form. The message never shows the
+                value, because it holds the password.
+        """
+        # An optional URL that is not set is fine.
+        if database_url is None:
+            return None
+
+        # A host and a database name are needed, or the connection fails late
+        # with an unclear error.
+        parts = urlsplit(database_url.get_secret_value())
+        has_postgres_form = (
+            parts.scheme == "postgresql"
+            and parts.hostname is not None
+            and parts.path.strip("/") != ""
+        )
+        if not has_postgres_form:
+            raise ValueError(
+                "must look like postgresql://user:password@host:port/database_name"
+            )
+        return database_url
 
 
 def load_settings(environment_file: Path | None = DEFAULT_ENVIRONMENT_FILE) -> Settings:
