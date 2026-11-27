@@ -23,10 +23,19 @@ SETTING_NAMES = [
     "FRONTEND_BASE_URL",
     "CORS_ALLOWED_ORIGINS",
     "MAX_UPLOAD_REQUEST_MB",
+    "DATABASE_URL",
+    "TEST_DATABASE_URL",
 ]
 
 # An invented address for the required FRONTEND_BASE_URL.
 EXAMPLE_FRONTEND_BASE_URL = "https://app.example.test"
+
+# An invented connection string for the required DATABASE_URL. Its password
+# lets the tests check that a value is never shown.
+EXAMPLE_DATABASE_URL = (
+    "postgresql://example_user:example_password"
+    "@database.example.test:5432/example_database"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -60,6 +69,7 @@ def test_load_settings_returns_values_when_environment_is_valid(
     monkeypatch.setenv("LOG_LEVEL", "WARNING")
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("DATABASE_URL", EXAMPLE_DATABASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -77,6 +87,7 @@ def test_load_settings_uses_info_log_level_when_log_level_is_missing(
     monkeypatch.setenv("APP_ENV", "development")
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("DATABASE_URL", EXAMPLE_DATABASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -93,6 +104,7 @@ def test_load_settings_uses_info_log_level_when_log_level_is_empty(
     monkeypatch.setenv("LOG_LEVEL", "")
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("DATABASE_URL", EXAMPLE_DATABASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -169,7 +181,8 @@ def test_load_settings_reads_values_when_environment_file_exists(
     environment_file.write_text(
         "APP_ENV=test\nLOG_LEVEL=DEBUG\n"
         f"FRONTEND_BASE_URL={EXAMPLE_FRONTEND_BASE_URL}\n"
-        f"CORS_ALLOWED_ORIGINS={EXAMPLE_FRONTEND_BASE_URL}\n",
+        f"CORS_ALLOWED_ORIGINS={EXAMPLE_FRONTEND_BASE_URL}\n"
+        f"DATABASE_URL={EXAMPLE_DATABASE_URL}\n",
         encoding="utf-8",
     )
 
@@ -191,6 +204,7 @@ def test_load_settings_prefers_environment_variable_when_file_has_same_setting(
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("DATABASE_URL", EXAMPLE_DATABASE_URL)
 
     # Act
     settings = load_settings(environment_file=environment_file)
@@ -207,6 +221,7 @@ def test_get_settings_returns_same_object_when_called_twice(
     monkeypatch.setenv("LOG_LEVEL", "INFO")
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("DATABASE_URL", EXAMPLE_DATABASE_URL)
 
     # Act
     first_settings = get_settings()
@@ -256,6 +271,7 @@ def test_load_settings_splits_cors_origins_when_value_has_commas(
     monkeypatch.setenv(
         "CORS_ALLOWED_ORIGINS", " http://localhost:3000 , https://app.example.test,"
     )
+    monkeypatch.setenv("DATABASE_URL", EXAMPLE_DATABASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -274,6 +290,7 @@ def test_load_settings_uses_30_mb_upload_limit_when_limit_is_missing(
     monkeypatch.setenv("APP_ENV", "development")
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("DATABASE_URL", EXAMPLE_DATABASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -290,6 +307,7 @@ def test_load_settings_reads_upload_limit_when_limit_is_set(
     monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
     monkeypatch.setenv("MAX_UPLOAD_REQUEST_MB", "5")
+    monkeypatch.setenv("DATABASE_URL", EXAMPLE_DATABASE_URL)
 
     # Act
     settings = load_settings(environment_file=None)
@@ -322,6 +340,7 @@ def test_settings_keeps_cors_origins_when_value_is_already_list() -> None:
         app_env="test",
         frontend_base_url=EXAMPLE_FRONTEND_BASE_URL,
         cors_allowed_origins=["http://localhost:3000"],
+        database_url=EXAMPLE_DATABASE_URL,
     )
 
     # Assert
@@ -373,3 +392,88 @@ def test_load_settings_raises_invalid_settings_error_when_cors_origin_is_wrong(
     # Assert: the message names the setting, but never shows the value.
     assert "CORS_ALLOWED_ORIGINS" in str(error_information.value)
     assert "app.example.test" not in str(error_information.value)
+
+
+def test_load_settings_hides_database_urls_when_settings_are_printed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("DATABASE_URL", EXAMPLE_DATABASE_URL)
+    monkeypatch.setenv("TEST_DATABASE_URL", EXAMPLE_DATABASE_URL)
+
+    # Act
+    settings = load_settings(environment_file=None)
+
+    # Assert: the values are kept, but printing never shows the password.
+    assert settings.database_url.get_secret_value() == EXAMPLE_DATABASE_URL
+    assert settings.test_database_url is not None
+    assert settings.test_database_url.get_secret_value() == EXAMPLE_DATABASE_URL
+    assert "example_password" not in repr(settings)
+
+
+def test_load_settings_leaves_test_database_url_empty_when_it_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("DATABASE_URL", EXAMPLE_DATABASE_URL)
+
+    # Act
+    settings = load_settings(environment_file=None)
+
+    # Assert
+    assert settings.test_database_url is None
+
+
+def test_load_settings_raises_invalid_settings_error_when_database_url_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange: the fixture has removed DATABASE_URL.
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+
+    # Act
+    with pytest.raises(InvalidSettingsError) as error_information:
+        load_settings(environment_file=None)
+
+    # Assert
+    assert "DATABASE_URL" in str(error_information.value)
+    assert "required" in str(error_information.value)
+
+
+@pytest.mark.parametrize("setting_name", ["DATABASE_URL", "TEST_DATABASE_URL"])
+@pytest.mark.parametrize(
+    "wrong_database_url",
+    [
+        "postgres://example_user:example_password@database.example.test/db",
+        "postgresql+asyncpg://example_user:example_password@database.example.test/db",
+        "postgresql://example_user:example_password@database.example.test",
+        "postgresql://example_user:example_password@database.example.test/",
+        "postgresql:///db?password=example_password",
+        "example_password",
+    ],
+)
+def test_load_settings_raises_invalid_settings_error_when_database_url_is_wrong(
+    monkeypatch: pytest.MonkeyPatch, setting_name: str, wrong_database_url: str
+) -> None:
+    # Arrange: a valid DATABASE_URL first, then one setting gets the wrong value.
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("FRONTEND_BASE_URL", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", EXAMPLE_FRONTEND_BASE_URL)
+    monkeypatch.setenv("DATABASE_URL", EXAMPLE_DATABASE_URL)
+    monkeypatch.setenv(setting_name, wrong_database_url)
+
+    # Act
+    with pytest.raises(InvalidSettingsError) as error_information:
+        load_settings(environment_file=None)
+
+    # Assert: the message names the setting, but never shows the password.
+    assert setting_name in str(error_information.value)
+    assert "example_password" not in str(error_information.value)
+    assert "example_password" not in str(error_information.value.__cause__)

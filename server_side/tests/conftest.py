@@ -15,6 +15,14 @@ os.environ["APP_ENV"] = "test"
 os.environ["FRONTEND_BASE_URL"] = TEST_FRONTEND_BASE_URL
 os.environ["CORS_ALLOWED_ORIGINS"] = TEST_FRONTEND_BASE_URL
 
+# DATABASE_URL is required. This address can never connect (nothing listens
+# on port 1), so no test can reach the development database by mistake. Only
+# the integration tests connect, and they use TEST_DATABASE_URL.
+UNREACHABLE_DATABASE_URL = (
+    "postgresql://test_user:test_password@127.0.0.1:1/no_database"
+)
+os.environ["DATABASE_URL"] = UNREACHABLE_DATABASE_URL
+
 from app.main import create_app  # noqa: E402  (APP_ENV must be set first)
 
 

@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.29
+**Document Version:** 0.31
 **Status:** Draft
 **Last updated:** 2026-11-26
 
@@ -372,6 +372,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: Production Supabase in the same region as Render (D-037, replaced); Frankfurt for all services (D-025, replaced).
 - Details: ARCHITECTURE §13.1, §13.5; K-10
 
+#### D-055 · 2026-11-27 · Naming convention for database constraints
+- Decision: `Base.metadata` in `core/database.py` has a fixed naming convention: `pk_<table>`, `fk_<table>_<column>_<referred table>`, `uq_<table>_<column>`, `ix_<table>_<column>`, `ck_<table>_<name>`.
+- Reason: Alembic needs stable constraint names to find and drop a constraint in a later migration; without a convention Postgres chooses names that differ from what the models expect.
+- Alternatives: Postgres default names (rejected: autogenerate cannot drop unnamed constraints reliably); naming each constraint by hand (rejected: easy to forget).
+- Details: DATA_MODEL §10
+
 ### 2.4 AI and RAG (D-060 – D-079)
 
 #### D-060 · 2026-11-19 · Models on Vertex AI in the EU
@@ -669,6 +675,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Alternatives: npm dev dependency in `client_side/` (rejected: the tool serves the whole repository, not only the frontend).
 - Details: ARCHITECTURE §3.3, §12.1
 
+#### D-118 · 2026-11-27 · Smart App Control off during development
+- Decision: Smart App Control is off on the developer's computer during development. Microsoft Defender Antivirus stays on. After development, the developer turns Smart App Control on again (the developer tested that it can be turned on again without a reset).
+- Reason: Smart App Control blocks unsigned compiled files that the project needs: SQLAlchemy's `.pyd` files ("An Application Control policy has blocked this file"; a reinstall and a fresh download did not help) and pre-commit hook launchers (WinError 4551). Production (Render, Netlify) and CI (Linux) are not affected.
+- Alternatives: Pure-Python SQLAlchemy without compiled extensions (rejected: slower everywhere, only to work around one computer); tests only in the Linux container (rejected: slower daily work); wait until Windows trusts the files (rejected: uncertain).
+- Details: README "Local development"
+
 ## 3. Open Checks and Known Issues
 
 ### 3.1 Open checks
@@ -810,3 +822,5 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-25 | 0.27 | D-037 (Supabase in any EU region), D-038 (Session pooler for the development database), D-052 (Supabase secret and publishable API keys), D-053 (token verification with the JWKS public keys); D-025 region part superseded; K-04 and K-10 partly done |
 | 2026-11-26 | 0.28 | D-039 (local Supabase for development and tests; one cloud project for production), D-116 (CI with the Supabase database container), D-117 (Supabase CLI with Scoop); D-029, D-032, D-038 and the development part of D-037 superseded; K-07 done; K-10 reworded; new open check K-39; area 2.2 is now full; D-054 (Supabase and Render in any EU region); D-025 and D-037 superseded; K-10 reworded |
 | 2026-11-26 | 0.29 | K-39 done (local JWKS, host.docker.internal, firewall rule, Analytics off) |
+| 2026-11-27 | 0.30 | D-118 (Smart App Control off during development) |
+| 2026-11-27 | 0.31 | D-055 (naming convention for database constraints) |

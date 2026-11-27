@@ -18,7 +18,8 @@ ARCHITECTURE §12.4.
 
 ### Once per computer
 
-1. Install Docker Desktop, uv and Node.js.
+1. Install Docker Desktop, uv and Node.js. Smart App Control blocks some
+   Python packages; it is off during development (MEMORY D-118).
 2. Install the Supabase CLI with Scoop (tested with version **3.4.0**; CI uses
    the same version):
 
