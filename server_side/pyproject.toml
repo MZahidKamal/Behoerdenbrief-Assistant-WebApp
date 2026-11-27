@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Backend of the Behoerdenbrief Assistant: FastAPI API and Celery worker."
 requires-python = ">=3.14,<3.15"
 dependencies = [
+    "alembic>=1.20.1",
     "asyncpg>=0.32.0",
     "fastapi>=0.165.0",
     "pydantic-settings>=2.16.3",
