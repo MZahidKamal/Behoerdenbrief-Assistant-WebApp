@@ -55,6 +55,11 @@ ENV PATH="/app/.venv/bin:$PATH" \
 COPY --link --from=builder /app/.venv /app/.venv
 COPY --link app ./app
 
+# Alembic needs its settings file and the migration scripts, so the same image
+# can run `alembic upgrade head` (ARCHITECTURE §12.4, DATA_MODEL §9).
+COPY --link alembic.ini ./
+COPY --link migrations ./migrations
+
 USER application_user
 
 EXPOSE 8000

@@ -1,9 +1,9 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.15
+**Document Version:** 0.16
 **Status:** Draft
-**Last updated:** 2026-11-26
+**Last updated:** 2026-11-27
 
 > This document answers **what to do now and what is still open**: the complete build plan from an empty `server_side/` to launch, in small tasks with one idea each.
 > Each task names the documents to read; the rules themselves are not repeated here. How to work on a task (including the explanations before and after): RULES §1, §1.1a · Branches, commits, pull requests: RULES §11 · Decisions and open checks: MEMORY.md
@@ -320,7 +320,7 @@ Total: 389 tasks.
   - Read: RULES §4.2
   - Learn: Why background work starts only after commit
 
-- [ ] **T-037** · Alembic setup
+- [x] **T-037** · Alembic setup
   - Done when: Alembic with the async template reads the database URL from settings; an empty migration runs up and down on the test database
   - Depends on: T-034
   - Read: DATA_MODEL §9; RULES §9
@@ -2430,6 +2430,7 @@ Total: 389 tasks.
   - Depends on: T-376, T-366, T-367
   - Read: ARCHITECTURE §13
   - Learn: Continuous deployment with gates
+  - Note: `migrations/env.py` reads the URL through the settings (T-037). The migrate job sets `DATABASE_URL` to the `PRODUCTION_DATABASE_URL` secret and also sets the other required settings (`APP_ENV`, `FRONTEND_BASE_URL`, `CORS_ALLOWED_ORIGINS`), or the settings check stops Alembic
 
 - [ ] **T-378** · First production deploy and smoke test
   - Done when: Public URL works; health check, registration, one letter flow and one admin action work in production (Stripe test mode until launch)
@@ -2483,3 +2484,4 @@ Total: 389 tasks.
 | 2026-11-27 | 0.13 | T-034 done (async engine, session factory, Base with naming convention, DATABASE_URL and TEST_DATABASE_URL settings) |
 | 2026-11-27 | 0.14 | T-035 done (DatabaseSession with scope="function", engine closed on shutdown) |
 | 2026-11-27 | 0.15 | T-036 done (after-commit callbacks, MEMORY D-057); new task T-389 in M07 (restart work stuck in queued or processing); T-126 with acks_late and reject_on_worker_lost; 389 tasks |
+| 2026-11-27 | 0.16 | T-037 done (Alembic with the async template, URL from the settings or `config.attributes`, Ruff post-write hooks, migrations in the Docker image and mounted read-only in Compose, empty migration tested up and down on the TestDB); note on T-377 (settings for the migrate job) |

@@ -65,6 +65,10 @@ services:
       # container cannot change the code. Mounting all of server_side would
       # hide the image's Linux .venv behind the Windows .venv.
       - ./server_side/app:/app/app:ro
+      # The migration scripts, read-only: a new migration file can be applied
+      # with `docker compose exec server alembic upgrade head` without a
+      # rebuild (ARCHITECTURE §12.4).
+      - ./server_side/migrations:/app/migrations:ro
     depends_on:
       # Start the API only when Redis answers "PONG".
       redis:
