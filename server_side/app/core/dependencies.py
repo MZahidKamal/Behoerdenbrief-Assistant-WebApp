@@ -10,6 +10,11 @@ from typing import Annotated
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.core.database import (
+    commit_and_run_after_commit_callbacks,
+    discard_after_commit_callbacks,
+)
+
 
 def get_database_session_factory(request: Request) -> async_sessionmaker[AsyncSession]:
     """Return the session factory that `create_app` stored in the app state.
@@ -49,12 +54,15 @@ async def get_database_session(request: Request) -> AsyncIterator[AsyncSession]:
         try:
             yield session
         except Exception:
-            # Undo every change of this request, then let the error continue.
+            # Undo every change of this request, drop the waiting callbacks,
+            # then let the error continue.
+            discard_after_commit_callbacks(session)
             await session.rollback()
             raise
-        # Commit here, before the answer is sent (`scope="function"` below).
-        # If the commit fails, the user gets a 500 and never a false success.
-        await session.commit()
+        # Commit here, before the answer is sent (`scope="function"` below),
+        # then run the after-commit callbacks. If the commit fails, the user
+        # gets a 500 and never a false success.
+        await commit_and_run_after_commit_callbacks(session)
 
 
 # Routes use only this type, so the scope is never forgotten. With the default

@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.32
+**Document Version:** 0.33
 **Status:** Draft
 **Last updated:** 2026-11-26
 
@@ -383,6 +383,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: With FastAPI's default scope `"request"`, the code after `yield` runs after the response is sent, so a failed commit could not become a 500 and the user would see a false success. The engine is created in `create_app` and closed in the app's lifespan.
 - Alternatives: Default scope `"request"` (rejected: commit after the response); commit in each service (rejected: RULES §4.2, one transaction per request).
 - Details: RULES §4.2; FastAPI docs "Dependencies with yield", "Early exit and scope"
+
+#### D-057 · 2026-11-27 · After-commit callbacks
+- Decision: Services register background work with `run_after_commit(session, callback)` (`core/database.py`); callbacks are async functions without arguments, stored in `session.info`. Only `commit_and_run_after_commit_callbacks` commits (used by `get_database_session` and later `run_async`, T-122); it runs the callbacks in order after a successful commit. A failed commit or a rollback throws them away. A failing callback is logged at error level (with traceback, no personal data) and the next callbacks still run; the response stays a success, because the data is saved. Work whose task never started or never finished is restarted by T-389.
+- Reason: RULES §4.2 (enqueue only after the commit). Async callbacks can enqueue without blocking the event loop (RULES §4.3). A 500 after a saved commit would be wrong, and a user retry could create a duplicate.
+- Alternatives: SQLAlchemy `after_commit` event (rejected: sync only, so enqueuing would block the event loop); raising the callback error as a 500 (rejected: the data is already saved).
+- Details: RULES §4.2; TASKS T-389
 
 ### 2.4 AI and RAG (D-060 – D-079)
 
@@ -831,3 +837,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-27 | 0.30 | D-118 (Smart App Control off during development) |
 | 2026-11-27 | 0.31 | D-055 (naming convention for database constraints) |
 | 2026-11-27 | 0.32 | D-056 (database session dependency commits before the response) |
+| 2026-11-27 | 0.33 | D-057 (after-commit callbacks) |

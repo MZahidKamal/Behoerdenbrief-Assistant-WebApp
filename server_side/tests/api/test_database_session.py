@@ -13,6 +13,7 @@ from fastapi import HTTPException
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.core.database import run_after_commit
 from app.core.dependencies import DatabaseSession
 from app.core.exceptions import AppException
 from app.main import create_app
@@ -58,6 +59,15 @@ class FakeSession(AsyncSession):
         """Do nothing: there is no connection to close."""
 
 
+# For each after-commit callback that ran: the commit count at that moment.
+commit_counts_seen_by_callbacks: list[int] = []
+
+
+async def record_commit_count() -> None:
+    """An after-commit callback that notes how many commits happened before it."""
+    commit_counts_seen_by_callbacks.append(FakeSession.commit_count)
+
+
 @pytest.fixture
 async def fake_session_client() -> AsyncIterator[AsyncClient]:
     """Give an HTTP client for the real app with a fake session and test routes.
@@ -69,6 +79,7 @@ async def fake_session_client() -> AsyncIterator[AsyncClient]:
     FakeSession.commit_count = 0
     FakeSession.rollback_count = 0
     FakeSession.fail_on_commit = False
+    commit_counts_seen_by_callbacks.clear()
 
     # The real app, but its sessions come from a factory for the fake.
     application = create_app()
@@ -85,6 +96,15 @@ async def fake_session_client() -> AsyncIterator[AsyncClient]:
     @application.get("/test/http-exception")
     async def get_http_exception_example(database_session: DatabaseSession) -> None:
         raise HTTPException(status_code=403, detail="Example forbidden.")
+
+    @application.get("/test/callback")
+    async def get_callback_example(database_session: DatabaseSession) -> None:
+        run_after_commit(database_session, record_commit_count)
+
+    @application.get("/test/callback-error")
+    async def get_callback_error_example(database_session: DatabaseSession) -> None:
+        run_after_commit(database_session, record_commit_count)
+        raise ExampleItemNotFoundError()
 
     # After a crash, Starlette sends the 500 answer and then raises the error
     # again. `raise_app_exceptions=False` lets the client return the answer,
@@ -146,3 +166,25 @@ async def test_database_session_returns_500_when_commit_fails(
     # and never a false success.
     assert response.status_code == 500
     assert FakeSession.commit_count == 1
+
+
+async def test_database_session_runs_callback_after_commit_when_route_succeeds(
+    fake_session_client: AsyncClient,
+) -> None:
+    # Act
+    response = await fake_session_client.get("/test/callback")
+
+    # Assert: the callback ran once, and the commit had already happened.
+    assert response.status_code == 200
+    assert commit_counts_seen_by_callbacks == [1]
+
+
+async def test_database_session_skips_callback_when_route_raises(
+    fake_session_client: AsyncClient,
+) -> None:
+    # Act
+    response = await fake_session_client.get("/test/callback-error")
+
+    # Assert
+    assert response.status_code == 404
+    assert commit_counts_seen_by_callbacks == []

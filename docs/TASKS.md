@@ -1,7 +1,7 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.14
+**Document Version:** 0.15
 **Status:** Draft
 **Last updated:** 2026-11-26
 
@@ -36,7 +36,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 | M04 Continuous Integration | T-061 – T-069 (9) | Every pull request is checked automatically |
 | M05 Users and Authentication | T-070 – T-108 (39) | Register, verify, log in, profile, reference numbers |
 | M06 Admin Basics and Authorities | T-109 – T-119 (11) | Admin role with 2FA, audit log, authorities with other names, seed of the six launch authorities |
-| M07 Background Worker | T-120 – T-127 (8) | Celery worker with event-loop thread, Beat, retries |
+| M07 Background Worker | T-120 – T-127, T-389 (9) | Celery worker with event-loop thread, Beat, retries |
 | M08 Files | T-128 – T-140 (13) | Storage, upload checks, malware scan, one-time downloads |
 | M09 LLM Integration | T-141 – T-166 (26) | Model adapters, fallback, prompts, token accounting, tool calling (registry, loop, tool-call log) |
 | M10 Knowledge Ingestion and Retrieval | T-167 – T-201 (35) | Admin adds sources; chunks, embeddings, hybrid search, search tool, seed sources of all launch authorities |
@@ -53,7 +53,7 @@ Starting point: repository root with Git, `docs/`, `client_side/` created with c
 | M21 Deployment | T-372 – T-378 (7) | Production on Render and Netlify through GitHub Actions |
 | M22 Legal and Launch | T-379 – T-382 (4) | Legal pages, legal checks, launch checklist |
 
-Total: 388 tasks.
+Total: 389 tasks.
 
 ## 3. Tasks
 
@@ -314,7 +314,7 @@ Total: 388 tasks.
   - Read: RULES §4.2
   - Learn: Database transactions and FastAPI dependencies with `yield`
 
-- [ ] **T-036** · After-commit hook
+- [x] **T-036** · After-commit hook
   - Done when: A helper runs registered callbacks only after a successful commit (for enqueuing tasks later); tests
   - Depends on: T-035
   - Read: RULES §4.2
@@ -871,7 +871,7 @@ Total: 388 tasks.
   - Learn: Scheduled tasks with Celery Beat
 
 - [ ] **T-126** · Task retries and error codes
-  - Done when: A task base retries temporary errors with backoff and stores an error code when a task finally fails; tests
+  - Done when: A task base retries temporary errors with backoff and stores an error code when a task finally fails; tasks use `acks_late=True` and `reject_on_worker_lost=True`, so a task whose worker crashed is delivered again; tests
   - Depends on: T-123
   - Read: RULES §7; ARCHITECTURE §8
   - Learn: Retries with exponential backoff
@@ -881,6 +881,13 @@ Total: 388 tasks.
   - Depends on: T-126
   - Read: RULES §4.4
   - Learn: Idempotent tasks
+
+- [ ] **T-389** · Restart work stuck in `queued` or `processing`
+  - Done when: A periodic Beat task finds rows that are still `queued` (or `pending`) longer than `STUCK_QUEUED_WORK_MINUTES` (setting, default 15), or still `processing` longer than `STUCK_PROCESSING_WORK_MINUTES` (setting, default 60; longer than the longest task), and enqueues their task again; after `MAX_STUCK_WORK_RESTARTS` restarts (setting, default 3) a row is set to `failed` with an error code instead; each kind of queued work registers how to find and restart its rows (this task adds the mechanism and a sample kind); every restart and every give-up is logged at warning level without personal data; tests
+  - Depends on: T-125, T-127
+  - Read: RULES §4.2, §4.4; ARCHITECTURE §5, §11
+  - Learn: Recovering background work that was never started or never finished
+  - Note: Later tasks that enqueue after commit register their kind here: letters (`process_letter`), reply previews, drafts, chat answers, data exports, knowledge sources (MEMORY D-057). Where the restart count is stored (a column per table or Redis) and the error code name are decided in this task, with an update of DATA_MODEL and API_DESIGN §3.4 if needed.
 
 
 ### M08 Files
@@ -2475,3 +2482,4 @@ Total: 388 tasks.
 | 2026-11-26 | 0.12 | T-033 done; README: TestDB create command; supabase db reset deletes the TestDB |
 | 2026-11-27 | 0.13 | T-034 done (async engine, session factory, Base with naming convention, DATABASE_URL and TEST_DATABASE_URL settings) |
 | 2026-11-27 | 0.14 | T-035 done (DatabaseSession with scope="function", engine closed on shutdown) |
+| 2026-11-27 | 0.15 | T-036 done (after-commit callbacks, MEMORY D-057); new task T-389 in M07 (restart work stuck in queued or processing); T-126 with acks_late and reject_on_worker_lost; 389 tasks |
