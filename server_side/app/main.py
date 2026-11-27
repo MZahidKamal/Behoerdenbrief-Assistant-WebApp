@@ -3,6 +3,8 @@
 Start it locally with `uv run uvicorn app.main:app --reload` (ARCHITECTURE §12).
 """
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Literal
 
 from fastapi import APIRouter, FastAPI
@@ -10,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.core.config import get_settings
+from app.core.database import create_database_engine, create_session_factory
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import RequestIdMiddleware, configure_logging
 from app.core.request_size_limit import RequestSizeLimitMiddleware
@@ -67,6 +70,22 @@ def create_app() -> FastAPI:
     # Set up the log format next, so every later step can already log.
     configure_logging(settings)
 
+    # One engine for the whole app. Creating it does not connect yet, so the
+    # app also starts (and tests run) when the database is not reachable.
+    database_engine = create_database_engine(settings.database_url)
+
+    @asynccontextmanager
+    async def close_database_engine_on_shutdown(
+        _application: FastAPI,
+    ) -> AsyncIterator[None]:
+        """Close all database connections when the app stops.
+
+        Yields:
+            Nothing. The app runs between start and stop.
+        """
+        yield
+        await database_engine.dispose()
+
     # The API documentation is a full map of all endpoints. It helps us while
     # we build, but in production it would only help an attacker, so there
     # `/docs` and `/openapi.json` do not exist and return 404 (SECURITY §12).
@@ -80,7 +99,11 @@ def create_app() -> FastAPI:
         docs_url=None if is_production else "/docs",
         openapi_url=None if is_production else "/openapi.json",
         redoc_url=None,
+        lifespan=close_database_engine_on_shutdown,
     )
+
+    # `get_database_session` takes each request's session from this factory.
+    application.state.database_session_factory = create_session_factory(database_engine)
 
     # Give every request its own id, so all log lines of one request can be
     # found together (RULES §8).

@@ -15,6 +15,17 @@ from app.main import create_app
 pytestmark = [allure.feature("server")]
 
 
+class FakeEngine:
+    """An engine that only counts how often it is closed."""
+
+    def __init__(self) -> None:
+        self.dispose_count = 0
+
+    async def dispose(self) -> None:
+        """Count the close."""
+        self.dispose_count += 1
+
+
 @pytest.fixture(autouse=True)
 def clear_settings_cache() -> Iterator[None]:
     """Empty the settings cache before and after each test.
@@ -80,3 +91,19 @@ def test_main_module_exposes_app_when_imported() -> None:
 
     # Assert
     assert isinstance(module_app, FastAPI)
+
+
+async def test_create_app_closes_database_engine_when_app_stops(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange: `create_app` gets the fake engine instead of a real one.
+    fake_engine = FakeEngine()
+    monkeypatch.setattr(main_module, "create_database_engine", lambda _url: fake_engine)
+    application = create_app()
+
+    # Act: start and stop the app, as Uvicorn does.
+    async with application.router.lifespan_context(application):
+        assert fake_engine.dispose_count == 0
+
+    # Assert
+    assert fake_engine.dispose_count == 1

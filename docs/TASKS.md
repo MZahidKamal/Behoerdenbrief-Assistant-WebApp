@@ -1,7 +1,7 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.13
+**Document Version:** 0.14
 **Status:** Draft
 **Last updated:** 2026-11-26
 
@@ -308,7 +308,7 @@ Total: 388 tasks.
   - Read: ARCHITECTURE §4; RULES §4.2
   - Learn: SQLAlchemy 2 async engine and sessions
 
-- [ ] **T-035** · `get_database_session` with commit and rollback
+- [x] **T-035** · `get_database_session` with commit and rollback
   - Done when: The dependency commits on success and rolls back on any exception; tests for both cases
   - Depends on: T-034
   - Read: RULES §4.2
@@ -2474,3 +2474,4 @@ Total: 388 tasks.
 | 2026-11-26 | 0.11 | T-388 done; note on T-038 (`auto_expose_new_tables`) |
 | 2026-11-26 | 0.12 | T-033 done; README: TestDB create command; supabase db reset deletes the TestDB |
 | 2026-11-27 | 0.13 | T-034 done (async engine, session factory, Base with naming convention, DATABASE_URL and TEST_DATABASE_URL settings) |
+| 2026-11-27 | 0.14 | T-035 done (DatabaseSession with scope="function", engine closed on shutdown) |
