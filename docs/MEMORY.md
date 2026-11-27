@@ -1,7 +1,7 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.31
+**Document Version:** 0.32
 **Status:** Draft
 **Last updated:** 2026-11-26
 
@@ -377,6 +377,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: Alembic needs stable constraint names to find and drop a constraint in a later migration; without a convention Postgres chooses names that differ from what the models expect.
 - Alternatives: Postgres default names (rejected: autogenerate cannot drop unnamed constraints reliably); naming each constraint by hand (rejected: easy to forget).
 - Details: DATA_MODEL §10
+
+#### D-056 · 2026-11-27 · Database session dependency commits before the response
+- Decision: Routes get their session only through the type `DatabaseSession` in `core/dependencies.py` (`Depends(get_database_session, scope="function")`). It commits after the route ends and **before** the response is sent; any exception rolls back and is raised again. Rule for dependencies that use the session: a normal dependency without `yield` (for example `get_current_user`, T-076) may use `DatabaseSession` freely; a dependency **with** `yield` that uses it must also declare `scope="function"`, otherwise FastAPI stops at start with `DependencyScopeError`. Never use `Depends(get_database_session)` directly: only the same dependency with the same scope gives one shared session per request.
+- Reason: With FastAPI's default scope `"request"`, the code after `yield` runs after the response is sent, so a failed commit could not become a 500 and the user would see a false success. The engine is created in `create_app` and closed in the app's lifespan.
+- Alternatives: Default scope `"request"` (rejected: commit after the response); commit in each service (rejected: RULES §4.2, one transaction per request).
+- Details: RULES §4.2; FastAPI docs "Dependencies with yield", "Early exit and scope"
 
 ### 2.4 AI and RAG (D-060 – D-079)
 
@@ -824,3 +830,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-26 | 0.29 | K-39 done (local JWKS, host.docker.internal, firewall rule, Analytics off) |
 | 2026-11-27 | 0.30 | D-118 (Smart App Control off during development) |
 | 2026-11-27 | 0.31 | D-055 (naming convention for database constraints) |
+| 2026-11-27 | 0.32 | D-056 (database session dependency commits before the response) |
