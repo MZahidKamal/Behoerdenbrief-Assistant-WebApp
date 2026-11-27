@@ -1,7 +1,7 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.12
+**Document Version:** 0.13
 **Status:** Draft
 **Last updated:** 2026-11-26
 
@@ -302,7 +302,7 @@ Total: 388 tasks.
   - Read: ARCHITECTURE §9.2, §12.4; MEMORY D-039
   - Learn: Why tests need their own database
 
-- [ ] **T-034** · Async database engine
+- [x] **T-034** · Async database engine
   - Done when: `core/database.py` creates the async engine (asyncpg), the session factory and `Base`; settings for the database URLs; a connection test against the test database
   - Depends on: T-033
   - Read: ARCHITECTURE §4; RULES §4.2
@@ -2473,3 +2473,4 @@ Total: 388 tasks.
 | 2026-11-26 | 0.10 | New task T-388 in M02 (local Supabase with the Supabase CLI, MEMORY D-039, D-117); T-033 local test database; T-061 and T-063 CI without a test database secret (MEMORY D-116); T-070, T-072, T-082, T-128, T-130, T-357, T-358 against the local Supabase; T-315 production only; T-374 project name; T-377 E2E with `supabase start`; note on T-032; 388 tasks; T-374 uses the existing cloud project, T-375 any EU region (MEMORY D-054) |
 | 2026-11-26 | 0.11 | T-388 done; note on T-038 (`auto_expose_new_tables`) |
 | 2026-11-26 | 0.12 | T-033 done; README: TestDB create command; supabase db reset deletes the TestDB |
+| 2026-11-27 | 0.13 | T-034 done (async engine, session factory, Base with naming convention, DATABASE_URL and TEST_DATABASE_URL settings) |
