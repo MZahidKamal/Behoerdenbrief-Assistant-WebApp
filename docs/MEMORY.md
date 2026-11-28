@@ -1,9 +1,9 @@
 # MEMORY
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.33
+**Document Version:** 0.34
 **Status:** Draft
-**Last updated:** 2026-11-26
+**Last updated:** 2026-11-28
 
 > This document answers **which decisions were made and why**, which checks are still open, and what was learned.
 > The **rules themselves** live in the other documents (PRD, ARCHITECTURE, DATA_MODEL, SECURITY, RAG, API_DESIGN, RULES). An entry here gives only the decision in one line, the reason, the rejected alternatives, and where the details are. If an entry and a document disagree, the document wins and the entry is corrected (with approval).
@@ -389,6 +389,12 @@ An entry without a `Status` line is active. "Alternatives: not compared" means n
 - Reason: RULES §4.2 (enqueue only after the commit). Async callbacks can enqueue without blocking the event loop (RULES §4.3). A 500 after a saved commit would be wrong, and a user retry could create a duplicate.
 - Alternatives: SQLAlchemy `after_commit` event (rejected: sync only, so enqueuing would block the event loop); raising the callback error as a 500 (rejected: the data is already saved).
 - Details: RULES §4.2; TASKS T-389
+
+#### D-058 · 2026-11-28 · No automatic Data API rights on new tables
+- Decision: The first migration (T-038) removes the default rights that the role `postgres` gives `anon`, `authenticated` and `service_role` on new tables, sequences and functions in `public` (`ALTER DEFAULT PRIVILEGES … REVOKE ALL`). So new tables start without Data API rights in every database: development, TestDB, CI and production. `supabase/config.toml` also sets `auto_expose_new_tables = false` for fresh local setups. This is a second lock; the main lock stays in every table migration: RLS on, no policies, rights revoked from `anon` and `authenticated` (DATA_MODEL §8). Exception to RULES §9: the downgrade of this migration does not give the rights back, because that would open new tables again; the rest of the downgrade works.
+- Reason: A table whose migration forgets the revoke is still closed. The config setting alone did not change the existing local database (a restart kept the rights, checked 2026-11-28), and it does not reach other databases; a migration works the same everywhere and is tested. The default rights of `supabase_admin` cannot be changed by `postgres` and stay; they only affect tables made in the Supabase Dashboard, which we do not use. The revoke in each table migration is still needed, because default rights can change outside our code (for example a Supabase update). Supabase changed its own default the same way (new projects from 2026-05-30, all projects from 2026-10-30). The TestDB had no default rights before (checked 2026-11-28).
+- Alternatives: Keep `true` (rejected: new tables open in development, different from the TestDB and production); only the config setting (rejected: it did not change the existing database and does not reach the TestDB or production); `supabase db reset` (rejected: deletes the TestDB and fixes only one computer); a revoke once by hand (rejected: RULES §9); a downgrade that gives the rights back (rejected: it opens new tables again).
+- Details: DATA_MODEL §8, §9; TASKS T-038, T-374
 
 ### 2.4 AI and RAG (D-060 – D-079)
 
@@ -838,3 +844,4 @@ Mistakes made while writing the documents, and the rule that now prevents them.
 | 2026-11-27 | 0.31 | D-055 (naming convention for database constraints) |
 | 2026-11-27 | 0.32 | D-056 (database session dependency commits before the response) |
 | 2026-11-27 | 0.33 | D-057 (after-commit callbacks) |
+| 2026-11-28 | 0.34 | D-058 (no automatic Data API rights on new tables) |

@@ -1,9 +1,9 @@
 # TASKS
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.16
+**Document Version:** 0.17
 **Status:** Draft
-**Last updated:** 2026-11-27
+**Last updated:** 2026-11-28
 
 > This document answers **what to do now and what is still open**: the complete build plan from an empty `server_side/` to launch, in small tasks with one idea each.
 > Each task names the documents to read; the rules themselves are not repeated here. How to work on a task (including the explanations before and after): RULES §1, §1.1a · Branches, commits, pull requests: RULES §11 · Decisions and open checks: MEMORY.md
@@ -326,12 +326,12 @@ Total: 389 tasks.
   - Read: DATA_MODEL §9; RULES §9
   - Learn: What migrations are and why they are versioned
 
-- [ ] **T-038** · Base migration
+- [x] **T-038** · Base migration
   - Done when: The first migration enables pgvector and creates `set_updated_at()`; downgrade removes them
   - Depends on: T-037
   - Read: DATA_MODEL §1, §6, §9
   - Learn: Database extensions and trigger functions
-  - Note: Decide `auto_expose_new_tables` in `supabase/config.toml` (default true: new tables in `public` are open to the roles `anon` and `authenticated`). `false` would be a second lock next to the revoked rights of DATA_MODEL §8
+  - Note: Decide `auto_expose_new_tables` in `supabase/config.toml` (default true: new tables in `public` are open to the roles `anon` and `authenticated`). `false` would be a second lock next to the revoked rights of DATA_MODEL §8. Done: decided in MEMORY D-058.
 
 - [ ] **T-039** · Test database fixtures
   - Done when: `tests/conftest.py` runs migrations on the test database, gives each test a session and empties tables between tests; `tests/factories/` exists
@@ -2412,6 +2412,7 @@ Total: 389 tasks.
   - Depends on: T-372
   - Read: ARCHITECTURE §11, §13; SECURITY §13
   - Learn: Separating environments
+  - Note: Check that new tables in `public` get no Data API rights (MEMORY D-058): the setting for new tables in Integrations > Data API is off, and `pg_default_acl` gives `anon`, `authenticated` and `service_role` no rights in `public`. Supabase turned this off for all projects on 2026-10-30, so it should already be off **(verify)**
 
 - [ ] **T-375** **[Developer]** · Production Render services
   - Done when: Web service, one background worker and Key Value in one EU region (MEMORY D-054); environment variables set; auto-deploy off
@@ -2485,3 +2486,4 @@ Total: 389 tasks.
 | 2026-11-27 | 0.14 | T-035 done (DatabaseSession with scope="function", engine closed on shutdown) |
 | 2026-11-27 | 0.15 | T-036 done (after-commit callbacks, MEMORY D-057); new task T-389 in M07 (restart work stuck in queued or processing); T-126 with acks_late and reject_on_worker_lost; 389 tasks |
 | 2026-11-27 | 0.16 | T-037 done (Alembic with the async template, URL from the settings or `config.attributes`, Ruff post-write hooks, migrations in the Docker image and mounted read-only in Compose, empty migration tested up and down on the TestDB); note on T-377 (settings for the migrate job) |
+| 2026-11-28 | 0.17 | T-038 done (base migration `add_base_database_setup`: pgvector in the schema `extensions`, `set_updated_at()` with a fixed search path, default Data API rights in `public` removed, MEMORY D-058; `auto_expose_new_tables = false`; shared TestDB fixture in `tests/integration/conftest.py`); note on T-374 (check the default rights in production) |

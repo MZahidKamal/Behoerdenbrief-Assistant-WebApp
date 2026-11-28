@@ -1,9 +1,9 @@
 # Data Model
 
 **Product:** Behördenbrief Assistant (Web App)
-**Document Version:** 0.16
+**Document Version:** 0.17
 **Status:** Draft
-**Last updated:** 2026-11-26
+**Last updated:** 2026-11-28
 
 > This document answers **what is stored in the database and how**.
 > Product rules: PRD.md · Flows, layers and configuration: ARCHITECTURE.md · Encryption method, keys and GDPR: SECURITY.md · Chunking and embedding model: RAG.md
@@ -787,7 +787,7 @@ Storage bucket access rules: SECURITY.md.
 | Production | Applied only by the CI/CD pipeline (`alembic upgrade head` against the production database) |
 | Local and test | `alembic upgrade head` against the local development database (`postgres`) or `behoerdenbrief_assistant_webapp_testdb` |
 | Initial data | Never inside migrations; created by the seed command (§12) |
-| First migration | Enables `pgvector` (and `pgcrypto` if `gen_random_uuid()` is not available), creates the number sequences and the shared trigger functions `set_updated_at()`, `reject_delete()` and `reject_locked_document_change()` |
+| First migration | Enables `pgvector` in the schema `extensions` (created if missing, as in the TestDB), creates the shared trigger function `set_updated_at()` and removes the default rights that the role `postgres` gives `anon`, `authenticated` and `service_role` on new tables, sequences and functions in `public` (T-038, MEMORY D-058). `gen_random_uuid()` is built into Postgres 17, so `pgcrypto` is not needed. The other shared objects (the number sequences, `reject_delete()` and `reject_locked_document_change()`) are created by the first table task that needs them, together with its test. The downgrade never drops the schema `extensions`, because Supabase keeps other extensions there, and never gives the default rights back, because that would open new tables again (MEMORY D-058) |
 | Triggers per table | The migration that creates a table also attaches its triggers (`set_updated_at`, and `reject_delete` for append-only tables) |
 
 ## 10. ORM Models
@@ -888,3 +888,4 @@ Development-only test users are not part of the seed; automated tests create the
 | 2026-11-21 | 0.14 | Final review: `token_usages.mcp_access_token_id` and operation type `mcp_query`, so the embedding cost of MCP searches is recorded (CHECK, relationship, index, ERD) |
 | 2026-11-22 | 0.15 | References to the API design document changed to `API_DESIGN.md` and `API_DESIGN §` (MEMORY D-105) |
 | 2026-11-26 | 0.16 | §9: TestDB name, local Supabase and CI database container; Supabase CLI migrations not used (MEMORY D-039, D-116) |
+| 2026-11-28 | 0.17 | §9: the first migration enables `pgvector` in the schema `extensions`, creates only `set_updated_at()` and removes the default Data API rights in `public`; no `pgcrypto`; other sequences and trigger functions come with the first table task that needs them; the downgrade keeps the schema `extensions` and does not give the rights back (T-038, MEMORY D-058) |
