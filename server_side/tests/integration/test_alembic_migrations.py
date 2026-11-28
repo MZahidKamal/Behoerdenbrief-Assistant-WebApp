@@ -18,15 +18,11 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from pydantic import SecretStr
-from sqlalchemy import column, func, inspect, select, table
+from sqlalchemy import column, inspect, select, table
 
-from app.core.config import load_settings
 from app.core.database import create_database_engine
 
 pytestmark = [allure.feature("server")]
-
-# The name from T-033 and ARCHITECTURE §9.2.
-TEST_DATABASE_NAME = "behoerdenbrief_assistant_webapp_testdb"
 
 # `server_side/alembic.ini`: two folders up from `tests/integration/`.
 ALEMBIC_CONFIGURATION_FILE = Path(__file__).resolve().parents[2] / "alembic.ini"
@@ -36,15 +32,6 @@ EMPTY_MIGRATION_REVISION_ID = "empty_test_migration"
 
 # Alembic's own table that stores which migration the database is at.
 ALEMBIC_VERSION_TABLE_NAME = "alembic_version"
-
-
-async def _read_current_database_name(database_url: SecretStr) -> str | None:
-    engine = create_database_engine(database_url)
-    try:
-        async with engine.connect() as connection:
-            return await connection.scalar(select(func.current_database()))
-    finally:
-        await engine.dispose()
 
 
 async def _read_applied_revision_ids(database_url: SecretStr) -> list[str]:
@@ -72,7 +59,9 @@ async def _read_applied_revision_ids(database_url: SecretStr) -> list[str]:
 
 
 @pytest.fixture
-def alembic_configuration_with_empty_migration(tmp_path: Path) -> Iterator[Config]:
+def alembic_configuration_with_empty_migration(
+    tmp_path: Path, test_database_url: SecretStr
+) -> Iterator[Config]:
     """Give an Alembic configuration for the TestDB with one empty migration.
 
     After the test, the database always goes back to `base`, also when the
@@ -80,28 +69,11 @@ def alembic_configuration_with_empty_migration(tmp_path: Path) -> Iterator[Confi
 
     Args:
         tmp_path: A new temporary folder from pytest for the migration file.
+        test_database_url: The checked TestDB URL from `conftest.py`.
 
     Yields:
         The configuration. Pass it to `alembic.command` functions.
     """
-    # The TestDB URL comes from the environment (CI) or server_side/.env.
-    settings = load_settings()
-    if settings.test_database_url is None:
-        pytest.fail(
-            "TEST_DATABASE_URL is not set. Start the local Supabase, create the "
-            "TestDB (README) and set TEST_DATABASE_URL in server_side/.env."
-        )
-    test_database_url = settings.test_database_url
-
-    # Safety: migrations change the schema, so never run them on a database
-    # that is not the TestDB, even when the URL is set wrong.
-    current_database_name = asyncio.run(_read_current_database_name(test_database_url))
-    if current_database_name != TEST_DATABASE_NAME:
-        pytest.fail(
-            f"TEST_DATABASE_URL points to {current_database_name!r}, "
-            f"not to {TEST_DATABASE_NAME!r}. No migration was run."
-        )
-
     # Our real alembic.ini, but migration files only in the temporary folder.
     # `env.py` reads the URL from `database_url` and keeps the test logging.
     alembic_configuration = Config(ALEMBIC_CONFIGURATION_FILE)
@@ -128,12 +100,8 @@ def alembic_configuration_with_empty_migration(tmp_path: Path) -> Iterator[Confi
 
 def test_upgrade_head_records_revision_when_empty_migration_exists(
     alembic_configuration_with_empty_migration: Config,
+    test_database_url: SecretStr,
 ) -> None:
-    # Arrange
-    test_database_url = alembic_configuration_with_empty_migration.attributes[
-        "database_url"
-    ]
-
     # Act
     command.upgrade(alembic_configuration_with_empty_migration, "head")
 
@@ -144,11 +112,9 @@ def test_upgrade_head_records_revision_when_empty_migration_exists(
 
 def test_downgrade_base_removes_revision_when_empty_migration_was_applied(
     alembic_configuration_with_empty_migration: Config,
+    test_database_url: SecretStr,
 ) -> None:
     # Arrange
-    test_database_url = alembic_configuration_with_empty_migration.attributes[
-        "database_url"
-    ]
     command.upgrade(alembic_configuration_with_empty_migration, "head")
 
     # Act
@@ -161,11 +127,9 @@ def test_downgrade_base_removes_revision_when_empty_migration_was_applied(
 
 def test_upgrade_head_works_again_when_migration_was_downgraded(
     alembic_configuration_with_empty_migration: Config,
+    test_database_url: SecretStr,
 ) -> None:
     # Arrange: up and down once (RULES §9: upgrade, downgrade, upgrade).
-    test_database_url = alembic_configuration_with_empty_migration.attributes[
-        "database_url"
-    ]
     command.upgrade(alembic_configuration_with_empty_migration, "head")
     command.downgrade(alembic_configuration_with_empty_migration, "base")
 
